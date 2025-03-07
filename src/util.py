@@ -2,13 +2,13 @@ import os, requests, subprocess, yaml
 
 
 GITHUB_ENDPOINT = "https://api.github.com"
+STACK_LOG_URL = "https://github.com/hugh-nguyen/cortex-stack-log.git"
 GH_PERSONAL_TOKEN = os.environ.get("GH_PERSONAL_TOKEN")
 CERT_PATH = os.environ.get("CERT_PATH", None)
 HEADERS = {
     "Authorization": f"token {GH_PERSONAL_TOKEN}",
     "Accept": "application/vnd.github.v3+json"
 }
-
 
 def get_endpoint_data(endpoint, headers={}, index=""):
     try:
