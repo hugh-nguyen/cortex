@@ -45,6 +45,20 @@ module "eks" {
       }
     }
   }
+
+  manage_aws_auth_configmap = true
+
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::495599745704:user/admin"
+      username = "admin"
+      groups   = ["system:masters"]
+    }
+  ]
+
+  tags = {
+    Environment = "cheap"
+  }
 }
 
 output "cluster_endpoint" {
