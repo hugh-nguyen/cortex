@@ -12,8 +12,8 @@ module "vpc" {
   public_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnets= ["10.0.101.0/24", "10.0.102.0/24"]
 
-  enable_nat_gateway   = true
-  single_nat_gateway   = true
+  enable_nat_gateway = true
+  single_nat_gateway = true
 }
 
 module "eks" {
@@ -33,12 +33,12 @@ module "eks" {
       max_size     = 2
       desired_size = 2
 
-      iam_role_additional_policies = [
-        "arn:aws:iam::aws:policy/AdministratorAccess",
-        "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-        "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
-        "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-      ]
+      iam_role_additional_policies = {
+        "AdministratorAccess"                = "arn:aws:iam::aws:policy/AdministratorAccess"
+        "AmazonEKSWorkerNodePolicy"          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        "AmazonEC2ContainerRegistryReadOnly" = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        "AmazonEKS_CNI_Policy"               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      }
     }
   }
 }
