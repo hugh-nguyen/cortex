@@ -16,6 +16,10 @@ aws iam create-policy \
   --policy-name AmazonEKS_ECR_Policy \
   --policy-document file://ecr-access-policy.json
 
+aws iam attach-role-policy \
+  --role-name eksctl-cluster-addon-iamserviceaccount-defaul-Role1-fGVaP1SCZ5bp \
+  --policy-arn arn:aws:iam::495599745704:policy/AmazonEKS_ECR_Policy
+
 
 eksctl utils associate-iam-oidc-provider \
   --region=ap-southeast-2 \
@@ -29,7 +33,11 @@ eksctl create iamserviceaccount \
   --cluster cluster \
   --attach-policy-arn arn:aws:iam::495599745704:policy/AmazonEKS_ECR_Policy \
   --approve \
-  --override-existing-serviceaccounts
+  --override-existing-serviceaccounts \
+  --region ap-southeast-2
+
+kubectl get serviceaccount ecr-access-sa -o yaml
+
 
 
 eksctl scale nodegroup \

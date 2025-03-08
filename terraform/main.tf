@@ -4,30 +4,26 @@ provider "aws" {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.19.0"
+  version = "3.14.2"
 
-  name            = "eks-vpc"
-  cidr            = "10.0.0.0/16"
-  azs             = ["ap-southeast-2a", "ap-southeast-2b"]
-  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets = ["10.0.101.0/24", "10.0.102.0/24"]
+  name           = "eks-vpc"
+  cidr           = "10.0.0.0/16"
+  azs            = ["ap-southeast-2a", "ap-southeast-2b"]
+  public_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets= ["10.0.101.0/24", "10.0.102.0/24"]
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
 }
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "18.0.0"
 
   cluster_name    = "eks-cluster"
-  cluster_version = "1.31"
+  cluster_version = "1.28"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
-
-  cluster_endpoint_public_access  = true
-  cluster_endpoint_private_access = false
-  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
   eks_managed_node_groups = {
     example = {
@@ -37,44 +33,13 @@ module "eks" {
       max_size     = 2
       desired_size = 2
 
-      iam_role_additional_policies = {
-        "AdministratorAccess"                = "arn:aws:iam::aws:policy/AdministratorAccess"
-        "AmazonEKSWorkerNodePolicy"          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-        "AmazonEC2ContainerRegistryReadOnly" = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-        "AmazonEKS_CNI_Policy"               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-      }
+      iam_role_additional_policies = [
+        "arn:aws:iam::aws:policy/AdministratorAccess",
+        "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+        "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+        "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      ]
     }
-  }
-
-  tags = {
-    Environment = "cheap"
-  }
-}
-
-data "aws_eks_cluster_auth" "eks" {
-  name = module.eks.cluster_name
-}
-
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token                  = data.aws_eks_cluster_auth.eks.token
-}
-
-resource "kubernetes_config_map_v1" "aws_auth" {
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
-
-  data = {
-    "mapUsers" = yamlencode([
-      {
-        userarn  = "arn:aws:iam::495599745704:user/admin"
-        username = "admin"
-        groups   = ["system:masters"]
-      }
-    ])
   }
 }
 
