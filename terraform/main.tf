@@ -21,11 +21,11 @@ module "eks" {
   version = "18.0.0"
 
   cluster_name    = "cheap-eks-cluster"
-  cluster_version = "1.23"
+  cluster_version = "1.27"
   vpc_id          = module.vpc.vpc_id
-  vpc_subnets     = module.vpc.private_subnets
+  subnet_ids     = module.vpc.private_subnets
 
-  managed_node_groups = {
+  eks_managed_node_groups = {
     cheap_nodes = {
       desired_capacity = 1
       max_capacity     = 1
