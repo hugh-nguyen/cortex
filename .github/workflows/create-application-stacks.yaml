@@ -10,6 +10,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -21,7 +26,7 @@ jobs:
           pip install pyyaml requests
 
       - name: Run Application Stack Script
-        run: |
-          python src/create-application-stacks.py --clone
+        run: python src/create-application-stacks.py --clone
         env:
           GH_PERSONAL_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
