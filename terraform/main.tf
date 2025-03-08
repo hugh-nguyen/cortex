@@ -25,6 +25,8 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
+  create_node_role = true
+
   eks_managed_node_groups = {
     example = {
       instance_types = ["t2.micro"]
@@ -32,6 +34,12 @@ module "eks" {
       min_size     = 1
       max_size     = 2
       desired_size = 2
+
+      iam_role_additional_policies = [
+        "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+        "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+        "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      ]
     }
   }
 }
