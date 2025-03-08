@@ -46,18 +46,35 @@ module "eks" {
     }
   }
 
-  manage_aws_auth_configmap = true
-
-  aws_auth_users = [
-    {
-      userarn  = "arn:aws:iam::495599745704:user/admin"
-      username = "admin"
-      groups   = ["system:masters"]
-    }
-  ]
-
   tags = {
     Environment = "cheap"
+  }
+}
+
+data "aws_eks_cluster_auth" "eks" {
+  name = module.eks.cluster_name
+}
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.eks.token
+}
+
+resource "kubernetes_config_map_v1" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    "mapUsers" = yamlencode([
+      {
+        userarn  = "arn:aws:iam::495599745704:user/admin"
+        username = "admin"
+        groups   = ["system:masters"]
+      }
+    ])
   }
 }
 
