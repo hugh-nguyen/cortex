@@ -1,6 +1,6 @@
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.8.1" # Latest stable version
+  version = "5.8.1"
 
   name                 = "eks-vpc"
   cidr                 = "10.0.0.0/16"
@@ -11,7 +11,6 @@ module "vpc" {
   enable_nat_gateway   = true
   single_nat_gateway   = true
 
-  enable_dns_hostnames = true
   enable_dns_hostnames = true
 }
 
