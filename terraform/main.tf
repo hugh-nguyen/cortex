@@ -19,23 +19,19 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "18.0.0"
 
-  cluster_name    = "cheap-eks-cluster"
-  cluster_version = "1.27"
+  cluster_name    = "eks-cluster"
+  cluster_version = "1.28"
   vpc_id          = module.vpc.vpc_id
   subnet_ids      = module.vpc.private_subnets
 
   eks_managed_node_groups = {
-    cheap_nodes = {
-      desired_capacity = 1
-      max_capacity     = 1
-      min_capacity     = 1
+    example = {
+      instance_types = ["t2.micro"]
 
-      instance_type = "t2.micro"
+      min_size     = 1
+      max_size     = 2
+      desired_size = 2
     }
-  }
-
-  tags = {
-    Environment = "cheap"
   }
 }
 
