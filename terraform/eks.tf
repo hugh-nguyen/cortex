@@ -19,7 +19,6 @@ resource "aws_eks_cluster" "main" {
   role_arn = aws_iam_role.cluster_role.arn
 
   vpc_config {
-    vpc_id      = module.vpc.vpc_id
     subnet_ids  = module.vpc.private_subnets
   }
 }
