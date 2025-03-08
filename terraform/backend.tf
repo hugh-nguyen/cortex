@@ -1,4 +1,10 @@
 terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
   backend "s3" {
     bucket         = "mapleharbour-tf-state"
     key            = "envoy-service-hub/terraform.tfstate"
