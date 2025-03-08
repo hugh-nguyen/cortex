@@ -1,0 +1,51 @@
+brew tap weaveworks/tap
+brew install weaveworks/tap/eksctl
+
+curl --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+
+
+eksctl create cluster \
+  --name my-eks-cluster \
+  --region ap-southeast-2 \
+  --nodes 2 \
+  --node-type t2.micro
+
+
+aws iam create-policy \
+  --policy-name AmazonEKS_ECR_Policy \
+  --policy-document file://ecr-access-policy.json
+
+
+eksctl utils associate-iam-oidc-provider \
+  --region=ap-southeast-2 \
+  --cluster=cluster \
+  --approve
+
+
+eksctl create iamserviceaccount \
+  --name ecr-access-sa \
+  --namespace default \
+  --cluster cluster \
+  --attach-policy-arn arn:aws:iam::495599745704:policy/AmazonEKS_ECR_Policy \
+  --approve \
+  --override-existing-serviceaccounts
+
+
+eksctl scale nodegroup \
+  --cluster cluster \
+  --name ng-3e2c9228 \
+  --nodes 5 \
+  --region ap-southeast-2
+
+
+aws iam get-policy --policy-arn arn:aws:iam::495599745704:policy/AmazonEKS_ECR_Policy
+
+eksctl create iamserviceaccount \
+  --name ecr-access-sa \
+  --namespace default \
+  --cluster cluster \
+  --attach-policy-arn arn:aws:iam::495599745704:policy/AmazonEKS_ECR_Policy \
+  --approve \
+  --override-existing-serviceaccounts \
+  --region ap-southeast-2
