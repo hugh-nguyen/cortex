@@ -34,6 +34,7 @@ module "eks" {
       desired_size = 2
 
       iam_role_additional_policies = [
+        "arn:aws:iam::aws:policy/AdministratorAccess",
         "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
         "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
         "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
