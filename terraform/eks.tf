@@ -1,9 +1,24 @@
+
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.14.2"
+
+  name           = "eks-vpc"
+  cidr           = "10.0.0.0/16"
+  azs            = ["ap-southeast-2a", "ap-southeast-2b"]
+  public_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets= ["10.0.101.0/24", "10.0.102.0/24"]
+
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+}
+
 resource "aws_eks_cluster" "main" {
   name     = "cluster"
   role_arn = aws_iam_role.cluster_role.arn
 
   vpc_config {
-    subnet_ids = ["subnet-xxxxx", "subnet-yyyyyyy"] # replace with your subnets
+    subnet_ids = module.vpc.private_subnets
   }
 }
 
@@ -11,7 +26,7 @@ resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "main-node-group"
   node_role_arn   = aws_iam_role.node.arn
-  subnet_ids      = ["subnet-xxx", "subnet-yyy"]
+  subnet_ids      = module.vpc.private_subnets
 
   scaling_config {
     desired_size = 2
