@@ -22,6 +22,34 @@ resource "aws_eks_cluster" "main" {
   }
 }
 
+resource "aws_launch_template" "eks_nodes" {
+  name_prefix   = "eks-nodes"
+  image_id      = data.aws_ami.eks_ami.id
+  instance_type = "t3.micro"
+
+  metadata_options {
+    http_tokens   = "optional"
+    http_endpoint = "enabled"
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "eks-node"
+    }
+  }
+}
+
+data "aws_ami" "eks_ami" {
+  most_recent = true
+  owners      = ["602401143452"]  # AWS EKS AMI owner ID
+
+  filter {
+    name   = "name"
+    values = ["amazon-eks-node-*"]
+  }
+}
+
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "main-node-group"
@@ -36,9 +64,9 @@ resource "aws_eks_node_group" "main" {
 
   instance_types = ["t3.micro"]
 
-  metadata_options {
-    http_tokens   = "optional"
-    http_endpoint = "enabled"
+  launch_template {
+    id      = aws_launch_template.eks_nodes.id
+    version = "$Latest"
   }
 
   depends_on = [aws_iam_role_policy_attachment.node_policy]
