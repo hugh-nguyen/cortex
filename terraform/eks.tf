@@ -125,25 +125,32 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
         Effect   = "Allow",
         Action   = [
           "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeSubnets",
+          "ec2:DescribeInstances",
+          "ec2:DescribeTags",
           "ec2:DescribeVpcs",
+          "ec2:DescribeSubnets",
           "ec2:DescribeSecurityGroups",
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:CreateSecurityGroup",
+          "ec2:DeleteSecurityGroup",
+          "ec2:CreateTags",
+          "ec2:DeleteTags",
           "elasticloadbalancing:DescribeLoadBalancers",
           "elasticloadbalancing:DescribeListeners",
           "elasticloadbalancing:DescribeTargetGroups",
           "elasticloadbalancing:DescribeTargetHealth",
           "elasticloadbalancing:DescribeTags",
+          "elasticloadbalancing:DescribeLoadBalancerAttributes"
           "elasticloadbalancing:RegisterTargets",
-          "elasticloadbalancing:DeregisterTargets",
-          "elasticloadbalancing:DescribeTargetGroupAttributes",
-          "elasticloadbalancing:AddTags",
-          "shield:GetSubscriptionState"
+          "elasticloadbalancing:DeregisterTargets"
         ],
         Resource = "*"
       }
     ]
   })
 }
+
 
 resource "aws_iam_role_policy_attachment" "aws_lb_controller_extra_permissions" {
   role       = aws_iam_role.aws_lb_controller_role.name
