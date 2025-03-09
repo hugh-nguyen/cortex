@@ -141,7 +141,7 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
           "elasticloadbalancing:DescribeTargetGroups",
           "elasticloadbalancing:DescribeTargetHealth",
           "elasticloadbalancing:DescribeTags",
-          "elasticloadbalancing:DescribeLoadBalancerAttributes"
+          "elasticloadbalancing:DescribeLoadBalancerAttributes",
           "elasticloadbalancing:RegisterTargets",
           "elasticloadbalancing:DeregisterTargets"
         ],
