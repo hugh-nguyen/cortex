@@ -146,7 +146,8 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
       {
         Effect   = "Allow",
         Action   = [
-          "wafv2:*"
+          "wafv2:*",
+          "waf-regional:*"
         ],
         Resource = "*"
       }
