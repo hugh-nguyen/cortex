@@ -25,11 +25,11 @@ provider "kubernetes" {
     command     = "aws"
     args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
   }
-  depends_on = [aws_eks_cluster.main]
 }
 
 data "aws_eks_cluster_auth" "main" {
   name = aws_eks_cluster.main.name
+  depends_on = [aws_eks_cluster.main] 
 }
 
 provider "helm" {
@@ -43,5 +43,4 @@ provider "helm" {
       args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
     }
   }
-  depends_on = [aws_eks_cluster.main] 
 }
