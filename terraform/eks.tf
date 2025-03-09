@@ -114,39 +114,3 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
 
-resource "aws_iam_policy" "aws_lb_controller_additional" {
-  name        = "AWSLoadBalancerControllerAdditionalPermissions"
-  description = "Additional permissions for AWS Load Balancer Controller"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = [
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeVpcs",
-          "ec2:DescribeSecurityGroups",
-          "elasticloadbalancing:DescribeLoadBalancers",
-          "elasticloadbalancing:DescribeListeners",
-          "elasticloadbalancing:DescribeTargetGroups",
-          "elasticloadbalancing:DescribeTargetHealth",
-          "elasticloadbalancing:DescribeTags",
-          "elasticloadbalancing:RegisterTargets",
-          "elasticloadbalancing:DeregisterTargets",
-          "elasticloadbalancing:DescribeTargetGroupAttributes", # THIS WAS MISSING
-          "elasticloadbalancing:AddTags",
-          "shield:GetSubscriptionState"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "aws_lb_controller_extra_permissions" {
-  role       = aws_iam_role.aws_lb_controller_role.name
-  policy_arn = aws_iam_policy.aws_lb_controller_additional.arn
-}
-
