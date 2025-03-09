@@ -6,4 +6,5 @@ resource "kubernetes_service_account" "ecr_access_sa" {
       "eks.amazonaws.com/role-arn" = module.iam_assumable_role_with_oidc.iam_role_arn
     }
   }
+  depends_on = [aws_eks_cluster.main]
 }
