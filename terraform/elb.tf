@@ -53,11 +53,10 @@ data "aws_instances" "eks_nodes" {
   }
 }
 
-# Attach EKS Nodes to Target Group (if using EC2 instances as targets)
 resource "aws_lb_target_group_attachment" "eks_nodes" {
   count = length(data.aws_instances.eks_nodes.private_ips)
 
-  target_group_arn = "arn:aws:elasticloadbalancing:ap-southeast-2:495599745704:targetgroup/eks-tg/70a7cee4e0fe3566"
+  target_group_arn = data.aws_lb_target_group.eks_tg.arn
   target_id        = data.aws_instances.eks_nodes.private_ips[count.index]
   port             = 80
 }
