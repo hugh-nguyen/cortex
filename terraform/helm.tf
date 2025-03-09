@@ -104,6 +104,18 @@ resource "kubernetes_service_account" "aws_lb_controller" {
   depends_on = [aws_iam_role_policy_attachment.aws_lb_controller_policy_attachment]
 }
 
+resource "kubernetes_secret" "aws_lb_controller_token" {
+  metadata {
+    name      = "aws-load-balancer-controller-token"
+    namespace = kubernetes_service_account.aws_lb_controller.metadata[0].namespace
+    annotations = {
+      "kubernetes.io/service-account.name" = kubernetes_service_account.aws_lb_controller.metadata[0].name
+    }
+  }
+  type = "kubernetes.io/service-account-token"
+  depends_on = [kubernetes_service_account.aws_lb_controller]
+}
+
 resource "kubernetes_cluster_role_binding" "aws_lb_controller_binding" {
   metadata {
     name = "aws-load-balancer-controller"
