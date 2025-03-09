@@ -104,7 +104,7 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
 
-resource "aws_iam_role_policy_attachment" "eks_lb_controller_policy" {
+resource "aws_iam_role_policy_attachment" "admin_policy" {
   role       = aws_iam_role.cluster_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSLoadBalancerControllerIAMPolicy"
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
