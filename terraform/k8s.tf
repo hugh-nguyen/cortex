@@ -1,23 +1,9 @@
-resource "kubernetes_service" "service_a" {
+resource "kubernetes_service_account" "ecr_access_sa" {
   metadata {
-    name = "service-a"
+    name      = "ecr-access-sa"
+    namespace = "default"
     annotations = {
-      "service.beta.kubernetes.io/aws-load-balancer-type"       = "nlb"
-      "service.beta.kubernetes.io/aws-load-balancer-target-type" = "ip"
+      "eks.amazonaws.com/role-arn" = module.iam_assumable_role_with_oidc.iam_role_arn
     }
-  }
-
-  spec {
-    selector = {
-      app = "service-a"
-    }
-
-    port {
-      port        = 80
-      target_port = 5000
-      protocol    = "TCP"
-    }
-
-    type = "LoadBalancer"
   }
 }
