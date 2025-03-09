@@ -124,18 +124,7 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
       {
         Effect   = "Allow",
         Action   = [
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeInstances",
-          "ec2:DescribeTags",
-          "ec2:DescribeVpcs",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups",
-          "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupIngress",
-          "ec2:CreateSecurityGroup",
-          "ec2:DeleteSecurityGroup",
-          "ec2:CreateTags",
-          "ec2:DeleteTags",
+          "ec2:*",
           "elasticloadbalancing:*"
         ],
         Resource = "*"
@@ -143,22 +132,14 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
       {
         Effect   = "Allow",
         Action   = [
-          "elasticloadbalancing:CreateListener",
-          "elasticloadbalancing:DeleteListener",
-          "elasticloadbalancing:CreateLoadBalancer",
-          "elasticloadbalancing:DeleteLoadBalancer",
-          "elasticloadbalancing:CreateTargetGroup",
-          "elasticloadbalancing:DeleteTargetGroup",
-          "elasticloadbalancing:ModifyLoadBalancerAttributes",
-          "elasticloadbalancing:ModifyTargetGroup",
-          "elasticloadbalancing:ModifyTargetGroupAttributes"
+          "elasticloadbalancing:*"
         ],
         Resource = "*"
       },
       {
         Effect   = "Allow",
         Action   = [
-          "shield:GetSubscriptionState"
+          "shield:*"
         ],
         Resource = "*"
       }
