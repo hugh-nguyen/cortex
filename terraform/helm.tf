@@ -6,16 +6,19 @@ data "aws_eks_cluster" "main" {
 
 data "tls_certificate" "eks_oidc" {
   url = trimsuffix(data.aws_eks_cluster.main.identity[0].oidc[0].issuer, "/")
+  depends_on = [aws_eks_cluster.main]
 }
 
 data "aws_vpc" "eks_vpc" {
   id = data.aws_eks_cluster.main.vpc_config[0].vpc_id
+  depends_on = [aws_eks_cluster.main]
 }
 
 resource "aws_iam_openid_connect_provider" "eks_oidc_provider" {
   url             = data.tls_certificate.eks_oidc.url
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.eks_oidc.certificates[0].sha1_fingerprint]
+  depends_on = [aws_eks_cluster.main]
 }
 
 resource "aws_iam_policy" "aws_lb_controller_policy" {
@@ -103,7 +106,7 @@ resource "kubernetes_service_account" "aws_lb_controller" {
     }
   }
 
-  depends_on = [aws_iam_role_policy_attachment.aws_lb_controller_policy_attachment]
+  depends_on = [aws_eks_cluster.main, aws_iam_role_policy_attachment.aws_lb_controller_policy_attachment]
 }
 
 resource "kubernetes_secret" "aws_lb_controller_token" {
@@ -115,7 +118,7 @@ resource "kubernetes_secret" "aws_lb_controller_token" {
     }
   }
   type = "kubernetes.io/service-account-token"
-  depends_on = [kubernetes_service_account.aws_lb_controller]
+  depends_on = [aws_eks_cluster.main, kubernetes_service_account.aws_lb_controller]
 }
 
 resource "kubernetes_cluster_role_binding" "aws_lb_controller_binding" {
@@ -174,5 +177,5 @@ resource "helm_release" "aws_lb_controller" {
     value = "true"
   }
 
-  depends_on = [kubernetes_service_account.aws_lb_controller]
+  depends_on = [kubernetes_service_account.aws_lb_controller, aws_eks_cluster.main]
 }
