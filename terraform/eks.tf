@@ -143,7 +143,30 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
           "elasticloadbalancing:DescribeTags",
           "elasticloadbalancing:DescribeLoadBalancerAttributes",
           "elasticloadbalancing:RegisterTargets",
-          "elasticloadbalancing:DeregisterTargets"
+          "elasticloadbalancing:DeregisterTargets",
+          "elasticloadbalancing:AddTags"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "elasticloadbalancing:CreateListener",
+          "elasticloadbalancing:DeleteListener",
+          "elasticloadbalancing:CreateLoadBalancer",
+          "elasticloadbalancing:DeleteLoadBalancer",
+          "elasticloadbalancing:CreateTargetGroup",
+          "elasticloadbalancing:DeleteTargetGroup",
+          "elasticloadbalancing:ModifyLoadBalancerAttributes",
+          "elasticloadbalancing:ModifyTargetGroup",
+          "elasticloadbalancing:ModifyTargetGroupAttributes"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "shield:GetSubscriptionState"
         ],
         Resource = "*"
       }
