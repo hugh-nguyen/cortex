@@ -142,6 +142,13 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
           "shield:*"
         ],
         Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "wafv2:*
+        ],
+        Resource = "*"
       }
     ]
   })
