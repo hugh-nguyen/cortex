@@ -5,6 +5,12 @@ resource "aws_lb" "eks_lb" {
   security_groups    = [aws_security_group.lb_sg.id]
   subnets            = module.vpc.public_subnets
   enable_deletion_protection = false
+
+  tags = {
+    Name                              = "eks-lb"
+    "kubernetes.io/ingress.class"     = "alb"
+    "kubernetes.io/cluster/cluster"   = "owned"
+  }
 }
 
 resource "aws_lb_target_group" "eks_tg" {
@@ -23,8 +29,11 @@ resource "aws_lb_target_group" "eks_tg" {
     unhealthy_threshold = 2
     matcher             = "200"
   }
-}
 
+  tags = {
+    "kubernetes.io/cluster/cluster" = "owned"
+  }
+}
 
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.eks_lb.arn
