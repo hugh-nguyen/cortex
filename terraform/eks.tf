@@ -4,13 +4,12 @@ module "vpc" {
 
   name                 = "eks-vpc"
   cidr                 = "10.0.0.0/16"
-  azs                  = ["ap-southeast-2a", "ap-southeast-2b"] # Adjust as needed
-  private_subnets = ["10.0.101.0/24", "10.0.102.0/24"]
-  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  azs                  = ["ap-southeast-2a", "ap-southeast-2b"]
+  private_subnets      = ["10.0.101.0/24", "10.0.102.0/24"]
+  public_subnets       = ["10.0.1.0/24", "10.0.2.0/24"]
 
   enable_nat_gateway   = true
   single_nat_gateway   = true
-
   enable_dns_hostnames = true
 }
 
@@ -30,12 +29,12 @@ resource "aws_eks_node_group" "main" {
   subnet_ids      = module.vpc.private_subnets
 
   scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size      = 1
+    desired_size = 4
+    max_size     = 5
+    min_size     = 1
   }
 
-  instance_types = ["t3.medium"]
+  instance_types = ["t3.micro"]
 
   depends_on = [aws_iam_role_policy_attachment.node_policy]
 }
@@ -104,4 +103,3 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy" {
   role       = aws_iam_role.cluster_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
-
