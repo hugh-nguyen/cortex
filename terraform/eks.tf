@@ -36,6 +36,11 @@ resource "aws_eks_node_group" "main" {
 
   instance_types = ["t3.micro"]
 
+  metadata_options {
+    http_tokens   = "optional"
+    http_endpoint = "enabled"
+  }
+
   depends_on = [aws_iam_role_policy_attachment.node_policy]
 }
 
