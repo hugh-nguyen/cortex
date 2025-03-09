@@ -1,3 +1,9 @@
+resource "aws_iam_policy" "aws_lb_controller_policy" {
+  name        = "AWSLoadBalancerControllerIAMPolicy"
+  description = "IAM policy for AWS Load Balancer Controller"
+  policy      = file("aws_lb_controller_policy.json") # This should contain the policy JSON
+}
+
 resource "aws_iam_role" "aws_lb_controller_role" {
   name = "aws-load-balancer-controller-role"
 
@@ -13,9 +19,9 @@ resource "aws_iam_role" "aws_lb_controller_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "aws_lb_controller_policy" {
+resource "aws_iam_role_policy_attachment" "aws_lb_controller_policy_attachment" {
   role       = aws_iam_role.aws_lb_controller_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSLoadBalancerControllerIAMPolicy"
+  policy_arn = aws_iam_policy.aws_lb_controller_policy.arn
 }
 
 resource "kubernetes_service_account" "aws_lb_controller" {
