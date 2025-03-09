@@ -2,10 +2,6 @@ data "aws_eks_cluster" "main" {
   name = "cluster"
 }
 
-data "aws_eks_cluster_auth" "main" {
-  name = "cluster"
-}
-
 data "tls_certificate" "eks_oidc" {
   url = data.aws_eks_cluster.main.identity[0].oidc[0].issuer
 }
