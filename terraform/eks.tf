@@ -119,7 +119,7 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
   description = "Additional permissions for AWS Load Balancer Controller"
 
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
         Effect   = "Allow"
@@ -127,7 +127,9 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
           "ec2:DescribeAvailabilityZones",
           "ec2:DescribeSubnets",
           "ec2:DescribeVpcs",
-          "ec2:DescribeSecurityGroups"
+          "ec2:DescribeSecurityGroups",
+          "elasticloadbalancing:AddTags",
+          "shield:GetSubscriptionState"
         ]
         Resource = "*"
       }
@@ -139,3 +141,4 @@ resource "aws_iam_role_policy_attachment" "aws_lb_controller_extra_permissions" 
   role       = aws_iam_role.aws_lb_controller_role.name
   policy_arn = aws_iam_policy.aws_lb_controller_additional.arn
 }
+
