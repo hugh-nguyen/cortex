@@ -136,18 +136,7 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
           "ec2:DeleteSecurityGroup",
           "ec2:CreateTags",
           "ec2:DeleteTags",
-          "elasticloadbalancing:DescribeLoadBalancers",
-          "elasticloadbalancing:DescribeListeners",
-          "elasticloadbalancing:DescribeTargetGroups",
-          "elasticloadbalancing:DescribeTargetHealth",
-          "elasticloadbalancing:DescribeTags",
-          "elasticloadbalancing:DescribeLoadBalancerAttributes",
-          "elasticloadbalancing:RegisterTargets",
-          "elasticloadbalancing:DeregisterTargets",
-          "elasticloadbalancing:AddTags",
-          "elasticloadbalancing:DescribeRules",
-          "elasticloadbalancing:CreateRule",
-          "elasticloadbalancing:DeleteRule"
+          "elasticloadbalancing:*"
         ],
         Resource = "*"
       },
