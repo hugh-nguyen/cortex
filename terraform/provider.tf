@@ -17,6 +17,11 @@ provider "aws" {
   region = "ap-southeast-2"
 }
 
+data "aws_eks_cluster_auth" "main" {
+  name = aws_eks_cluster.main.name
+  depends_on = [aws_eks_cluster.main] 
+}
+
 provider "kubernetes" {
   host                   = aws_eks_cluster.main.endpoint
   cluster_ca_certificate = base64decode(aws_eks_cluster.main.certificate_authority[0].data)
@@ -25,11 +30,6 @@ provider "kubernetes" {
     command     = "aws"
     args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
   }
-}
-
-data "aws_eks_cluster_auth" "main" {
-  name = aws_eks_cluster.main.name
-  depends_on = [aws_eks_cluster.main] 
 }
 
 provider "helm" {
