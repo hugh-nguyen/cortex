@@ -10,8 +10,10 @@ resource "aws_lb" "eks_lb" {
 resource "aws_lb_target_group" "eks_tg" {
   name     = "eks-tg"
   port     = 80
-  protocol = "HTTP"  # Changing to HTTP since ALB supports it
+  protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id
+
+  target_type = "ip"
 
   health_check {
     path                = "/health"
@@ -22,6 +24,7 @@ resource "aws_lb_target_group" "eks_tg" {
     matcher             = "200"
   }
 }
+
 
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.eks_lb.arn
