@@ -79,7 +79,8 @@ resource "aws_iam_role" "aws_lb_controller_role" {
       Action = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
-          "${trimsuffix(data.aws_eks_cluster.main.identity[0].oidc[0].issuer, "/")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+          "${trimsuffix(data.aws_eks_cluster.main.identity[0].oidc[0].issuer, "/")}:aud": "sts.amazonaws.com",
+          "${trimsuffix(data.aws_eks_cluster.main.identity[0].oidc[0].issuer, "/")}:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
         }
       }
     }]
