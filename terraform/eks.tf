@@ -18,14 +18,18 @@ resource "aws_eks_cluster" "main" {
   role_arn = aws_iam_role.cluster_role.arn
 
   vpc_config {
-    subnet_ids  = module.vpc.private_subnets
+    subnet_ids = module.vpc.private_subnets
   }
+
+  depends_on = [aws_iam_role.cluster_role]
 }
 
 resource "aws_iam_openid_connect_provider" "eks_oidc_provider" {
   url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = ["<thumbprint>"]
+
+  depends_on = [aws_eks_cluster.main]
 }
 
 resource "aws_iam_role" "cluster_role" {
@@ -51,6 +55,34 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
 
+resource "aws_launch_template" "eks_nodes" {
+  name_prefix   = "eks-nodes"
+  image_id      = data.aws_ami.eks_ami.id
+  instance_type = "t3.micro"
+
+  metadata_options {
+    http_tokens   = "optional"   # ✅ Ensure Instance Metadata is accessible
+    http_endpoint = "enabled"
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "eks-node"
+    }
+  }
+}
+
+data "aws_ami" "eks_ami" {
+  most_recent = true
+  owners      = ["602401143452"]  # AWS EKS AMI owner ID
+
+  filter {
+    name   = "name"
+    values = ["amazon-eks-node-*"]
+  }
+}
+
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "main-node-group"
@@ -63,7 +95,11 @@ resource "aws_eks_node_group" "main" {
     min_size     = 1
   }
 
-  instance_types = ["t3.micro"]
+  launch_template {
+    id      = aws_launch_template.eks_nodes.id
+    version = "$Latest"
+  }
+
   depends_on = [aws_eks_cluster.main]
 }
 
@@ -74,9 +110,7 @@ resource "aws_iam_role" "node" {
     Version = "2012-10-17"
     Statement = [{
       Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
-      }
+      Principal = { Service = "ec2.amazonaws.com" }
       Action = "sts:AssumeRole"
     }]
   })
@@ -97,6 +131,7 @@ resource "aws_iam_role_policy_attachment" "node_ecr_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+# ✅ Fix provider dependencies
 provider "aws" {
   region = "ap-southeast-2"
 }
@@ -110,6 +145,8 @@ provider "kubernetes" {
     command     = "aws"
     args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
   }
+
+  depends_on = [aws_eks_cluster.main]
 }
 
 provider "helm" {
@@ -123,4 +160,6 @@ provider "helm" {
       args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
     }
   }
+
+  depends_on = [aws_eks_cluster.main]
 }
