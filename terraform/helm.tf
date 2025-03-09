@@ -34,7 +34,7 @@ resource "aws_iam_role" "aws_lb_controller_role" {
 
 resource "aws_iam_role_policy_attachment" "aws_lb_controller_policy" {
   role       = aws_iam_role.aws_lb_controller_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSLoadBalancerControllerIAMPolicy"
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
 resource "kubernetes_service_account" "aws_lb_controller" {
