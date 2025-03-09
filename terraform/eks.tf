@@ -18,41 +18,8 @@ resource "aws_eks_cluster" "main" {
   role_arn = aws_iam_role.cluster_role.arn
 
   vpc_config {
-    subnet_ids = module.vpc.private_subnets
+    subnet_ids  = module.vpc.private_subnets
   }
-
-  depends_on = [aws_iam_role.cluster_role]
-}
-
-resource "aws_iam_openid_connect_provider" "eks_oidc_provider" {
-  url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["<thumbprint>"]
-
-  depends_on = [aws_eks_cluster.main]
-}
-
-resource "aws_iam_role" "cluster_role" {
-  name = "eks-cluster-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = { Service = "eks.amazonaws.com" }
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  role       = aws_iam_role.cluster_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_service_policy" {
-  role       = aws_iam_role.cluster_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
 
 resource "aws_launch_template" "eks_nodes" {
@@ -61,7 +28,7 @@ resource "aws_launch_template" "eks_nodes" {
   instance_type = "t3.micro"
 
   metadata_options {
-    http_tokens   = "optional"   # ✅ Ensure Instance Metadata is accessible
+    http_tokens   = "optional"
     http_endpoint = "enabled"
   }
 
@@ -95,12 +62,14 @@ resource "aws_eks_node_group" "main" {
     min_size     = 1
   }
 
+  instance_types = ["t3.micro"]
+
   launch_template {
     id      = aws_launch_template.eks_nodes.id
     version = "$Latest"
   }
 
-  depends_on = [aws_eks_cluster.main]
+  depends_on = [aws_iam_role_policy_attachment.node_policy]
 }
 
 resource "aws_iam_role" "node" {
@@ -110,13 +79,20 @@ resource "aws_iam_role" "node" {
     Version = "2012-10-17"
     Statement = [{
       Effect = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
       Action = "sts:AssumeRole"
     }]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "node_policy" {
+resource "aws_iam_role_policy_attachment" "nodes_ecr" {
+  role       = aws_iam_role.node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "node_worker_policy" {
   role       = aws_iam_role.node.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
@@ -131,35 +107,37 @@ resource "aws_iam_role_policy_attachment" "node_ecr_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-# ✅ Fix provider dependencies
-provider "aws" {
-  region = "ap-southeast-2"
+resource "aws_iam_role_policy_attachment" "node_policy" {
+  role       = aws_iam_role.node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
 
-provider "kubernetes" {
-  host                   = aws_eks_cluster.main.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.main.certificate_authority[0].data)
+resource "aws_iam_role" "cluster_role" {
+  name = "eks-cluster-role"
 
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
-  }
-
-  depends_on = [aws_eks_cluster.main]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "eks.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-provider "helm" {
-  kubernetes {
-    host                   = aws_eks_cluster.main.endpoint
-    token                  = data.aws_eks_cluster_auth.main.token
-    cluster_ca_certificate = base64decode(aws_eks_cluster.main.certificate_authority[0].data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
-    }
-  }
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  role       = aws_iam_role.cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}
 
-  depends_on = [aws_eks_cluster.main]
+resource "aws_iam_role_policy_attachment" "eks_service_policy" {
+  role       = aws_iam_role.cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "admin_policy" {
+  role       = aws_iam_role.cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
