@@ -20,6 +20,8 @@ resource "aws_eks_cluster" "main" {
   vpc_config {
     subnet_ids  = module.vpc.private_subnets
   }
+
+  depends_on = [aws_iam_role.cluster_role]
 }
 
 resource "aws_launch_template" "eks_nodes" {

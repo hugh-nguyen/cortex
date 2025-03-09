@@ -1,5 +1,7 @@
 data "aws_eks_cluster" "main" {
   name = "cluster"
+
+  depends_on = [aws_eks_cluster.main]
 }
 
 data "tls_certificate" "eks_oidc" {
@@ -132,6 +134,7 @@ resource "kubernetes_cluster_role_binding" "aws_lb_controller_binding" {
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"
   }
+  depends_on = [aws_eks_cluster.main]
 }
 
 resource "helm_release" "aws_lb_controller" {
