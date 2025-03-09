@@ -1,3 +1,21 @@
+data "aws_eks_cluster" "main" {
+  name = "cluster"
+}
+
+data "aws_eks_cluster_auth" "main" {
+  name = "cluster"
+}
+
+data "tls_certificate" "eks_oidc" {
+  url = data.aws_eks_cluster.main.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "eks_oidc_provider" {
+  url             = data.tls_certificate.eks_oidc.url
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.eks_oidc.certificates[0].sha1_fingerprint]
+}
+
 resource "aws_iam_role" "aws_lb_controller_role" {
   name = "aws-load-balancer-controller-role"
 
@@ -6,22 +24,30 @@ resource "aws_iam_role" "aws_lb_controller_role" {
     Statement = [{
       Effect = "Allow"
       Principal = {
-        Service = "eks.amazonaws.com"
+        Federated = aws_iam_openid_connect_provider.eks_oidc_provider.arn
       }
-      Action = "sts:AssumeRole"
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${data.aws_eks_cluster.main.identity[0].oidc[0].issuer}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+        }
+      }
     }]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "aws_lb_controller_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "aws_lb_controller_policy" {
   role       = aws_iam_role.aws_lb_controller_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AWSLoadBalancerControllerIAMPolicy"
 }
 
 resource "kubernetes_service_account" "aws_lb_controller" {
   metadata {
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.aws_lb_controller_role.arn
+    }
   }
 }
 
@@ -52,7 +78,7 @@ resource "helm_release" "aws_lb_controller" {
 
   set {
     name  = "clusterName"
-    value = aws_eks_cluster.main.name
+    value = data.aws_eks_cluster.main.name
   }
 
   set {
@@ -63,5 +89,10 @@ resource "helm_release" "aws_lb_controller" {
   set {
     name  = "serviceAccount.name"
     value = "aws-load-balancer-controller"
+  }
+
+  set {
+    name  = "region"
+    value = "ap-southeast-2"
   }
 }
