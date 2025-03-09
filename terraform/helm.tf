@@ -1,5 +1,3 @@
-
-
 resource "aws_iam_role" "aws_lb_controller_role" {
   name = "aws-load-balancer-controller-role"
 
@@ -27,19 +25,18 @@ resource "kubernetes_service_account" "aws_lb_controller" {
   }
 }
 
-resource "kubernetes_role_binding" "aws_lb_controller_binding" {
+resource "kubernetes_cluster_role_binding" "aws_lb_controller_binding" {
   metadata {
-    name      = "aws-load-balancer-controller"
-    namespace = "kube-system"
+    name = "aws-load-balancer-controller"
   }
 
   role_ref {
     api_group = "rbac.authorization.k8s.io"
-    kind      = "Role"
+    kind      = "ClusterRole"
     name      = "aws-load-balancer-controller"
   }
 
-  subjects {
+  subject {
     kind      = "ServiceAccount"
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"
