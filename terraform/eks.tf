@@ -144,7 +144,8 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
           "elasticloadbalancing:DescribeLoadBalancerAttributes",
           "elasticloadbalancing:RegisterTargets",
           "elasticloadbalancing:DeregisterTargets",
-          "elasticloadbalancing:AddTags"
+          "elasticloadbalancing:AddTags",
+          "elasticloadbalancing:DescribeRules"
         ],
         Resource = "*"
       },
@@ -173,7 +174,6 @@ resource "aws_iam_policy" "aws_lb_controller_additional" {
     ]
   })
 }
-
 
 resource "aws_iam_role_policy_attachment" "aws_lb_controller_extra_permissions" {
   role       = aws_iam_role.aws_lb_controller_role.name
