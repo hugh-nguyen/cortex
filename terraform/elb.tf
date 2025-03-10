@@ -60,10 +60,4 @@ data "aws_instances" "eks_nodes" {
   }
 }
 
-resource "aws_lb_target_group_attachment" "eks_nodes" {
-  count = length(data.aws_instances.eks_nodes.private_ips)
 
-  target_group_arn = data.aws_lb_target_group.eks_tg.arn
-  target_id        = data.aws_instances.eks_nodes.private_ips[count.index]
-  port             = 80
-}
