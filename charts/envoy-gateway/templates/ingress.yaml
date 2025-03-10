@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: envoy-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/backend-protocol: "HTTP"
+    alb.ingress.kubernetes.io/group.name: "eks-ingress-group"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/security-groups: "sg-0446972e9fac79d5c"
+    alb.ingress.kubernetes.io/subnets: "subnet-0b10896d480b2beb5,subnet-086fa042b2c6f22c3"
+    alb.ingress.kubernetes.io/healthcheck-path: "/health"
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "10"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthcheck-healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/healthcheck-unhealthy-threshold-count: "2"
+spec:
+  ingressClassName: alb
+  defaultBackend:
+    service:
+      name: envoy
+      port:
+        number: 80
+  rules:
+    - http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: envoy
+                port:
+                  number: 80
+
