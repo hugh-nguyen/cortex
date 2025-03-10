@@ -23,21 +23,38 @@ static_resources:
                         allow_methods: "GET, POST, OPTIONS"
                         allow_headers: "X-Stack-Version, Content-Type"
                         expose_headers: "X-Stack-Version"
+
                       routes:
                         - match:
                             prefix: "/a/"
                           route:
                             cluster: service_a
+                            
                         - match:
                             prefix: "/b/"
+                            headers:
+                              - name: "X-Stack-Version"
+                                string_match:
+                                  exact: "0.0.4"
                           route:
-                            cluster: service-b
+                            cluster: service-b-0-0-4
+
+                        - match:
+                            prefix: "/b/"
+                            headers:
+                              - name: "X-Stack-Version"
+                                string_match:
+                                  exact: "0.0.5"
+                          route:
+                            cluster: service-b-0-0-5
+
                         - match:
                             prefix: "/"
                           direct_response:
                             status: 404
                             body:
                               inline_string: "Invalid API Route"
+
                 http_filters:
                   - name: envoy.filters.http.cors
                     typed_config:
@@ -45,6 +62,7 @@ static_resources:
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
   clusters:
     - name: service_a
       connect_timeout: 0.25s
@@ -58,17 +76,32 @@ static_resources:
                   address:
                     socket_address:
                       address: service-a
-                      port_value: 5000
-    - name: service-b
+                      port_value: 80
+
+    - name: service-b-0-0-4
       connect_timeout: 0.25s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
-        cluster_name: service-b
+        cluster_name: service-b-0-0-4
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: service-b.default.svc.cluster.local
-                      port_value: 5001
+                      address: service-b-0-0-4
+                      port_value: 80
+
+    - name: service-b-0-0-5
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: service-b-0-0-5
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: service-b-0-0-5
+                      port_value: 80
