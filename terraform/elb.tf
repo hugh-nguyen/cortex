@@ -45,14 +45,13 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-data "aws_lb" "eks_lb" {
-  name = "eks-lb"  # Make sure this is the exact ALB name
-}
+# data "aws_lb" "eks_lb" {
+#  name = "eks-lb"
+# }
 
-# Fetch the existing Target Group
-data "aws_lb_target_group" "eks_tg" {
-  name = "eks-tg"  # Make sure this matches your existing target group
-}
+# data "aws_lb_target_group" "eks_tg" {
+#   name = "eks-tg"  # Make sure this matches your existing target group
+# }
 
 data "aws_instances" "eks_nodes" {
   filter {
