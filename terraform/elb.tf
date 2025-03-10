@@ -21,7 +21,7 @@ resource "aws_lb_target_group" "eks_tg" {
   target_type = "ip"
 
   health_check {
-    path                = "/a/getresult?x=2&y=3" # Update this to a known working endpoint
+    path                = "/health"
     interval            = 10
     timeout             = 5
     healthy_threshold   = 2
