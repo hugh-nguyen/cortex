@@ -18,12 +18,11 @@ resource "aws_lb_target_group" "eks_tg" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = module.vpc.vpc_id
-
   target_type = "ip"
 
   health_check {
-    path                = "/health"
-    interval            = 30
+    path                = "/a/getresult?x=2&y=3" # Update this to a known working endpoint
+    interval            = 10
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
