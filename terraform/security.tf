@@ -1,3 +1,12 @@
+data "aws_eks_cluster" "eks" {
+  name = "cluster"  # Replace with your EKS cluster name
+}
+
+data "aws_security_group" "eks_cluster_sg" {
+  id = data.aws_eks_cluster.eks.vpc_config[0].cluster_security_group_id
+}
+
+# Security Group for the Load Balancer
 resource "aws_security_group" "lb_sg" {
   name        = "eks-lb-sg"
   description = "Allow inbound traffic to the Load Balancer"
@@ -24,18 +33,6 @@ resource "aws_security_group" "lb_sg" {
   }
 }
 
-data "aws_security_group" "eks_cluster_sg" {
-  filter {
-    name   = "vpc-id"
-    values = [module.vpc.vpc_id]
-  }
-
-  filter {
-    name   = "group-name"
-    values = ["eks-cluster-sg-cluster-*"]
-  }
-}
-
 resource "aws_security_group_rule" "allow_alb_to_eks_nodes" {
   type                     = "ingress"
   from_port                = 80
@@ -45,4 +42,3 @@ resource "aws_security_group_rule" "allow_alb_to_eks_nodes" {
   source_security_group_id = aws_security_group.lb_sg.id
   description              = "Allow ALB to communicate with EKS worker nodes"
 }
-
