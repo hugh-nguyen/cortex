@@ -49,6 +49,11 @@ static_resources:
                             cluster: service-b-0-0-5
 
                         - match:
+                            prefix: "/b/"
+                          route:
+                            cluster: service-b-0-0-5
+
+                        - match:
                             prefix: "/"
                           direct_response:
                             status: 404
