@@ -21,7 +21,7 @@ spec:
     service:
       name: envoy
       port:
-        number: 80
+        number: 8080
   rules:
     - http:
         paths:
@@ -31,5 +31,5 @@ spec:
               service:
                 name: envoy
                 port:
-                  number: 80
+                  number: 8080
 
