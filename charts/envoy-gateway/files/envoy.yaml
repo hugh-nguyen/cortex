@@ -88,18 +88,18 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
-    - name: mfe-a-0-0-1
+    - name: mfe-a-0-0-2
       connect_timeout: 0.25s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
-        cluster_name: mfe-a-0-0-1
+        cluster_name: mfe-a-0-0-2
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: mfe-a-0-0-1
+                      address: mfe-a-0-0-2
                       port_value: 80
 
     - name: service-a-0-0-32
