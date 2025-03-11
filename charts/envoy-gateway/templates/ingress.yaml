@@ -8,8 +8,6 @@ metadata:
     alb.ingress.kubernetes.io/backend-protocol: "HTTP"
     alb.ingress.kubernetes.io/group.name: "eks-ingress-group"
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-    alb.ingress.kubernetes.io/security-groups: "sg-051c5cc26830ec14d"
-    alb.ingress.kubernetes.io/subnets: "subnet-0270f48a70d075565,subnet-078a9ee7309b60ef7"
     alb.ingress.kubernetes.io/healthcheck-path: "/ready"
     alb.ingress.kubernetes.io/healthcheck-port: "8081"
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "10"
