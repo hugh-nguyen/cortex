@@ -11,10 +11,10 @@ spec:
       app: {{ .Chart.Name }}
   template:
     metadata:
-      annotations:
-        configChecksum: {{ include (print $.Template.BasePath "/envoy.yaml") . | sha256sum }}
       labels:
         app: {{ .Chart.Name }}
+      annotations:
+        configChecksum: {{ .Files.Get "files/envoy.yaml" | sha256sum }}
     spec:
       containers:
         - name: envoy
@@ -31,4 +31,3 @@ spec:
         - name: envoy-config
           configMap:
             name: envoy-config
-            
