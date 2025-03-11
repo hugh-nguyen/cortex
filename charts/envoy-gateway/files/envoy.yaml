@@ -36,7 +36,6 @@ static_resources:
                             prefix: "/a/"
                           route:
                             cluster: service-a-0-0-32
-                            prefix_rewrite: "/api"
                             
                         - match:
                             prefix: "/b/"
