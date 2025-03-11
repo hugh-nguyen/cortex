@@ -43,7 +43,7 @@ static_resources:
                         - match:
                             prefix: "/mfe-a/"
                           route:
-                            cluster: mfe-a-0-0-2
+                            cluster: mfe-a-0-0-3
                             prefix_rewrite: "/" 
                             
                         - match:
@@ -88,18 +88,18 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
-    - name: mfe-a-0-0-2
+    - name: mfe-a-0-0-3
       connect_timeout: 0.25s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
-        cluster_name: mfe-a-0-0-2
+        cluster_name: mfe-a-0-0-3
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: mfe-a-0-0-2
+                      address: mfe-a-0-0-3
                       port_value: 80
 
     - name: service-a-0-0-32
