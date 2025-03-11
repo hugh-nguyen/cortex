@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: envoy
 spec:
-  type: LoadBalancer
+  type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: 8080
