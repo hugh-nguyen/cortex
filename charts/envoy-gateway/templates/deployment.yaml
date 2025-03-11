@@ -11,6 +11,8 @@ spec:
       app: {{ .Chart.Name }}
   template:
     metadata:
+      annotations:
+        configChecksum: {{ include (print $.Template.BasePath "/envoy.yaml") . | sha256sum }}
       labels:
         app: {{ .Chart.Name }}
     spec:
