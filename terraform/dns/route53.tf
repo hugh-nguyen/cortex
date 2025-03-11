@@ -4,19 +4,13 @@ data "aws_route53_zone" "hn_cortex_click" {
 }
 
 data "aws_lb" "ingress_alb" {
-  filter {
-    name   = "tag:elbv2.k8s.aws/cluster"
-    values = ["cluster"]
+  load_balancer_type = "application"
+
+  tags = {
+    "elbv2.k8s.aws/cluster"    = "cluster"
+    "ingress.k8s.aws/resource" = "LoadBalancer"
+    "ingress.k8s.aws/stack"    = "eks-ingress-group"
   }
-  filter {
-    name   = "tag:ingress.k8s.aws/resource"
-    values = ["LoadBalancer"]
-  }
-  filter {
-    name   = "tag:ingress.k8s.aws/stack"
-    values = ["eks-ingress-group"]
-  }
-  most_recent = true
 }
 
 resource "aws_route53_record" "hn_cortex_click_alias" {
