@@ -35,7 +35,7 @@ def create_application_manifests(service_configs):
             result[app] = {}
         result[app][svc] = {
             "version": sc["latest_tag"],
-            "depends_on": 'hugh-nguyen/service-b'
+            "depends_on": sc["service-dependencies"],
         }
     
     if os.path.exists("temp"):
@@ -56,7 +56,6 @@ def create_application_manifests(service_configs):
             latest_stack_number = int(manifests[-1].split("-")[-1])
             manifest_name = f"{app_name}/{app_name}-stack-{latest_stack_number}"
 
-        # x = [{k: v} for k, v in data.items()]
         print(yaml.dump(data, sort_keys=False))
         path = f"temp/cortex-stack-log/app-stacks/{manifest_name}.yaml"
         open(path, "w").write(yaml.dump(data, sort_keys=False))
