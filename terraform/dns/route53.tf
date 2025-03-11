@@ -4,8 +4,6 @@ data "aws_route53_zone" "hn_cortex_click" {
 }
 
 data "aws_lb" "ingress_alb" {
-  load_balancer_type = "application"
-
   tags = {
     "elbv2.k8s.aws/cluster"    = "cluster"
     "ingress.k8s.aws/resource" = "LoadBalancer"
