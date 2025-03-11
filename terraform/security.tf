@@ -6,7 +6,6 @@ data "aws_security_group" "eks_cluster_sg" {
   id = data.aws_eks_cluster.eks.vpc_config[0].cluster_security_group_id
 }
 
-# Security Group for the Load Balancer
 resource "aws_security_group" "lb_sg" {
   name        = "eks-lb-sg"
   description = "Allow inbound traffic to the Load Balancer"
@@ -17,7 +16,15 @@ resource "aws_security_group" "lb_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP traffic"
+    description = "Allow HTTP traffic on port 80"
+  }
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTP traffic on port 8080"
   }
 
   ingress {
@@ -39,6 +46,16 @@ resource "aws_security_group" "lb_sg" {
   tags = {
     Name = "eks-lb-sg"
   }
+}
+
+resource "aws_security_group_rule" "allow_alb_to_envoy_8080" {
+  type                     = "ingress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  security_group_id        = data.aws_security_group.eks_cluster_sg.id
+  source_security_group_id = aws_security_group.lb_sg.id
+  description              = "Allow ALB to communicate with Envoy on port 8080"
 }
 
 resource "aws_security_group_rule" "allow_alb_to_envoy_healthcheck" {
