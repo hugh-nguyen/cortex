@@ -1,5 +1,5 @@
 data "aws_eks_cluster" "eks" {
-  name = "cluster"  # Replace with your EKS cluster name
+  name = "cluster"
 }
 
 data "aws_security_group" "eks_cluster_sg" {
@@ -20,6 +20,14 @@ resource "aws_security_group" "lb_sg" {
     description = "Allow HTTP traffic"
   }
 
+  ingress {
+    from_port   = 8081
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow ALB health checks on port 8081"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -31,6 +39,16 @@ resource "aws_security_group" "lb_sg" {
   tags = {
     Name = "eks-lb-sg"
   }
+}
+
+resource "aws_security_group_rule" "allow_alb_to_envoy_healthcheck" {
+  type                     = "ingress"
+  from_port                = 8081
+  to_port                  = 8081
+  protocol                 = "tcp"
+  security_group_id        = data.aws_security_group.eks_cluster_sg.id
+  source_security_group_id = aws_security_group.lb_sg.id
+  description              = "Allow ALB to perform health checks on Envoy (port 8081)"
 }
 
 resource "aws_security_group_rule" "allow_alb_to_eks_nodes" {
