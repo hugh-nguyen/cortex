@@ -49,7 +49,6 @@ resource "aws_security_group" "lb_sg" {
 }
 
 resource "aws_security_group_rule" "allow_alb_to_envoy_8080" {
-  depends_on = [module.eks]
   type                     = "ingress"
   from_port                = 8080
   to_port                  = 8080
