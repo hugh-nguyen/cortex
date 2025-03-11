@@ -1,15 +1,29 @@
-resource "aws_route53_zone" "domain_zone" {
-  name = "hn-cortex.click"
+data "aws_route53_zone" "hn_cortex_click" {
+  name         = "hn-cortex.click"
+  private_zone = false
 }
 
 data "aws_lb" "ingress_alb" {
-  name = "k8s-eksingressgroup-e31e0db899-1610594416" 
+  filter {
+    name   = "tag:elbv2.k8s.aws/cluster"
+    values = ["cluster"]
+  }
+  filter {
+    name   = "tag:ingress.k8s.aws/resource"
+    values = ["LoadBalancer"]
+  }
+  filter {
+    name   = "tag:ingress.k8s.aws/stack"
+    values = ["eks-ingress-group"]
+  }
+  most_recent = true
 }
 
-resource "aws_route53_record" "domain_alias" {
-  zone_id = aws_route53_zone.my_domain_zone.zone_id
+resource "aws_route53_record" "hn_cortex_click_alias" {
+  zone_id = data.aws_route53_zone.hn_cortex_click.zone_id
   name    = "hn-cortex.click"
   type    = "A"
+
   alias {
     name                   = data.aws_lb.ingress_alb.dns_name
     zone_id                = data.aws_lb.ingress_alb.zone_id
