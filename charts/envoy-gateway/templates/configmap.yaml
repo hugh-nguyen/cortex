@@ -4,4 +4,4 @@ metadata:
   name: envoy-config
 data:
   envoy.yaml: |-
-    {{ .Files.Get "files/envoy.yaml" | indent 4 }}
+{{ .Files.Get "files/envoy.yaml" | indent 4 }}
