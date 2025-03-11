@@ -152,3 +152,17 @@ static_resources:
                     socket_address:
                       address: service-b-0-0-5
                       port_value: 80
+
+    - name: service-b-0-0-6
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: service-b-0-0-6
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: service-b-0-0-6
+                      port_value: 80
