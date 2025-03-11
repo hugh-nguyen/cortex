@@ -14,20 +14,12 @@ module "vpc" {
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = "1"
-<<<<<<< HEAD
     "kubernetes.io/cluster/cluster" = "shared"
-=======
-    "kubernetes.io/cluster/cluster" = "owned"
->>>>>>> main
   }
 
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = "1"
-<<<<<<< HEAD
     "kubernetes.io/cluster/cluster" = "shared"
-=======
-    "kubernetes.io/cluster/cluster" = "owned"
->>>>>>> main
   }
 }
 

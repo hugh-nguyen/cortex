@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 admin:
   access_log_path: /dev/null
   address:
@@ -6,19 +5,13 @@ admin:
       address: 0.0.0.0
       port_value: 8081
 
-=======
->>>>>>> main
 static_resources:
   listeners:
     - name: listener_0
       address:
         socket_address:
           address: 0.0.0.0
-<<<<<<< HEAD
           port_value: 8080
-=======
-          port_value: 80
->>>>>>> main
       filter_chains:
         - filters:
             - name: envoy.filters.network.http_connection_manager

@@ -33,7 +33,6 @@ static_resources:
 
                       routes:
                         - match:
-<<<<<<< HEAD
                             prefix: "/mfe-a/"
                             headers:
                               - name: "X-Stack-Version"
@@ -48,8 +47,6 @@ static_resources:
                             prefix_rewrite: "/" 
                             
                         - match:
-=======
->>>>>>> main
                             prefix: "/a/"
                           route:
                             cluster: service-a-0-0-32
