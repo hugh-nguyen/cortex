@@ -44,6 +44,7 @@ static_resources:
                             prefix: "/mfe-a/"
                           route:
                             cluster: mfe-a-0-0-1
+                            prefix_rewrite: "/" 
                             
                         - match:
                             prefix: "/a/"
