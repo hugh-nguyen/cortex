@@ -1,10 +1,17 @@
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 8081
+
 static_resources:
   listeners:
     - name: listener_0
       address:
         socket_address:
           address: 0.0.0.0
-          port_value: 80
+          port_value: 8080
       filter_chains:
         - filters:
             - name: envoy.filters.network.http_connection_manager
@@ -26,39 +33,51 @@ static_resources:
 
                       routes:
                         - match:
+                            prefix: "/mfe-a/"
+                            headers:
+                              - name: "X-Stack-Version"
+                                present_match: true
+                          route:
+                            cluster_header: "X-Stack-Version"
+
+                        - match:
+                            prefix: "/mfe-a/"
+                          route:
+                            cluster: mfe-a-0-0-3
+                            prefix_rewrite: "/" 
+                            
+                        - match:
                             prefix: "/a/"
                           route:
-                            cluster: service_a
+                            cluster: service-a-0-0-32
                             
                         - match:
                             prefix: "/b/"
                             headers:
                               - name: "X-Stack-Version"
                                 string_match:
-                                  exact: "1.0.1"
+                                  exact: "0.0.4"
                           route:
-                            cluster: service-b-0-0-1
+                            cluster: service-b-0-0-4
 
                         - match:
                             prefix: "/b/"
                             headers:
                               - name: "X-Stack-Version"
                                 string_match:
-                                  exact: "1.0.2"
+                                  exact: "0.0.5"
                           route:
-                            cluster: service-b-0-0-2
+                            cluster: service-b-0-0-5
 
                         - match:
                             prefix: "/b/"
                           route:
-                            cluster: service-b-0-0-1
-                            
+                            cluster: service-b-0-0-5
+
                         - match:
                             prefix: "/"
-                          direct_response:
-                            status: 404
-                            body:
-                              inline_string: "Invalid API Route"
+                          route:
+                            cluster: service-b-0-0-5
 
                 http_filters:
                   - name: envoy.filters.http.cors
@@ -69,44 +88,58 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
-    - name: service_a
+    - name: mfe-a-0-0-3
       connect_timeout: 0.25s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
-        cluster_name: service_a
+        cluster_name: mfe-a-0-0-3
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: service-a
+                      address: mfe-a-0-0-3
                       port_value: 80
 
-    - name: service-b-0-0-1
+    - name: service-a-0-0-32
       connect_timeout: 0.25s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
-        cluster_name: service-b-0-0-1
+        cluster_name: service-a-0-0-32
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: service-b-0-0-1
+                      address: service-a-0-0-32
                       port_value: 80
 
-    - name: service-b-0-0-2
+    - name: service-b-0-0-4
       connect_timeout: 0.25s
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
-        cluster_name: service-b-0-0-2
+        cluster_name: service-b-0-0-4
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: service-b-0-0-2
+                      address: service-b-0-0-4
+                      port_value: 80
+
+    - name: service-b-0-0-5
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: service-b-0-0-5
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: service-b-0-0-5
                       port_value: 80

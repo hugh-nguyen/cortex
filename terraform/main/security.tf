@@ -1,11 +1,3 @@
-data "aws_eks_cluster" "eks" {
-  name = "cluster"
-}
-
-data "aws_security_group" "eks_cluster_sg" {
-  id = data.aws_eks_cluster.eks.vpc_config[0].cluster_security_group_id
-}
-
 resource "aws_security_group" "lb_sg" {
   name        = "eks-lb-sg"
   description = "Allow inbound traffic to the Load Balancer"
@@ -53,7 +45,7 @@ resource "aws_security_group_rule" "allow_alb_to_envoy_8080" {
   from_port                = 8080
   to_port                  = 8080
   protocol                 = "tcp"
-  security_group_id        = data.aws_security_group.eks_cluster_sg.id
+  security_group_id        = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
   source_security_group_id = aws_security_group.lb_sg.id
   description              = "Allow ALB to communicate with Envoy on port 8080"
 }
@@ -63,7 +55,7 @@ resource "aws_security_group_rule" "allow_alb_to_envoy_healthcheck" {
   from_port                = 8081
   to_port                  = 8081
   protocol                 = "tcp"
-  security_group_id        = data.aws_security_group.eks_cluster_sg.id
+  security_group_id        = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
   source_security_group_id = aws_security_group.lb_sg.id
   description              = "Allow ALB to perform health checks on Envoy (port 8081)"
 }
@@ -73,7 +65,7 @@ resource "aws_security_group_rule" "allow_alb_to_eks_nodes" {
   from_port                = 80
   to_port                  = 80
   protocol                 = "tcp"
-  security_group_id        = data.aws_security_group.eks_cluster_sg.id
+  security_group_id        = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
   source_security_group_id = aws_security_group.lb_sg.id
   description              = "Allow ALB to communicate with EKS worker nodes"
 }

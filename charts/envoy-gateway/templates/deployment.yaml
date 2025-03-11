@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         app: {{ .Chart.Name }}
+      annotations:
+        configChecksum: {{ .Files.Get "files/envoy.yaml" | sha256sum }}
     spec:
       containers:
         - name: envoy
@@ -29,4 +31,3 @@ spec:
         - name: envoy-config
           configMap:
             name: envoy-config
-            
