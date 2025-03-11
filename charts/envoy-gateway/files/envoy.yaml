@@ -62,10 +62,8 @@ static_resources:
 
                         - match:
                             prefix: "/"
-                          direct_response:
-                            status: 404
-                            body:
-                              inline_string: "Invalid API Route"
+                          route:
+                            cluster: service-b-0-0-5
 
                 http_filters:
                   - name: envoy.filters.http.cors
