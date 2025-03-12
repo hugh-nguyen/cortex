@@ -89,6 +89,15 @@ static_resources:
 
                         - match:
                             prefix: "/b/"
+                            headers:
+                              - name: "X-Stack-Version"
+                                string_match:
+                                  exact: "0.0.8"
+                          route:
+                            cluster: service-b-0-0-8
+
+                        - match:
+                            prefix: "/b/"
                           route:
                             cluster: service-b-0-0-4
 
@@ -188,4 +197,18 @@ static_resources:
                   address:
                     socket_address:
                       address: service-b-0-0-7
+                      port_value: 80
+
+    - name: service-b-0-0-8
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: service-b-0-0-8
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: service-b-0-0-8
                       port_value: 80
