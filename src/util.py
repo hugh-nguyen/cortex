@@ -10,6 +10,23 @@ HEADERS = {
     "Accept": "application/vnd.github.v3+json"
 }
 
+def get_service_configs(repository_data):
+    base_dir = "temp"
+    result = {}
+
+    for repo in repository_data:
+        if "iac" in repo["name"]:
+            continue
+        repo_name = repo["name"]
+        with open(f"temp/{repo['name']}/meta.yaml", "r") as f:
+            data = yaml.safe_load(f)
+            result[repo_name] = {
+                "name": repo_name,
+                "latest_tag": get_latest_tag(repo["full_name"]),
+                **data,
+            }
+    return result
+
 def get_endpoint_data(endpoint, headers={}, index=""):
     try:
         result = requests.get(endpoint, verify=CERT_PATH, headers=HEADERS, timeout=10).json()
@@ -31,6 +48,7 @@ def get_repositories(org, prefix=None):
         endpoint = f"{GITHUB_ENDPOINT}/users/{org}/repos?page={page}&per_page=100" # replace users with orgs
         result += get_endpoint_data(endpoint)
         page += 1
+    print([r["name"] for r in result])
     return [r for r in result if r["name"].startswith(prefix)]
 
 
@@ -44,8 +62,8 @@ def clone_or_pull(repo_name, clone_url):
         subprocess.run(["git", "-C", repo_path, "pull"], check=True)
 
 
-def get_latest_tag(repo_name):
-    url = f"{GITHUB_ENDPOINT}/repos/{repo_name}/tags"
+def get_latest_tag(repo_full_name):
+    url = f"{GITHUB_ENDPOINT}/repos/{repo_full_name}/tags"
     result = get_endpoint_data(url)
     if result:
         return result[0]["name"]
