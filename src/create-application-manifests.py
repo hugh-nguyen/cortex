@@ -10,9 +10,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--clone', action='store_true')
 args = parser.parse_args()
 
-repository_data = get_repositories("hugh-nguyen", "app1")
-repository_data += get_repositories("hugh-nguyen", "shared-app")
+app_lookup = set(["app1", "shared-app"])
 
+def find_app_from_full_name(name):
+    print(name)
+    result = name
+    while result:
+        result = "-".join(result.split("-")[:-1])
+        print(result)
+        if result in app_lookup:
+            return result
+    return result
+
+repository_data = []
+for app in list(app_lookup):
+    print(app)
+    repository_data += get_repositories("hugh-nguyen", app)
 
 if args.clone:
     print("===========Clone Repositories===========")
@@ -35,9 +48,15 @@ for sc in service_configs.values():
     if app not in application_configs:
         application_configs[app] = {}
     application_configs[app][svc] = {
+        "app_name": app,
+        "service_name": svc,
         "version": sc["latest_tag"],
         "depends_on": [
-            {"service": d, "version": service_configs[d]["latest_tag"]}
+            {
+                "app_name": find_app_from_full_name(d),
+                "service_name": d.replace(find_app_from_full_name(d)+"-", ""), 
+                "version": service_configs[d]["latest_tag"]
+            }
             for d in sc["service-dependencies"]
         ]
     }
@@ -65,9 +84,9 @@ for app_name, data in application_configs.items():
         manifest_name = f"{app_name}/{app_name}-manifest-{latest_manifest_number+1}"
     print("!manifest_name", manifest_name)
 
-    print(yaml.dump(data, sort_keys=False))
+    print(yaml.dump(list(data.values()), sort_keys=False))
     path = f"temp/cortex-stack-log/app-manifests/{manifest_name}.yaml"
-    open(path, "w").write(yaml.dump(data, sort_keys=False))
+    open(path, "w").write(yaml.dump(list(data.values()), sort_keys=False))
 
 
 print("===========Storing Manifests===========")

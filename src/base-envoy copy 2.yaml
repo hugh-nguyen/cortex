@@ -28,43 +28,79 @@ static_resources:
                         allow_origin_string_match:
                           - exact: "*"
                         allow_methods: "GET, POST, OPTIONS"
-                        allow_headers: "X-Stack-Version, Content-Type"
-                        expose_headers: "X-Stack-Version"
+                        allow_headers: "X-App-Stack-Version, Content-Type"
+                        expose_headers: "X-App-Stack-Version"
 
                       routes:
-                            
+                        
                         - match:
-                            prefix: "/a/"
-                          route:
-                            cluster: service-a-0-0-32
-                            
-                        - match:
-                            prefix: "/b/"
+                            prefix: "/app1/service-a/"
                             headers:
-                              - name: "X-Stack-Version"
+                              - name: "X-App-Stack-Version"
                                 string_match:
-                                  exact: "0.0.4"
+                                  exact: "1"
                           route:
-                            cluster: service-b-0-0-4
+                            cluster: app1-service-a-0-0-30
+                        
+                        - match:
+                            prefix: "/app1/service-b/"
+                            headers:
+                              - name: "X-App-Stack-Version"
+                                string_match:
+                                  exact: "1"
+                          route:
+                            cluster: app1-service-b-0-0-4
 
                         - match:
-                            prefix: "/b/"
+                            prefix: "/shared/service-s/"
                             headers:
-                              - name: "X-Stack-Version"
+                              - name: "X-App-Stack-Version"
                                 string_match:
-                                  exact: "0.0.5"
+                                  exact: "1"
                           route:
-                            cluster: service-b-0-0-5
+                            cluster: app1-service-s-0-0-1
+                        
+                        - match:
+                            prefix: "/app1/service-a/"
+                            headers:
+                              - name: "X-App-Stack-Version"
+                                string_match:
+                                  exact: "2"
+                          route:
+                            cluster: app1-service-a-0-0-32
+                        
+                        - match:
+                            prefix: "/app1/service-a/"
+                          route:
+                            cluster: app1-service-a-0-0-32
 
                         - match:
-                            prefix: "/b/"
+                            prefix: "/app1/service-b/"
+                            headers:
+                              - name: "X-App-Stack-Version"
+                                string_match:
+                                  exact: "2"
                           route:
-                            cluster: service-b-0-0-5
+                            cluster: app1-service-b-0-0-5
+
+                        - match:
+                            prefix: "/app1/service-b/"
+                          route:
+                            cluster: app1-service-b-0-0-5
+                        
+                        - match:
+                            prefix: "/shared/service-s/"
+                            headers:
+                              - name: "X-App-Stack-Version"
+                                string_match:
+                                  exact: "2"
+                          route:
+                            cluster: app1-service-s-0-0-1
 
                         - match:
                             prefix: "/"
                           route:
-                            cluster: service-b-0-0-5
+                            cluster: app1-service-a-0-0-30
 
                 http_filters:
                   - name: envoy.filters.http.cors
