@@ -32,38 +32,22 @@ resource "aws_eks_cluster" "main" {
   }
 }
 
-resource "aws_launch_template" "node_lt" {
-  name_prefix = "my-node-lt-"
-
-  user_data = base64encode(
-    <<-EOF
-      #!/bin/bash
-      /etc/eks/bootstrap.sh cluster-name --use-max-pods false
-    EOF
-  )
-
-  image_id      = data.aws_ami.eks_worker.id
-  instance_type = "t3.micro"
-}
-
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "main-node-group"
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = module.vpc.private_subnets
 
-  launch_template {
-    id      = aws_launch_template.node_lt.id
-    version = "$Latest"
-  }
-
   scaling_config {
-    desired_size = 3
-    max_size     = 3
+    desired_size = 4
+    max_size     = 6
     min_size     = 1
   }
-}
 
+  instance_types = ["t3.micro"]
+
+  depends_on = [aws_iam_role_policy_attachment.node_policy]
+}
 
 resource "aws_iam_role" "node" {
   name = "eks-node-group-role"
