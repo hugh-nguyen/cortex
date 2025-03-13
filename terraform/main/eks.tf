@@ -32,25 +32,6 @@ resource "aws_eks_cluster" "main" {
   }
 }
 
-resource "aws_launch_template" "eks_node_template" {
-  name_prefix   = "eks-node-template-"
-  instance_type = "t3.micro"  # Keep using t3.micro as requested
-
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    set -o xtrace
-    /etc/eks/bootstrap.sh ${aws_eks_cluster.main.name} --kubelet-extra-args '--max-pods=35'
-    EOF
-  )
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name = "EKS-Worker-Node"
-    }
-  }
-}
-
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "main-node-group"
@@ -58,14 +39,15 @@ resource "aws_eks_node_group" "main" {
   subnet_ids      = module.vpc.private_subnets
 
   scaling_config {
-    desired_size = 3
-    max_size     = 4
-    min_size     = 1
+    desired_size = 4 
+    max_size     = 5
+    min_size     = 3
   }
 
-  launch_template {
-    id      = aws_launch_template.eks_node_template.id
-    version = "$Latest"
+  instance_types = ["t3.micro"]
+
+  kubelet_config {
+    max_pods = 35
   }
 
   depends_on = [aws_iam_role_policy_attachment.node_policy]
