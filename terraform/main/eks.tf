@@ -32,6 +32,26 @@ resource "aws_eks_cluster" "main" {
   }
 }
 
+# Launch template for custom max pods
+resource "aws_launch_template" "eks_node_template" {
+  name_prefix   = "eks-node-template-"
+  instance_type = "t3.micro"  # Keep using t3.micro as requested
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    set -o xtrace
+    /etc/eks/bootstrap.sh ${aws_eks_cluster.main.name} --kubelet-extra-args '--max-pods=35'
+    EOF
+  )
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "EKS-Worker-Node"
+    }
+  }
+}
+
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "main-node-group"
@@ -44,7 +64,10 @@ resource "aws_eks_node_group" "main" {
     min_size     = 1
   }
 
-  instance_types = ["t3.micro"]
+  launch_template {
+    id      = aws_launch_template.eks_node_template.id
+    version = "$Latest"
+  }
 
   depends_on = [aws_iam_role_policy_attachment.node_policy]
 }
@@ -63,101 +86,3 @@ resource "aws_iam_role" "node" {
     }]
   })
 }
-
-resource "aws_iam_role_policy_attachment" "nodes_ecr" {
-  role       = aws_iam_role.node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-resource "aws_iam_role_policy_attachment" "node_worker_policy" {
-  role       = aws_iam_role.node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "node_cni_policy" {
-  role       = aws_iam_role.node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-}
-
-resource "aws_iam_role_policy_attachment" "node_ecr_policy" {
-  role       = aws_iam_role.node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-resource "aws_iam_role_policy_attachment" "node_policy" {
-  role       = aws_iam_role.node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-}
-
-resource "aws_iam_role" "cluster_role" {
-  name = "eks-cluster-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "eks.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  role       = aws_iam_role.cluster_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_service_policy" {
-  role       = aws_iam_role.cluster_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-}
-
-resource "aws_iam_policy" "aws_lb_controller_additional" {
-  name        = "AWSLoadBalancerControllerAdditionalPermissions"
-  description = "Additional permissions for AWS Load Balancer Controller"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = [
-          "ec2:*",
-          "elasticloadbalancing:*"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect   = "Allow",
-        Action   = [
-          "elasticloadbalancing:*"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect   = "Allow",
-        Action   = [
-          "shield:*"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect   = "Allow",
-        Action   = [
-          "wafv2:*",
-          "waf-regional:*"
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-
-resource "aws_iam_role_policy_attachment" "aws_lb_controller_extra_permissions" {
-  role       = aws_iam_role.aws_lb_controller_role.name
-  policy_arn = aws_iam_policy.aws_lb_controller_additional.arn
-}
-
