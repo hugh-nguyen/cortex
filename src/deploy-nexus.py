@@ -67,7 +67,7 @@ print()
 
 envoy_config["static_resources"]["listeners"] \
     [0]["filter_chains"][0]["filters"][0]["typed_config"] \
-    ["route_config"]["virtual_hosts"][0]["routes"] = 
+    ["route_config"]["virtual_hosts"][0]["routes"] = []
 
 # clusters = []
 # envoy_config["static_resources"]["clusters"] = clusters

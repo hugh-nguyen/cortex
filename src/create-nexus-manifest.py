@@ -30,7 +30,7 @@ for app_stack in app_stacks:
     app_stack_path = f"{log_dir}/{app_stack}"
     for service in yaml.safe_load(open(app_stack_path, "r").read()):
         print(service)
-        nexus
+        nexus.append()
     # content = {
     #     **data,
     #     app_stack_version: app_stack.split(".")[0].split("-")[-1]
