@@ -30,7 +30,151 @@ static_resources:
                 allow_methods: GET, POST, OPTIONS
                 allow_headers: X-Stack-Version, Content-Type
                 expose_headers: X-Stack-Version
-              routes: []
+              routes:
+              - match:
+                  prefix: /app1/service-a/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /app1/service-a/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                  - name: X-App-Version
+                    string_match:
+                      exact: 2
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /app1/service-b/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: app1-service-b-0-0-7
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /app1/service-b/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                  - name: X-App-Version
+                    string_match:
+                      exact: 2
+                route:
+                  cluster: app1-service-b-0-0-8
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /app2/service-y/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app2
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: app2-service-y-0-0-1
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                  - name: X-App-Version
+                    string_match:
+                      exact: 2
+                route:
+                  cluster: shared-app-service-s-0-0-5
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app2
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app2
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: shared-app-service-s-0-0-5
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: shared-app
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: shared-app
+                  - name: X-App-Version
+                    string_match:
+                      exact: 1
+                route:
+                  cluster: shared-app-service-s-0-0-5
+                  prefix_rewrite: ''
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: shared-app
+                  - name: X-App-Version
+                    string_match:
+                      exact: 2
+                route:
+                  cluster: shared-app-service-s-0-0-5
+                  prefix_rewrite: ''
           http_filters:
           - name: envoy.filters.http.cors
             typed_config:

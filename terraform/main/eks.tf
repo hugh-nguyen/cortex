@@ -5,15 +5,14 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
 
-  name                 = "eks-vpc"
-  cidr                 = "10.0.0.0/16"
-  azs                  = ["ap-southeast-2a", "ap-southeast-2b"]
-  private_subnets      = ["10.0.101.0/24", "10.0.102.0/24"]
-  public_subnets       = ["10.0.1.0/24",  "10.0.2.0/24"]
+  name            = "eks-vpc"
+  cidr            = "10.0.0.0/16"
+  azs             = ["ap-southeast-2a", "ap-southeast-2b"]
+  private_subnets = ["10.0.101.0/24", "10.0.102.0/24"]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
 
-  # Disable NAT Gateway
+  # Disable NAT Gateway (we're routing to AWS services via VPC endpoints)
   enable_nat_gateway   = false
-  # single_nat_gateway = true  # No longer needed
 
   enable_dns_hostnames = true
 
@@ -31,8 +30,6 @@ module "vpc" {
 ###############################################################################
 # Security Group for Interface Endpoints
 ###############################################################################
-# This SG will allow inbound HTTPS (443) from within your VPC CIDR so the
-# private subnets can talk to the interface endpoints. Outbound is unrestricted.
 resource "aws_security_group" "vpc_endpoints" {
   name        = "vpc-endpoints-sg"
   description = "Allow HTTPS from VPC to interface endpoints"
@@ -62,12 +59,11 @@ resource "aws_security_group" "vpc_endpoints" {
 ###############################################################################
 # Interface Endpoints for ECR (API + DKR) and STS
 ###############################################################################
-# ECR API Endpoint
 resource "aws_vpc_endpoint" "ecr_api" {
-  vpc_id            = module.vpc.vpc_id
-  service_name      = "com.amazonaws.ap-southeast-2.ecr.api"
-  vpc_endpoint_type = "Interface"
-  subnet_ids        = module.vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
+  service_name       = "com.amazonaws.ap-southeast-2.ecr.api"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = module.vpc.private_subnets
   security_group_ids = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
 
@@ -76,12 +72,11 @@ resource "aws_vpc_endpoint" "ecr_api" {
   }
 }
 
-# ECR DKR Endpoint (actual Docker registry)
 resource "aws_vpc_endpoint" "ecr_dkr" {
-  vpc_id            = module.vpc.vpc_id
-  service_name      = "com.amazonaws.ap-southeast-2.ecr.dkr"
-  vpc_endpoint_type = "Interface"
-  subnet_ids        = module.vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
+  service_name       = "com.amazonaws.ap-southeast-2.ecr.dkr"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = module.vpc.private_subnets
   security_group_ids = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
 
@@ -90,12 +85,11 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   }
 }
 
-# STS Endpoint (for assuming IAM roles in private subnets)
 resource "aws_vpc_endpoint" "sts" {
-  vpc_id            = module.vpc.vpc_id
-  service_name      = "com.amazonaws.ap-southeast-2.sts"
-  vpc_endpoint_type = "Interface"
-  subnet_ids        = module.vpc.private_subnets
+  vpc_id             = module.vpc.vpc_id
+  service_name       = "com.amazonaws.ap-southeast-2.sts"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = module.vpc.private_subnets
   security_group_ids = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
 
@@ -107,8 +101,6 @@ resource "aws_vpc_endpoint" "sts" {
 ###############################################################################
 # Gateway Endpoint for S3
 ###############################################################################
-# If your workloads need to pull or push to S3 (for example, some images, logs),
-# you can use a Gateway endpoint to keep traffic inside AWS without NAT.
 resource "aws_vpc_endpoint" "s3" {
   vpc_id            = module.vpc.vpc_id
   service_name      = "com.amazonaws.ap-southeast-2.s3"
@@ -121,7 +113,7 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 ###############################################################################
-# EKS Cluster (Upgraded to 1.32)
+# EKS Cluster (Upgraded to 1.32 with Private Endpoint Enabled)
 ###############################################################################
 resource "aws_eks_cluster" "main" {
   name    = "cluster"
@@ -130,7 +122,10 @@ resource "aws_eks_cluster" "main" {
   role_arn = aws_iam_role.cluster_role.arn
 
   vpc_config {
-    subnet_ids = module.vpc.private_subnets
+    subnet_ids              = module.vpc.private_subnets
+    # Enable private endpoint so nodes in private subnets can connect
+    endpoint_public_access  = false
+    endpoint_private_access = true
   }
 }
 
