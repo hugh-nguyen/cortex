@@ -80,9 +80,6 @@ def create_cluster(name, port=80):
 
 envoy_config = yaml.safe_load(open("base-envoy.yaml", "r").read())
 
-
-
-
 envoy_clusters = []
 for s in services:
     app, svc, ver = s["app"], s["svc"], s["ver"]
