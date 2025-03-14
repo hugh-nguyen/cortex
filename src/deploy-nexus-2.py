@@ -97,9 +97,9 @@ envoy_config["static_resources"]["listeners"] \
     ["route_config"]["virtual_hosts"][0]["routes"] = envoy_routes
 open("envoy.yaml", "w").write(yaml.dump(envoy_config, sort_keys=False))
 
-subprocess.run([
-    "helm",
-    "upgrade",
-    "envoy",
-    "./envoy.yaml"
-], check=True)
+# subprocess.run([
+#     "helm",
+#     "upgrade",
+#     "envoy",
+#     "./envoy.yaml"
+# ], check=True)
