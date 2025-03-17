@@ -1,0 +1,33 @@
+app1-service-a:
+  application-name: app1
+  latest_tag: 0.0.36
+  name: app1-service-a
+  service-dependencies:
+  - app: app1
+    svc: service-b
+    ver: 0.0.8
+  service-name: service-a
+app1-service-b:
+  application-name: app1
+  latest_tag: 0.0.8
+  name: app1-service-b
+  service-dependencies:
+  - app: shared-app
+    svc: service-s
+    ver: 0.0.5
+  service-name: service-b
+app2-service-y:
+  application-name: app2
+  latest_tag: 0.0.1
+  name: app2-service-y
+  service-dependencies:
+  - app: shared-app
+    svc: service-s
+    ver: 0.0.4
+  service-name: service-y
+shared-app-service-s:
+  application-name: shared-app
+  latest_tag: 0.0.5
+  name: shared-app-service-s
+  service-dependencies: []
+  service-name: service-s

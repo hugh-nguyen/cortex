@@ -1,0 +1,14 @@
+- app: app1
+  svc: service-a
+  ver: 0.0.36
+  depends_on:
+  - app: app1
+    svc: service-b
+    ver: 0.0.7
+- app: app1
+  svc: service-b
+  ver: 0.0.7
+  depends_on:
+  - app: shared-app
+    svc: service-s
+    ver: 0.0.4

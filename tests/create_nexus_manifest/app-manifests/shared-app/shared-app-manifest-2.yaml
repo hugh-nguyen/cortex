@@ -1,0 +1,4 @@
+- app: shared-app
+  svc: service-s
+  ver: 0.0.5
+  depends_on: []

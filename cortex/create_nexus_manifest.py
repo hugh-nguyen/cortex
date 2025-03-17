@@ -1,10 +1,5 @@
 import os, yaml, subprocess
-from util import *
-
-# if os.path.exists("temp"):
-#     subprocess.run(["rm", "-rf", "temp/cortex-stack-log"], check=True)
-# subprocess.run(["git", "clone", STACK_LOG_URL, "temp/cortex-stack-log"], check=True)
-# subprocess.run(["git", "-C", "temp/cortex-stack-log", "checkout", "model"], check=True)
+from cortex.util import *
 
 def create_deployment(deployment):
     return {
@@ -42,9 +37,9 @@ def nexus_route_sort_key(route):
     )
 
 
-def create_nexus_manifest(path_to_app_manifests):
+def create_nexus_manifest(path_to_manifests):
 
-    app_manifest_file_paths = get_all_files(path_to_app_manifests)
+    app_manifest_file_paths = get_all_files(f"{path_to_manifests}/app-manifests")
 
     nexus_services = []
     nexus_routes = []
@@ -97,17 +92,22 @@ def create_nexus_manifest(path_to_app_manifests):
     nexus_routes = [yaml.safe_load(r) for r in nexus_routes]
     nexus_routes = sorted(nexus_routes, key=nexus_route_sort_key)
 
-    return {"services": nexus_services, "routes": nexus_routes}
+    new_manifest = {"services": nexus_services, "routes": nexus_routes}
+    return diff_and_name_manifest(
+        f"{path_to_manifests}/nexus-manifests",
+        yaml.dump(new_manifest, sort_keys=False)
+    )
 
 
 if __name__ == '__main__':
-    nexus_manifest = create_nexus_manifest("temp/cortex-stack-log/app-manifests")
 
-    existing_nexus_manifests = os.listdir("temp/cortex-stack-log/nexus-manifests")
-    latest_number = int(sorted([f[0:-5] for f in existing_nexus_manifests])[-1].split("-")[-1])
-    latest_manifest = open(f"temp/cortex-stack-log/nexus-manifests/{sorted(existing_nexus_manifests)[-1]}", "r").read()
+    clone_repo(DEPLOY_LOG_URL, "temp/cortex-deploy-log")
 
-    new_manifest = yaml.dump(nexus_manifest, sort_keys=False)
-    if latest_manifest != new_manifest:
-        path = f"temp/cortex-stack-log/nexus-manifests/nexus-manifest-{latest_number+1}.yaml"
-        open(path, "w").write(new_manifest)
+    nexus_manifest = create_nexus_manifest("temp/cortex-deploy-log")
+    if nexus_manifest:
+        open(nexus_manifest["path"], "w").write(nexus_manifest["manifest"])
+
+    push_repo(
+        "github.com/hugh-nguyen/cortex-deploy-log.git", 
+        "temp/cortex-deploy-log"
+    )

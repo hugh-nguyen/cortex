@@ -2,7 +2,7 @@ import os, requests, subprocess, yaml
 
 
 GITHUB_ENDPOINT = "https://api.github.com"
-STACK_LOG_URL = "https://github.com/hugh-nguyen/cortex-stack-log.git"
+DEPLOY_LOG_URL = "https://github.com/hugh-nguyen/cortex-deploy-log.git"
 GH_PERSONAL_TOKEN = os.environ.get("GH_PERSONAL_TOKEN")
 CERT_PATH = os.environ.get("CERT_PATH", None)
 HEADERS = {
@@ -90,3 +90,52 @@ def get_latest_tag(repo_full_name):
         return result[0]["name"]
     else:
         return None
+
+
+def diff_and_name_manifest(path_to_existing_manifests, new_manifest):
+    existing_manifests = os.listdir(path_to_existing_manifests)
+    print(existing_manifests)
+    print("-=====")
+    latest_manifest_number = 1
+    
+    if existing_manifests:
+        latest_manifest_filename = sorted(existing_manifests)[-1]
+        latest_manifest_number = int(
+            latest_manifest_filename.removesuffix(".yaml").split("-")[-1]
+        )
+        latest_manifest_path = "{}/{}".format(
+            path_to_existing_manifests,
+            latest_manifest_filename
+        )
+        latest_manifest = open(latest_manifest_path, "r").read()
+
+    if not existing_manifests or latest_manifest != new_manifest:
+        new_manifest_path = "{}/{}-manifest-{}.yaml".format(
+            path_to_existing_manifests,
+            path_to_existing_manifests.split("/")[-1].split("-")[0],
+            latest_manifest_number+1
+        )
+        return {
+            "path": new_manifest_path,
+            "manifest": new_manifest
+        }
+    return None
+
+
+def clone_repo(url, path):
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", path], check=True)
+    subprocess.run(["git", "clone", url, path], check=True)
+
+
+def push_repo(url, path):
+    os.chdir(path)
+    subprocess.run(["git", "add", "."], check=True)
+    commit_message = f"Update {manifest_name}"
+    try:
+        subprocess.run(["git", "commit", "-m", commit_message], check=True)
+        new_remote = f"https://{GH_PERSONAL_TOKEN}@{url}"
+        subprocess.run(["git", "remote", "set-url", "origin", new_remote], check=True)
+        subprocess.run(["git", "push"], check=True)
+    except subprocess.CalledProcessError as e:
+        print("No changes to commit or error occurred:", e)
