@@ -1,0 +1,13 @@
+name: {0}
+connect_timeout: 0.25s
+type: STRICT_DNS
+lb_policy: ROUND_ROBIN
+load_assignment:
+  cluster_name: {0}
+  endpoints:
+  - lb_endpoints:
+    - endpoint:
+        address:
+          socket_address:
+            address: {0}
+            port_value: {1}

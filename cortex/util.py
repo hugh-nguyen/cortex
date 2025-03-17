@@ -10,15 +10,36 @@ HEADERS = {
     "Accept": "application/vnd.github.v3+json"
 }
 
-def get_service_configs(repository_data):
+app_lookup = set(["app1", "app2", "shared-app"])
+
+def get_all_files(directory):
+    file_list = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            file_list.append(file_path)
+
+    return file_list
+
+def get_service_configs(args):
+    repositories = [r for r in get_repositories("hugh-nguyen") if any(r["name"].startswith(app) for app in app_lookup)]
+
+    if args.clone:
+        print("===========Clone Repositories===========")
+        if os.path.exists("temp"):
+            subprocess.run(["rm", "-rf", "temp"], check=True)
+            os.makedirs("temp")
+        for repo in repositories:
+            clone_or_pull(repo["name"], repo["clone_url"])
+
     base_dir = "temp"
     result = {}
 
-    for repo in repository_data:
+    for repo in repositories:
         if "iac" in repo["name"]:
             continue
         repo_name = repo["name"]
-        with open(f"temp/{repo['name']}/meta.yaml", "r") as f:
+        with open(f"temp/{repo['name']}/cortex.yaml", "r") as f:
             data = yaml.safe_load(f)
             result[repo_name] = {
                 "name": repo_name,
@@ -26,6 +47,7 @@ def get_service_configs(repository_data):
                 **data,
             }
     return result
+
 
 def get_endpoint_data(endpoint, headers={}, index=""):
     try:
@@ -39,7 +61,7 @@ def get_endpoint_data(endpoint, headers={}, index=""):
     return result
 
 
-def get_repositories(org, prefix=None):
+def get_repositories(org):
     result = []
     prevlen = -1
     page = 1
@@ -48,8 +70,7 @@ def get_repositories(org, prefix=None):
         endpoint = f"{GITHUB_ENDPOINT}/users/{org}/repos?page={page}&per_page=100" # replace users with orgs
         result += get_endpoint_data(endpoint)
         page += 1
-    print([r["name"] for r in result])
-    return [r for r in result if r["name"].startswith(prefix)]
+    return result
 
 
 def clone_or_pull(repo_name, clone_url):

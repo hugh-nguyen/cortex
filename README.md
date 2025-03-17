@@ -1,2 +1,2 @@
 # cortex
-test change
+source .env

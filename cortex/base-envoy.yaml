@@ -31,7 +31,7 @@ static_resources:
                         allow_headers: "X-Stack-Version, Content-Type"
                         expose_headers: "X-Stack-Version"
 
-                      routes: []
+                      routes: {0}
 
                 http_filters:
                   - name: envoy.filters.http.cors
@@ -41,4 +41,4 @@ static_resources:
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
-  clusters: []
+  clusters: {1}

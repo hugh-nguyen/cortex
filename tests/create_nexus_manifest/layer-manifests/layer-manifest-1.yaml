@@ -1,0 +1,19 @@
+- app: app1
+  app_ver: 1
+  svc: service-a
+  svc_ver: 0.0.36
+- app: app1
+  app_ver: 1
+  svc: service-b
+  svc_ver: 0.0.7
+- app: app2
+  app_ver: 1
+  svc: service-y
+  svc_ver: 0.0.1
+- app: shared-app
+  app_ver: 1
+  svc: service-s
+  svc_ver: 0.0.4
+  required_by:
+    - app1
+    - app2

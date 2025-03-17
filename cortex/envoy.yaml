@@ -39,10 +39,10 @@ static_resources:
                       exact: app1
                   - name: X-App-Version
                     string_match:
-                      exact: 1
+                      exact: '1'
                 route:
                   cluster: app1-service-a-0-0-36
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
               - match:
                   prefix: /app1/service-a/
                   headers:
@@ -51,10 +51,24 @@ static_resources:
                       exact: app1
                   - name: X-App-Version
                     string_match:
-                      exact: 2
+                      exact: '2'
                 route:
                   cluster: app1-service-a-0-0-36
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
+              - match:
+                  prefix: /app1/service-a/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: /
+              - match:
+                  prefix: /app1/service-a/
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: /
               - match:
                   prefix: /app1/service-b/
                   headers:
@@ -63,10 +77,10 @@ static_resources:
                       exact: app1
                   - name: X-App-Version
                     string_match:
-                      exact: 1
+                      exact: '1'
                 route:
                   cluster: app1-service-b-0-0-7
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
               - match:
                   prefix: /app1/service-b/
                   headers:
@@ -75,10 +89,24 @@ static_resources:
                       exact: app1
                   - name: X-App-Version
                     string_match:
-                      exact: 2
+                      exact: '2'
                 route:
                   cluster: app1-service-b-0-0-8
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
+              - match:
+                  prefix: /app1/service-b/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                route:
+                  cluster: app1-service-b-0-0-7
+                  prefix_rewrite: /
+              - match:
+                  prefix: /app1/service-b/
+                route:
+                  cluster: app1-service-b-0-0-7
+                  prefix_rewrite: /
               - match:
                   prefix: /app2/service-y/
                   headers:
@@ -87,10 +115,24 @@ static_resources:
                       exact: app2
                   - name: X-App-Version
                     string_match:
-                      exact: 1
+                      exact: '1'
                 route:
                   cluster: app2-service-y-0-0-1
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
+              - match:
+                  prefix: /app2/service-y/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app2
+                route:
+                  cluster: app2-service-y-0-0-1
+                  prefix_rewrite: /
+              - match:
+                  prefix: /app2/service-y/
+                route:
+                  cluster: app2-service-y-0-0-1
+                  prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
                   headers:
@@ -99,10 +141,10 @@ static_resources:
                       exact: app1
                   - name: X-App-Version
                     string_match:
-                      exact: 1
+                      exact: '1'
                 route:
                   cluster: shared-app-service-s-0-0-4
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
                   headers:
@@ -111,10 +153,19 @@ static_resources:
                       exact: app1
                   - name: X-App-Version
                     string_match:
-                      exact: 2
+                      exact: '2'
                 route:
                   cluster: shared-app-service-s-0-0-5
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                route:
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
                   headers:
@@ -123,34 +174,19 @@ static_resources:
                       exact: app2
                   - name: X-App-Version
                     string_match:
-                      exact: 1
+                      exact: '1'
                 route:
                   cluster: shared-app-service-s-0-0-4
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
                   headers:
                   - name: X-App-Name
                     string_match:
                       exact: app2
-                  - name: X-App-Version
-                    string_match:
-                      exact: 1
-                route:
-                  cluster: shared-app-service-s-0-0-5
-                  prefix_rewrite: ''
-              - match:
-                  prefix: /shared-app/service-s/
-                  headers:
-                  - name: X-App-Name
-                    string_match:
-                      exact: shared-app
-                  - name: X-App-Version
-                    string_match:
-                      exact: 1
                 route:
                   cluster: shared-app-service-s-0-0-4
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
                   headers:
@@ -159,10 +195,10 @@ static_resources:
                       exact: shared-app
                   - name: X-App-Version
                     string_match:
-                      exact: 1
+                      exact: '1'
                 route:
-                  cluster: shared-app-service-s-0-0-5
-                  prefix_rewrite: ''
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
                   headers:
@@ -171,10 +207,30 @@ static_resources:
                       exact: shared-app
                   - name: X-App-Version
                     string_match:
-                      exact: 2
+                      exact: '2'
                 route:
                   cluster: shared-app-service-s-0-0-5
-                  prefix_rewrite: ''
+                  prefix_rewrite: /
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: shared-app
+                route:
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: /
+              - match:
+                  prefix: /shared-app/service-s/
+                route:
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: /
+              - match:
+                  prefix: /
+                direct_response:
+                  status: 404
+                  body:
+                    inline_string: Invalid API Route
           http_filters:
           - name: envoy.filters.http.cors
             typed_config:
@@ -182,83 +238,82 @@ static_resources:
           - name: envoy.filters.http.router
             typed_config:
               '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
-  clusters: []
-clusters:
-- name: app1-service-a-0-0-36
-  connect_timeout: 0.25s
-  type: STRICT_DNS
-  lb_policy: ROUND_ROBIN
-  load_assignment:
-    cluster_name: app1-service-a-0-0-36
-    endpoints:
-    - lb_endpoints:
-      - endpoint:
-          address:
-            socket_address:
-              address: app1-service-a-0-0-36
-              port_value: 80
-- name: app1-service-b-0-0-7
-  connect_timeout: 0.25s
-  type: STRICT_DNS
-  lb_policy: ROUND_ROBIN
-  load_assignment:
-    cluster_name: app1-service-b-0-0-7
-    endpoints:
-    - lb_endpoints:
-      - endpoint:
-          address:
-            socket_address:
-              address: app1-service-b-0-0-7
-              port_value: 80
-- name: app1-service-b-0-0-8
-  connect_timeout: 0.25s
-  type: STRICT_DNS
-  lb_policy: ROUND_ROBIN
-  load_assignment:
-    cluster_name: app1-service-b-0-0-8
-    endpoints:
-    - lb_endpoints:
-      - endpoint:
-          address:
-            socket_address:
-              address: app1-service-b-0-0-8
-              port_value: 80
-- name: app2-service-y-0-0-1
-  connect_timeout: 0.25s
-  type: STRICT_DNS
-  lb_policy: ROUND_ROBIN
-  load_assignment:
-    cluster_name: app2-service-y-0-0-1
-    endpoints:
-    - lb_endpoints:
-      - endpoint:
-          address:
-            socket_address:
-              address: app2-service-y-0-0-1
-              port_value: 80
-- name: shared-app-service-s-0-0-4
-  connect_timeout: 0.25s
-  type: STRICT_DNS
-  lb_policy: ROUND_ROBIN
-  load_assignment:
-    cluster_name: shared-app-service-s-0-0-4
-    endpoints:
-    - lb_endpoints:
-      - endpoint:
-          address:
-            socket_address:
-              address: shared-app-service-s-0-0-4
-              port_value: 80
-- name: shared-app-service-s-0-0-5
-  connect_timeout: 0.25s
-  type: STRICT_DNS
-  lb_policy: ROUND_ROBIN
-  load_assignment:
-    cluster_name: shared-app-service-s-0-0-5
-    endpoints:
-    - lb_endpoints:
-      - endpoint:
-          address:
-            socket_address:
-              address: shared-app-service-s-0-0-5
-              port_value: 80
+  clusters:
+  - name: app1-service-a-0-0-36
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: app1-service-a-0-0-36
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: app1-service-a-0-0-36
+                port_value: 80
+  - name: app1-service-b-0-0-7
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: app1-service-b-0-0-7
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: app1-service-b-0-0-7
+                port_value: 80
+  - name: app1-service-b-0-0-8
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: app1-service-b-0-0-8
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: app1-service-b-0-0-8
+                port_value: 80
+  - name: app2-service-y-0-0-1
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: app2-service-y-0-0-1
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: app2-service-y-0-0-1
+                port_value: 80
+  - name: shared-app-service-s-0-0-4
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: shared-app-service-s-0-0-4
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: shared-app-service-s-0-0-4
+                port_value: 80
+  - name: shared-app-service-s-0-0-5
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: shared-app-service-s-0-0-5
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: shared-app-service-s-0-0-5
+                port_value: 80
