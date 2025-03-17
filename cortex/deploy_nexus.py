@@ -137,4 +137,4 @@ def deploy_nexus(path):
     # ], check=True)
 
 if __name__ == '__main__':
-    deploy_nexus("temp/cortex-stack-log/nexus-manifests/nexus-manifest-1.yaml")
+    deploy_nexus("temp/cortex-deploy-log/nexus-manifests/nexus-manifest-1.yaml")

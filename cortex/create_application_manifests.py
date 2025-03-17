@@ -36,27 +36,6 @@ def create_new_application_manifests(service_configs, path_to_app_manifests):
     print("===========Calculating Manifests===========")
     result = []
     for app_name, data in application_configs.items():
-        # manifest_name = f"{app_name}/{app_name}-manifest-1"
-
-        # path = f"{path_to_app_manifests}/{app_name}"
-        # if not os.path.exists(path):
-        #     os.makedirs(path)
-
-        # manifests = sorted([f[0:-5] for f in os.listdir(path)])
-        
-        # new_manifest_name = f"{app_name}/{app_name}-manifest-1"
-
-        # if manifests:
-        #     latest_manifest = open(f"{path}/{manifests[-1]}.yaml", "r").read()
-        #     latest_manifest_number = int(manifests[-1].split("-")[-1])
-        #     new_manifest_name = f"{app_name}/{app_name}-manifest-{latest_manifest_number+1}"
-
-        # new_manifest = yaml.dump(list(data.values()), sort_keys=False)
-
-        # if not manifests or latest_manifest != new_manifest:
-        #     path = f"{path_to_app_manifests}/{new_manifest_name}.yaml"
-        #     result[path] = new_manifest
-
 
         path = f"{path_to_app_manifests}/{app_name}"
         if not os.path.exists(path):
@@ -68,21 +47,10 @@ def create_new_application_manifests(service_configs, path_to_app_manifests):
         )
         if new_manifest:
             result.append(new_manifest)
-            
+
     return result
 
-    # print("===========Storing Manifests===========")
-
-    # os.chdir("temp/cortex-stack-log")
-    # subprocess.run(["git", "add", "."], check=True)
-    # commit_message = f"Update {manifest_name}"
-    # try:
-    #     subprocess.run(["git", "commit", "-m", commit_message], check=True)
-    #     new_remote = f"https://{GH_PERSONAL_TOKEN}@github.com/hugh-nguyen/cortex-stack-log.git"
-    #     subprocess.run(["git", "remote", "set-url", "origin", new_remote], check=True)
-    #     subprocess.run(["git", "push"], check=True)
-    # except subprocess.CalledProcessError as e:
-    #     print("No changes to commit or error occurred:", e)
+    print("===========Storing Manifests===========")
 
 
 if __name__ == '__main__':
@@ -92,15 +60,17 @@ if __name__ == '__main__':
 
     service_configs = get_service_configs(parser.parse_args())
 
-    if os.path.exists("temp"):
-        subprocess.run(["rm", "-rf", "temp/cortex-stack-log"], check=True)
-    subprocess.run(["git", "clone", STACK_LOG_URL, "temp/cortex-stack-log"], check=True)
+    clone_repo(DEPLOY_LOG_URL, "temp/cortex-deploy-log")
 
     new_manifests = create_new_application_manifests(
         service_configs,
-        "temp/cortex-stack-log/app-manifests"
+        "temp/cortex-deploy-log/app-manifests"
     )
     
     for manifest in new_manifests:
         open(manifest["path"], "w").write(manifest["manifest"])
 
+    push_repo(
+        "github.com/hugh-nguyen/cortex-deploy-log.git", 
+        "temp/cortex-deploy-log"
+    )
