@@ -1,5 +1,5 @@
 import yaml, os, subprocess, argparse, json
-from util import *
+from cortex.util import *
 
 
 def create_route(prefix, cluster_name, headers=None):

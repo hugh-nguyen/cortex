@@ -5,7 +5,7 @@ import yaml
 import argparse
 from collections import defaultdict
 
-from util import *
+from cortex.util import *
 
 def find_app_from_full_name(name):
     result = name
@@ -16,7 +16,13 @@ def find_app_from_full_name(name):
     return result
 
 
-def create_new_application_manifests(service_configs):
+def determine_version(svc, ver):
+    if ver == "latest":
+        return service_configs[svc]["latest_tag"]
+    return ver
+
+
+def create_new_application_manifests(service_configs, path_to_app_manifests):
     application_configs = defaultdict(dict)
     for sc in service_configs.values():
         app, svc = sc['application-name'], sc['service-name']
@@ -24,44 +30,46 @@ def create_new_application_manifests(service_configs):
             "app": app,
             "svc": svc,
             "ver": sc["latest_tag"],
-            "depends_on": [
-                {
-                    "app": find_app_from_full_name(k),
-                    "svc": k.replace(find_app_from_full_name(k)+"-", ""), 
-                    "ver": service_configs[d]["latest_tag"] if v == "latest" else v
-                }
-                for k, v in sc["service-dependencies"].items()
-            ]
+            "depends_on": sc["service-dependencies"]
         }
 
-    if os.path.exists("temp"):
-        subprocess.run(["rm", "-rf", "temp/cortex-stack-log"], check=True)
-    subprocess.run(["git", "clone", STACK_LOG_URL, "temp/cortex-stack-log"], check=True)
-
     print("===========Calculating Manifests===========")
-
+    result = []
     for app_name, data in application_configs.items():
-        manifest_name = f"{app_name}/{app_name}-manifest-1"
+        # manifest_name = f"{app_name}/{app_name}-manifest-1"
 
-        path = f"temp/cortex-stack-log/app-manifests/{app_name}"
+        # path = f"{path_to_app_manifests}/{app_name}"
+        # if not os.path.exists(path):
+        #     os.makedirs(path)
+
+        # manifests = sorted([f[0:-5] for f in os.listdir(path)])
+        
+        # new_manifest_name = f"{app_name}/{app_name}-manifest-1"
+
+        # if manifests:
+        #     latest_manifest = open(f"{path}/{manifests[-1]}.yaml", "r").read()
+        #     latest_manifest_number = int(manifests[-1].split("-")[-1])
+        #     new_manifest_name = f"{app_name}/{app_name}-manifest-{latest_manifest_number+1}"
+
+        # new_manifest = yaml.dump(list(data.values()), sort_keys=False)
+
+        # if not manifests or latest_manifest != new_manifest:
+        #     path = f"{path_to_app_manifests}/{new_manifest_name}.yaml"
+        #     result[path] = new_manifest
+
+
+        path = f"{path_to_app_manifests}/{app_name}"
         if not os.path.exists(path):
             os.makedirs(path)
 
-        manifests = sorted([f[0:-5] for f in os.listdir(path)])
-        
-        new_manifest_name = f"{app_name}/{app_name}-manifest-1"
-
-        if manifests:
-            latest_manifest = open(f"{path}/{manifests[-1]}.yaml", "r").read()
-            latest_manifest_number = int(manifests[-1].split("-")[-1])
-            new_manifest_name = f"{app_name}/{app_name}-manifest-{latest_manifest_number+1}"
-
-        new_manifest = yaml.dump(list(data.values()), sort_keys=False)
-
-        if not manifests or latest_manifest != new_manifest:
-            path = f"temp/cortex-stack-log/app-manifests/{new_manifest_name}.yaml"
-            open(path, "w").write(new_manifest)
-
+        new_manifest = diff_and_name_manifest(
+            f"{path_to_app_manifests}/{app_name}",
+            yaml.dump(list(data.values()), sort_keys=False)
+        )
+        if new_manifest:
+            result.append(new_manifest)
+            
+    return result
 
     # print("===========Storing Manifests===========")
 
@@ -76,8 +84,6 @@ def create_new_application_manifests(service_configs):
     # except subprocess.CalledProcessError as e:
     #     print("No changes to commit or error occurred:", e)
 
-    print("Done")
-
 
 if __name__ == '__main__':
     print("===========Calculating Applicaiton Configs===========")
@@ -85,5 +91,16 @@ if __name__ == '__main__':
     parser.add_argument('--clone', action='store_true')
 
     service_configs = get_service_configs(parser.parse_args())
-    create_new_application_manifests(service_configs)
+
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp/cortex-stack-log"], check=True)
+    subprocess.run(["git", "clone", STACK_LOG_URL, "temp/cortex-stack-log"], check=True)
+
+    new_manifests = create_new_application_manifests(
+        service_configs,
+        "temp/cortex-stack-log/app-manifests"
+    )
     
+    for manifest in new_manifests:
+        open(manifest["path"], "w").write(manifest["manifest"])
+

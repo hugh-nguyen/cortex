@@ -90,3 +90,35 @@ def get_latest_tag(repo_full_name):
         return result[0]["name"]
     else:
         return None
+
+
+def diff_and_name_manifest(path_to_existing_manifests, new_manifest):
+    existing_manifests = os.listdir(path_to_existing_manifests)
+    print(existing_manifests)
+    print("-=====")
+    latest_manifest_number = 1
+    
+    if existing_manifests:
+        latest_manifest_filename = sorted(existing_manifests)[-1]
+        latest_manifest_number = int(
+            latest_manifest_filename.removesuffix(".yaml").split("-")[-1]
+        )
+        latest_manifest_path = "{}/{}".format(
+            path_to_existing_manifests,
+            latest_manifest_filename
+        )
+        latest_manifest = open(latest_manifest_path, "r").read()
+    print(latest_manifest_path)
+    print(latest_manifest)
+    print(latest_manifest != new_manifest)
+    if not existing_manifests or latest_manifest != new_manifest:
+        new_manifest_path = "{}/{}-manifest-{}.yaml".format(
+            path_to_existing_manifests,
+            path_to_existing_manifests.split("/")[-1].split("-")[0],
+            latest_manifest_number+1
+        )
+        return {
+            "path": new_manifest_path,
+            "manifest": new_manifest
+        }
+    return None
