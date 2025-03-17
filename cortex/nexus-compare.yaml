@@ -1,80 +1,102 @@
 services:
 - app: app1
   svc: service-a
-  ver: 0.0.36
+  svc_ver: 0.0.36
 - app: app1
   svc: service-b
-  ver: 0.0.7
+  svc_ver: 0.0.7
 - app: app1
   svc: service-b
-  ver: 0.0.8
+  svc_ver: 0.0.8
 - app: app2
   svc: service-y
-  ver: 0.0.1
+  svc_ver: 0.0.1
 - app: shared-app
   svc: service-s
-  ver: 0.0.4
+  svc_ver: 0.0.4
 - app: shared-app
   svc: service-s
-  ver: 0.0.5
+  svc_ver: 0.0.5
 routes:
 - prefix: /app1/service-a/
   headers:
   - App-Name: app1
-  - App-Stack: 1
+  - App-Version: 1
   cluster: app1-service-a-0-0-36
 - prefix: /app1/service-a/
   headers:
   - App-Name: app1
-  - App-Stack: 2
+  - App-Version: 2
+  cluster: app1-service-a-0-0-36
+- prefix: /app1/service-a/
+  headers:
+  - App-Name: app1
+  cluster: app1-service-a-0-0-36
+- prefix: /app1/service-a/
   cluster: app1-service-a-0-0-36
 - prefix: /app1/service-b/
   headers:
   - App-Name: app1
-  - App-Stack: 1
+  - App-Version: 1
   cluster: app1-service-b-0-0-7
 - prefix: /app1/service-b/
   headers:
   - App-Name: app1
-  - App-Stack: 2
+  - App-Version: 2
   cluster: app1-service-b-0-0-8
+- prefix: /app1/service-b/
+  headers:
+  - App-Name: app1
+  cluster: app1-service-b-0-0-7
+- prefix: /app1/service-b/
+  cluster: app1-service-b-0-0-7
 - prefix: /app2/service-y/
   headers:
   - App-Name: app2
-  - App-Stack: 1
+  - App-Version: 1
+  cluster: app2-service-y-0-0-1
+- prefix: /app2/service-y/
+  headers:
+  - App-Name: app2
+  cluster: app2-service-y-0-0-1
+- prefix: /app2/service-y/
   cluster: app2-service-y-0-0-1
 - prefix: /shared-app/service-s/
   headers:
   - App-Name: app1
-  - App-Stack: 1
+  - App-Version: 1
   cluster: shared-app-service-s-0-0-4
 - prefix: /shared-app/service-s/
   headers:
   - App-Name: app1
-  - App-Stack: 2
+  - App-Version: 2
   cluster: shared-app-service-s-0-0-5
 - prefix: /shared-app/service-s/
   headers:
-  - App-Name: app2
-  - App-Stack: 1
+  - App-Name: app1
   cluster: shared-app-service-s-0-0-4
 - prefix: /shared-app/service-s/
   headers:
   - App-Name: app2
-  - App-Stack: 1
-  cluster: shared-app-service-s-0-0-5
+  - App-Version: 1
+  cluster: shared-app-service-s-0-0-4
 - prefix: /shared-app/service-s/
   headers:
-  - App-Name: shared-app
-  - App-Stack: 1
+  - App-Name: app2
   cluster: shared-app-service-s-0-0-4
 - prefix: /shared-app/service-s/
   headers:
   - App-Name: shared-app
-  - App-Stack: 1
+  - App-Version: 1
+  cluster: shared-app-service-s-0-0-4
+- prefix: /shared-app/service-s/
+  headers:
+  - App-Name: shared-app
+  - App-Version: 2
   cluster: shared-app-service-s-0-0-5
 - prefix: /shared-app/service-s/
   headers:
   - App-Name: shared-app
-  - App-Stack: 2
-  cluster: shared-app-service-s-0-0-5
+  cluster: shared-app-service-s-0-0-4
+- prefix: /shared-app/service-s/
+  cluster: shared-app-service-s-0-0-4

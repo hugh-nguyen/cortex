@@ -55,11 +55,38 @@ static_resources:
                                   exact: "0.0.5"
                           route:
                             cluster: service-b-0-0-5
+                        
+                        - match:
+                            prefix: "/b/"
+                            headers:
+                              - name: "X-Stack-Version"
+                                string_match:
+                                  exact: "0.0.6"
+                          route:
+                            cluster: service-b-0-0-6
+
+                        - match:
+                            prefix: "/b/"
+                            headers:
+                              - name: "X-Stack-Version"
+                                string_match:
+                                  exact: "0.0.7"
+                          route:
+                            cluster: service-b-0-0-7
+
+                        - match:
+                            prefix: "/b/"
+                            headers:
+                              - name: "X-Stack-Version"
+                                string_match:
+                                  exact: "0.0.8"
+                          route:
+                            cluster: service-b-0-0-8
 
                         - match:
                             prefix: "/b/"
                           route:
-                            cluster: service-b-0-0-5
+                            cluster: service-b-0-0-4
 
                         - match:
                             prefix: "/"
@@ -129,4 +156,46 @@ static_resources:
                   address:
                     socket_address:
                       address: service-b-0-0-5
+                      port_value: 80
+
+    - name: service-b-0-0-6
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: service-b-0-0-6
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: service-b-0-0-6
+                      port_value: 80
+
+    - name: service-b-0-0-7
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: service-b-0-0-7
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: service-b-0-0-7
+                      port_value: 80
+
+    - name: service-b-0-0-8
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: service-b-0-0-8
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: service-b-0-0-8
                       port_value: 80
