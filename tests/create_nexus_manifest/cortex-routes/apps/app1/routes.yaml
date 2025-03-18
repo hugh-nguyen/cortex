@@ -1,6 +1,6 @@
 /app1/service-a/:
   app: app1
-  app_ver: 1
+  app_ver: 2
   svc: service-a
 /app1/main/:
   app: app1

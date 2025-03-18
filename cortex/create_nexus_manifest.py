@@ -37,10 +37,10 @@ def nexus_route_sort_key(route):
     if "headers" in route and len(route["headers"]) == 2:
         app_version_sort_key = route["headers"][1]["App-Version"]
     return (
-        not route["custom"],
         route["prefix"],
         app_name_sort_key,
         app_version_sort_key,
+        route["custom"],
         route["cluster"]
     )
 
@@ -93,7 +93,7 @@ def create_nexus_manifest(path_to_data):
             nexus_routes.append(create_route(prefix, release_name, app, app_ver))
             
             if prefix not in prefixes:
-                nexus_routes.append(create_route(prefix, release_name, app))
+                # nexus_routes.append(create_route(prefix, release_name, app))
                 nexus_routes.append(create_route(prefix, release_name))
 
                 prefixes.add(prefix)

@@ -13,5 +13,4 @@ def test_create_envoy_config_1():
         os.path.dirname(__file__), 
         "test_create_envoy_config_1.yaml"
     )
-    open("t.yaml", "w").write(yaml.dump(result, sort_keys=False))
     assert yaml.dump(result, sort_keys=False) == open(path, "r").read()
