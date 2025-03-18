@@ -6,9 +6,12 @@ def test_create_envoy_config_1():
         os.path.dirname(__file__), 
         "nexus-manifests/nexus-manifest-1.yaml"
     )
-    result = create_envoy_config(path)
+    nexus_manifest = yaml.safe_load(open(path, "r").read())
+
+    result = create_envoy_config(nexus_manifest)
     path = os.path.join(
         os.path.dirname(__file__), 
         "test_create_envoy_config_1.yaml"
     )
-    assert yaml.dump(result) == open(path, "r").read()
+    open("t.yaml", "w").write(yaml.dump(result, sort_keys=False))
+    assert yaml.dump(result, sort_keys=False) == open(path, "r").read()

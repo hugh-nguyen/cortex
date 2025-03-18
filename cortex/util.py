@@ -92,7 +92,11 @@ def get_latest_tag(repo_full_name):
         return None
 
 
-def diff_and_name_manifest(path_to_existing_manifests, new_manifest):
+def diff_and_name_manifest(
+    path_to_existing_manifests,
+    output_prefix,
+    new_manifest
+):
     existing_manifests = os.listdir(path_to_existing_manifests)
     print(existing_manifests)
     print("-=====")
@@ -112,7 +116,7 @@ def diff_and_name_manifest(path_to_existing_manifests, new_manifest):
     if not existing_manifests or latest_manifest != new_manifest:
         new_manifest_path = "{}/{}-manifest-{}.yaml".format(
             path_to_existing_manifests,
-            path_to_existing_manifests.split("/")[-1].split("-")[0],
+            output_prefix,
             latest_manifest_number+1
         )
         return {
@@ -123,15 +127,13 @@ def diff_and_name_manifest(path_to_existing_manifests, new_manifest):
 
 
 def clone_repo(url, path):
-    if os.path.exists("temp"):
-        subprocess.run(["rm", "-rf", path], check=True)
     subprocess.run(["git", "clone", url, path], check=True)
 
 
-def push_repo(url, path):
+def push_repo(url, path, message):
     os.chdir(path)
     subprocess.run(["git", "add", "."], check=True)
-    commit_message = f"Update {manifest_name}"
+    commit_message = message
     try:
         subprocess.run(["git", "commit", "-m", commit_message], check=True)
         new_remote = f"https://{GH_PERSONAL_TOKEN}@{url}"

@@ -95,19 +95,23 @@ def create_nexus_manifest(path_to_manifests):
     new_manifest = {"services": nexus_services, "routes": nexus_routes}
     return diff_and_name_manifest(
         f"{path_to_manifests}/nexus-manifests",
+        "nexus",
         yaml.dump(new_manifest, sort_keys=False)
     )
 
 
 if __name__ == '__main__':
 
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
     clone_repo(DEPLOY_LOG_URL, "temp/cortex-deploy-log")
 
     nexus_manifest = create_nexus_manifest("temp/cortex-deploy-log")
     if nexus_manifest:
         open(nexus_manifest["path"], "w").write(nexus_manifest["manifest"])
 
-    push_repo(
-        "github.com/hugh-nguyen/cortex-deploy-log.git", 
-        "temp/cortex-deploy-log"
-    )
+        push_repo(
+            "github.com/hugh-nguyen/cortex-deploy-log.git", 
+            "temp/cortex-deploy-log",
+            f"Update {nexus_manifest['path'].split('/')[-1]}"
+        )

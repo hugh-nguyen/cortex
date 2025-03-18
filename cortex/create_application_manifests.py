@@ -43,14 +43,13 @@ def create_new_application_manifests(service_configs, path_to_app_manifests):
 
         new_manifest = diff_and_name_manifest(
             f"{path_to_app_manifests}/{app_name}",
+            app_name,
             yaml.dump(list(data.values()), sort_keys=False)
         )
         if new_manifest:
             result.append(new_manifest)
 
     return result
-
-    print("===========Storing Manifests===========")
 
 
 if __name__ == '__main__':
@@ -60,6 +59,8 @@ if __name__ == '__main__':
 
     service_configs = get_service_configs(parser.parse_args())
 
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
     clone_repo(DEPLOY_LOG_URL, "temp/cortex-deploy-log")
 
     new_manifests = create_new_application_manifests(
@@ -67,10 +68,13 @@ if __name__ == '__main__':
         "temp/cortex-deploy-log/app-manifests"
     )
     
+    commit_message = "Update "
     for manifest in new_manifests:
         open(manifest["path"], "w").write(manifest["manifest"])
+        commit_message += manifest["path"].split('/')[-2] + " "
 
     push_repo(
         "github.com/hugh-nguyen/cortex-deploy-log.git", 
-        "temp/cortex-deploy-log"
+        "temp/cortex-deploy-log",
+        commit_message
     )

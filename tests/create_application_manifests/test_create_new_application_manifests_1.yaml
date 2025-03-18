@@ -3,4 +3,4 @@
     \ 0.0.8\n  depends_on:\n  - app: shared-app\n    svc: service-s\n    ver: 0.0.5\n"
   path: tests/create_application_manifests/app-manifests/app1/app1-manifest-2.yaml
 - manifest: "- app: shared-app\n  svc: service-s\n  ver: 0.0.5\n  depends_on: []\n"
-  path: tests/create_application_manifests/app-manifests/shared-app/shared-manifest-2.yaml
+  path: tests/create_application_manifests/app-manifests/shared-app/shared-app-manifest-2.yaml
