@@ -32,6 +32,66 @@ static_resources:
                 expose_headers: X-Stack-Version
               routes:
               - match:
+                  prefix: /app1/main/
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+                - header:
+                    key: X-App-Version
+                    value: '1'
+              - match:
+                  prefix: /app1/service-a/
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+                - header:
+                    key: X-App-Version
+                    value: '1'
+              - match:
+                  prefix: /app2/main/
+                route:
+                  cluster: app2-service-y-0-0-1
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app2
+                - header:
+                    key: X-App-Version
+                    value: '1'
+              - match:
+                  prefix: /app2/service-y/
+                route:
+                  cluster: app2-service-y-0-0-1
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app2
+                - header:
+                    key: X-App-Version
+                    value: '1'
+              - match:
+                  prefix: /shared-app/service-s/
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+                - header:
+                    key: X-App-Version
+                    value: '1'
+              - match:
                   prefix: /app1/service-a/
                   headers:
                   - name: X-App-Name

@@ -2,7 +2,12 @@ import yaml, os, subprocess, argparse, json
 from cortex.util import *
 
 
-def create_route(prefix, cluster_name, headers=None):
+def create_route(
+    prefix, 
+    cluster_name, 
+    headers=None, 
+    custom=False
+):
     match_ = { "prefix": prefix }
     if headers:
         match_["headers"] = headers
@@ -10,10 +15,21 @@ def create_route(prefix, cluster_name, headers=None):
     route = { "cluster": cluster_name }
     route["prefix_rewrite"] = "/"
 
-    return {
+    result = {
         "match": match_,
         "route": route
     }
+    
+    if custom:
+        del match_["headers"]
+        transform = lambda h: {
+            "header": {"key": h["name"],
+            "value": h["string_match"]["exact"]}
+        }
+        result["request_headers_to_add"] = [
+            transform(h) for h in headers
+        ]
+    return result
 
 
 def create_cluster(name, port=80):
@@ -48,24 +64,16 @@ def create_envoy_config(nexus_manifest):
     envoy_routes = []
     for i, nexus_route in enumerate(nexus_routes):
         prefix, cluster = nexus_route["prefix"], nexus_route["cluster"]
+        custom = nexus_route["custom"]
         
+        headers = []
         if "headers" in nexus_route:
-            app_name = nexus_route["headers"][0]["App-Name"]
-
-            if len(nexus_route["headers"]) == 2:
-                app_version = f"{nexus_route['headers'][1]['App-Version']}"
-                headers = [
-                    create_header("X-App-Name", app_name),
-                    create_header("X-App-Version", app_version),
-                ]
-                envoy_routes.append(create_route(prefix, cluster, headers))
-
-            else:
-                headers = [create_header("X-App-Name", app_name)]
-                envoy_routes.append(create_route(prefix, cluster, headers))
-
-        else:
-            envoy_routes.append(create_route(prefix, cluster))
+            headers = [
+                create_header("X-"+key, str(value))
+                for h in nexus_route["headers"]
+                for key, value in h.items()
+            ]
+        envoy_routes.append(create_route(prefix, cluster, headers, custom))
 
     route = {
         "match": { "prefix": "/" },
@@ -144,25 +152,30 @@ def deploy_services(nexus_services):
 
 def deploy_routes(nexus_manifest):
     envoy_config = create_envoy_config(nexus_manifest)
-    open("charts/envoy-gateway/files/envoy.yaml", "w").write(yaml.dump(envoy_config, sort_keys=False))
-    print("======== CONNECT TO KUBERNETES =========")
-    subprocess.run([
-        "aws",
-        "eks",
-        "update-kubeconfig",
-        "--region",
-        "ap-southeast-2",
-        "--name",
-        "cluster",
+    open("cortex/envoy.yaml", "w").write(
+        yaml.dump(envoy_config, sort_keys=False)
+    )
+    # open("charts/envoy-gateway/files/envoy.yaml", "w").write(
+    #     yaml.dump(envoy_config, sort_keys=False)
+    # )
+    # print("======== CONNECT TO KUBERNETES =========")
+    # subprocess.run([
+    #     "aws",
+    #     "eks",
+    #     "update-kubeconfig",
+    #     "--region",
+    #     "ap-southeast-2",
+    #     "--name",
+    #     "cluster",
        
-    ], check=True)
+    # ], check=True)
 
-    subprocess.run([
-        "helm",
-        "upgrade",
-        "envoy",
-        "./charts/envoy-gateway",
-    ], check=True)
+    # subprocess.run([
+    #     "helm",
+    #     "upgrade",
+    #     "envoy",
+    #     "./charts/envoy-gateway",
+    # ], check=True)
 
 
 if __name__ == '__main__':

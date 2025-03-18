@@ -3,6 +3,7 @@ import os, requests, subprocess, yaml
 
 GITHUB_ENDPOINT = "https://api.github.com"
 DEPLOY_LOG_URL = "https://github.com/hugh-nguyen/cortex-deploy-log.git"
+ROUTE_REPO_URL = "https://github.com/hugh-nguyen/cortex-routes.git"
 GH_PERSONAL_TOKEN = os.environ.get("GH_PERSONAL_TOKEN")
 CERT_PATH = os.environ.get("CERT_PATH", None)
 HEADERS = {

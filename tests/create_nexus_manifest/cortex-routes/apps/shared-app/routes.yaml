@@ -1,0 +1,4 @@
+/shared-app/service-s/:
+  app: app1
+  app_ver: 1
+  svc: service-a

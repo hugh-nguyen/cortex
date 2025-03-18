@@ -1,0 +1,8 @@
+/app2/service-y/:
+  app: app2
+  app_ver: 1
+  svc: service-y
+/app2/main/:
+  app: app2
+  app_ver: 1
+  svc: service-y

@@ -1,5 +1,6 @@
 import os, yaml, subprocess
 from cortex.util import *
+from collections import defaultdict
 
 def create_deployment(deployment):
     return {
@@ -9,13 +10,19 @@ def create_deployment(deployment):
     }
 
 
-def create_route(prefix, release_name, app_name=None, app_version=None):
+def create_route(
+    prefix, 
+    release_name, 
+    app_name=None, 
+    app_version=None, 
+    custom=False
+):
     result = {"prefix": prefix}
     if app_name:
         result["headers"] = [{"App-Name": app_name}]
         if app_version:
             result["headers"].append({"App-Version": app_version})
-    return {**result, "cluster": release_name}
+    return {**result, "cluster": release_name, "custom": custom}
 
 
 def nexus_services_sort_key(service):
@@ -30,6 +37,7 @@ def nexus_route_sort_key(route):
     if "headers" in route and len(route["headers"]) == 2:
         app_version_sort_key = route["headers"][1]["App-Version"]
     return (
+        not route["custom"],
         route["prefix"],
         app_name_sort_key,
         app_version_sort_key,
@@ -37,16 +45,37 @@ def nexus_route_sort_key(route):
     )
 
 
-def create_nexus_manifest(path_to_manifests):
+def create_nexus_manifest(path_to_data):
 
+    path_to_manifests = f"{path_to_data}/cortex-deploy-log"
+    path_to_routes = f"{path_to_data}/cortex-routes"
+
+    #
     app_manifest_file_paths = get_all_files(f"{path_to_manifests}/app-manifests")
+    app_manifest_lookup = defaultdict(dict)
+    for path in app_manifest_file_paths:
+        app = path.split("/")[-2]
+        app_ver = int(path.removesuffix(".yaml").split("-")[-1])
+        data = yaml.safe_load(open(path, "r").read())
+        app_manifest_lookup[app][app_ver] = {d["svc"]: d["ver"] for d in data}
 
     nexus_services = []
     nexus_routes = []
+
+    app_dirs = os.listdir(f"{path_to_routes}/apps")
+    for app_name in os.listdir(f"{path_to_routes}/apps"):
+        routes = yaml.safe_load(open(f"{path_to_routes}/apps/{app_name}/routes.yaml", "r"))
+        for prefix, config in routes.items():
+            app, svc, app_ver = config["app"], config["svc"], config["app_ver"]
+            svc_ver = app_manifest_lookup[app][app_ver][svc]
+            release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
+            route = create_route(prefix, release_name, app, app_ver, custom=True)
+            nexus_routes.append(route)
+
+    #
     prefixes = set()
     for app_manifest_file_path in sorted(app_manifest_file_paths):
 
-        print(app_manifest_file_path)
         app_manifest_file = open(app_manifest_file_path, "r")
         app_manifest_services = yaml.safe_load(app_manifest_file.read())
 
@@ -105,8 +134,9 @@ if __name__ == '__main__':
     if os.path.exists("temp"):
         subprocess.run(["rm", "-rf", "temp"], check=True)
     clone_repo(DEPLOY_LOG_URL, "temp/cortex-deploy-log")
+    clone_repo(ROUTE_REPO_URL, "temp/cortex-routes")
 
-    nexus_manifest = create_nexus_manifest("temp/cortex-deploy-log")
+    nexus_manifest = create_nexus_manifest("temp")
     if nexus_manifest:
         open(nexus_manifest["path"], "w").write(nexus_manifest["manifest"])
 
