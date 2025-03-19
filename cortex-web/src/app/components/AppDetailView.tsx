@@ -15,8 +15,9 @@ import {
 } from '@mui/material';
 import { purple } from '@mui/material/colors';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 
-// Import DependencyGraph with no SSR to prevent hydration issues
+// Dynamically import with no SSR
 const DependencyGraph = dynamic(
   () => import('@/app/components/DependencyGraph'),
   { ssr: false }
@@ -40,17 +41,25 @@ interface AppVersions {
 
 interface AppDetailViewProps {
   appName: string;
-  onBack: () => void;
+  onBack?: () => void;
+  initialVersion?: number | null;
+  isRoutedPage?: boolean;
 }
 
-const AppDetailView: React.FC<AppDetailViewProps> = ({ appName, onBack }) => {
+const AppDetailView: React.FC<AppDetailViewProps> = ({ 
+  appName, 
+  onBack, 
+  initialVersion = null,
+  isRoutedPage = false
+}) => {
+  const router = useRouter();
   const [appVersions, setAppVersions] = useState<AppVersions | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeVersion, setActiveVersion] = useState<number | null>(null);
+  const [activeVersion, setActiveVersion] = useState<number | null>(initialVersion);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   
-  // Use key for DependencyGraph to force re-render on version change
+  // Add a graphKey state to force re-render when switching versions
   const [graphKey, setGraphKey] = useState(0);
   
   useEffect(() => {
@@ -66,12 +75,22 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({ appName, onBack }) => {
         const data = await response.json();
         setAppVersions(data.app_versions);
         
-        // Set active version to the highest version number
-        const highestVersion = Math.max(...Object.keys(data.app_versions).map(Number));
-        setActiveVersion(highestVersion);
-        
-        // Set the graph data for the active version
-        setGraphData(data.app_versions[highestVersion].graph);
+        // If no initial version is provided or it's invalid, set to highest version
+        if (activeVersion === null || !data.app_versions[activeVersion]) {
+          const highestVersion = Math.max(...Object.keys(data.app_versions).map(Number));
+          setActiveVersion(highestVersion);
+          
+          // Update URL if using routing
+          if (isRoutedPage) {
+            router.replace(`/appdetail/${appName}/${highestVersion}`);
+          }
+          
+          // Set the graph data for the active version
+          setGraphData(data.app_versions[highestVersion].graph);
+        } else {
+          // Set graph data for specified initial version
+          setGraphData(data.app_versions[activeVersion].graph);
+        }
         
         setError(null);
       } catch (err) {
@@ -83,16 +102,31 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({ appName, onBack }) => {
     };
 
     fetchAppVersions();
-  }, [appName]);
+  }, [appName, router, activeVersion, initialVersion, isRoutedPage]);
 
   const handleVersionClick = (version: number) => {
     if (activeVersion === version) return;
     
     setActiveVersion(version);
+    
     if (appVersions && appVersions[version]) {
       setGraphData(appVersions[version].graph);
+      
       // Update key to force re-render of the graph
       setGraphKey(prevKey => prevKey + 1);
+      
+      // Update URL if using routing
+      if (isRoutedPage) {
+        router.replace(`/appdetail/${appName}/${version}`);
+      }
+    }
+  };
+
+  const handleBackClick = () => {
+    if (onBack) {
+      onBack();
+    } else if (isRoutedPage) {
+      router.push('/');
     }
   };
   
@@ -119,7 +153,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({ appName, onBack }) => {
               fontWeight: 'bold',
               cursor: 'pointer'
             }}
-            onClick={onBack}
+            onClick={handleBackClick}
           >
             {appName}
           </Typography>

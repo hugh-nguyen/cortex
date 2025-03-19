@@ -24,6 +24,9 @@ interface Service {
   ver: string;
   x: number;
   y: number;
+  // Adding calculated absolute positions
+  absX?: number;
+  absY?: number;
 }
 
 interface Dependency {
@@ -57,10 +60,38 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
   const [error, setError] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(0.7); // Default to 70%
   
+  // Process data to calculate absolute positions from relative
+  const processGraphData = (data: GraphData): GraphData => {
+    // Create a copy of the data to avoid mutating the original
+    const processedData = {
+      ...data,
+      services: data.services.map(service => {
+        // Find the parent app
+        const app = data.apps.find(a => a.id === service.app);
+        
+        // Calculate absolute position based on relative position to the app
+        const absX = app ? app.x + service.x : service.x;
+        const absY = app ? app.y + service.y : service.y;
+        
+        // Return the service with absolute position
+        return {
+          ...service,
+          // Store original x/y as relative positions
+          absX,
+          absY
+        };
+      })
+    };
+    
+    return processedData;
+  };
+  
   // Fetch data from the API when no custom data is provided
   useEffect(() => {
     if (customGraphData) {
-      setGraphData(customGraphData);
+      // Process the custom data to calculate absolute positions
+      const processedData = processGraphData(customGraphData);
+      setGraphData(processedData);
       setLoading(false);
       return;
     }
@@ -75,7 +106,9 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
         }
         
         const data = await response.json();
-        setGraphData(data);
+        // Process the fetched data to calculate absolute positions
+        const processedData = processGraphData(data);
+        setGraphData(processedData);
         setError(null);
       } catch (err) {
         console.error('Error fetching graph data:', err);
@@ -137,7 +170,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .attr('fill', '#FFF5F7')
       .attr('opacity', 0)
       .transition()
-      .duration(800)
+      .duration(400)
       .delay((d, i) => i * 200)
       .attr('height', d => d.height)
       .attr('opacity', 0.8);
@@ -157,12 +190,13 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .delay((d, i) => 300 + i * 200)
       .attr('opacity', 1);
     
+    // Use the calculated absolute positions for the service nodes
     const serviceNodes = nodeLayer.selectAll('.service')
       .data(services)
       .join('g')
       .attr('class', 'service')
       .attr('id', d => d.id)
-      .attr('transform', d => `translate(${d.x}, ${d.y})`)
+      .attr('transform', d => `translate(${d.absX || d.x}, ${d.absY || d.y})`)
       .attr('opacity', 0)
       .style('cursor', 'move');
     
@@ -170,17 +204,6 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .duration(600)
       .delay((d, i) => 600 + i * 300)
       .attr('opacity', 1);
-    
-    // Calculate relative positions of services to their apps
-    const serviceRelativePositions = services.map(service => {
-      const app = apps.find(a => a.id === service.app);
-      return {
-        id: service.id,
-        app: service.app,
-        relX: app ? service.x - app.x : 0,
-        relY: app ? service.y - app.y : 0
-      };
-    });
     
     function hexagonPath(size: number): string {
       const points: [number, number][] = [];
@@ -285,7 +308,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .attr('x', 60)
       .attr('y', 20)
       .attr('width', 100)
-      .attr('height', 30)
+      .attr('height', 20)
       .attr('rx', 5)
       .attr('ry', 5)
       .attr('fill', '#F8BBD0')
@@ -297,11 +320,12 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
     serviceNodes.append('text')
       .attr('class', 'version-number')
       .attr('x', 110)
-      .attr('y', 35)
+      .attr('y', 31)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
       .attr('fill', '#4A1D3E')
       .attr('font-size', '13px')
+      .attr('font-weight', 'bold')
       .attr('opacity', 0)
       .text(d => d.ver)
       .transition()
@@ -329,20 +353,26 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
         
         if (!sourceNode || !targetNode) return;
         
+        // Use absolute positions for link calculations
+        const sourceX = sourceNode.absX || sourceNode.x;
+        const sourceY = sourceNode.absY || sourceNode.y;
+        const targetX = targetNode.absX || targetNode.x;
+        const targetY = targetNode.absY || targetNode.y;
+        
         // Calculate angle between nodes
-        const dx = targetNode.x - sourceNode.x;
-        const dy = targetNode.y - sourceNode.y;
+        const dx = targetX - sourceX;
+        const dy = targetY - sourceY;
         const angle = Math.atan2(dy, dx);
         
         // Calculate points at the edge of hexagons
         const sourcePoint = {
-          x: sourceNode.x + Math.cos(angle) * hexSize,
-          y: sourceNode.y + Math.sin(angle) * hexSize
+          x: sourceX + Math.cos(angle) * hexSize,
+          y: sourceY + Math.sin(angle) * hexSize
         };
         
         const targetPoint = {
-          x: targetNode.x - Math.cos(angle) * hexSize,
-          y: targetNode.y - Math.sin(angle) * hexSize
+          x: targetX - Math.cos(angle) * hexSize,
+          y: targetY - Math.sin(angle) * hexSize
         };
         
         // Calculate control point for the curve
@@ -386,26 +416,26 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
         };
     });
     
-    // Make service nodes draggable
+    // Make service nodes draggable with updated positioning logic
     serviceNodes.call(
       (d3.drag() as any)
         .on('start', function(this: any, event: any, d: Service) {
           d3.select(this).raise().attr('stroke', 'black');
         })
         .on('drag', function(this: any, event: any, d: Service) {
-          // Update the node position
-          d.x = event.x;
-          d.y = event.y;
-          d3.select(this).attr('transform', `translate(${d.x}, ${d.y})`);
+          // Update the absolute node position
+          d.absX = event.x;
+          d.absY = event.y;
+          
+          // Update the visual position
+          d3.select(this).attr('transform', `translate(${d.absX}, ${d.absY})`);
           
           // Update the relative position to its app
-          const relPos = serviceRelativePositions.find(p => p.id === d.id);
-          if (relPos) {
-            const app = apps.find(a => a.id === d.app);
-            if (app) {
-              relPos.relX = d.x - app.x;
-              relPos.relY = d.y - app.y;
-            }
+          const app = apps.find(a => a.id === d.app);
+          if (app) {
+            // Calculate new relative position
+            d.x = d.absX - app.x;
+            d.y = d.absY - app.y;
           }
           
           // Update links
@@ -417,13 +447,17 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
         })
     );
 
-    // Make app groups draggable
+    // Make app groups draggable with updated positioning logic
     appGroups.call(
       (d3.drag() as any)
         .on('start', function(this: any, event: any, d: App) {
           d3.select(this).attr('opacity', 0.8);
         })
         .on('drag', function(this: any, event: any, d: App) {
+          // Calculate position change
+          const deltaX = event.x - d.x;
+          const deltaY = event.y - d.y;
+          
           // Update app position
           d.x = event.x;
           d.y = event.y;
@@ -432,16 +466,12 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
           // Update all services in this app
           services.forEach(service => {
             if (service.app === d.id) {
-              // Find this service's relative position
-              const relPos = serviceRelativePositions.find(p => p.id === service.id);
-              if (relPos) {
-                // Update service position based on app's position and relative offset
-                service.x = d.x + relPos.relX;
-                service.y = d.y + relPos.relY;
-                
-                // Update service visual position
-                d3.select(`#${service.id}`).attr('transform', `translate(${service.x}, ${service.y})`);
-              }
+              // Update absolute position based on app movement
+              service.absX = (service.absX || service.x) + deltaX;
+              service.absY = (service.absY || service.y) + deltaY;
+              
+              // Update service visual position
+              d3.select(`#${service.id}`).attr('transform', `translate(${service.absX}, ${service.absY})`);
             }
           });
           

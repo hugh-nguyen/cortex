@@ -2,8 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import MuiClientProvider from '@/app/components/MuiClientProvider';
+import CortexLayout from '@/app/components/CortexLayout';
 
-// Use dynamic import with ssr: false to prevent hydration mismatch
+// Dynamically import with no SSR to prevent hydration issues
 const AppDashboard = dynamic(
   () => import('@/app/components/AppDashboard'),
   { ssr: false }
@@ -12,9 +13,9 @@ const AppDashboard = dynamic(
 export default function Home() {
   return (
     <MuiClientProvider>
-      <main>
+      <CortexLayout>
         <AppDashboard />
-      </main>
+      </CortexLayout>
     </MuiClientProvider>
   );
 }

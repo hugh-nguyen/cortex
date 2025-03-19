@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
 import yaml
+import graph
+import graph_original
 
 app = FastAPI(
     title="Hello World API",
@@ -15,6 +17,41 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+graph_app1v3_yaml = """
+- app: app1
+  svc: service-a
+  ver: 0.0.36
+  depends_on:
+  - app: app1
+    svc: service-b
+    ver: 0.0.7
+- app: app1
+  svc: service-b
+  ver: 0.0.7
+  depends_on:
+  - app: shared-app
+    svc: service-s
+    ver: 0.0.4
+"""
+
+graph_app1v2_yaml = """
+- app: app1
+  svc: service-a
+  ver: 0.0.36
+  depends_on:
+  - app: app1
+    svc: service-b
+    ver: 0.0.7
+- app: app1
+  svc: service-b
+  ver: 0.0.7
+  depends_on:
+  - app: shared-app
+    svc: service-s
+    ver: 0.0.4
+"""
+
 
 @app.get("/")
 async def read_root():
@@ -46,8 +83,8 @@ async def test_app_versions(app: str = "app1"):
     
     database = {
         "app1": {
-            3: {"app": "app1", "version": 3, "graph": graph_app1v3},
-            2: {"app": "app1", "version": 2, "graph": graph_app1v2},
+            3: {"app": "app1", "version": 3, "graph": graph.calculate_graph("app1", graph_app1v3_yaml)},
+            2: {"app": "app1", "version": 2, "graph": graph_original.calculate_graph(graph_app1v2_yaml)},
             1: {"app": "app1", "version": 1, "graph": graph_app1v1},
         },
         "app2": {
