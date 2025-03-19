@@ -10,10 +10,12 @@ import {
   Alert, 
   Container,
   CardActionArea,
-  Typography
+  Typography,
+  Tooltip
 } from '@mui/material';
 import { purple } from '@mui/material/colors';
 import { useRouter } from 'next/navigation';
+import { getRelativeTimeString } from '@/app/utils/relativeTime'; // Import the utility
 
 interface AppData {
   App: string;
@@ -33,7 +35,7 @@ const AppDashboard: React.FC = () => {
     const fetchAppData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:8000/test_apps');
+        const response = await fetch('http://127.0.0.1:8000/get_apps');
         
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);
@@ -124,9 +126,12 @@ const AppDashboard: React.FC = () => {
                       <Typography color={purple[800]} fontWeight="bold" component="span">
                         Last Updated:
                       </Typography>
-                      <Typography color="text.primary" component="span" sx={{ ml: 1 }}>
-                        {app['Last Updated']}
-                      </Typography>
+                      <Tooltip title={app['Last Updated']} arrow placement="top">
+                        <Typography color="text.primary" component="span" sx={{ ml: 1 }}>
+                          {/* Convert timestamp to relative time */}
+                          {getRelativeTimeString(app['Last Updated'])}
+                        </Typography>
+                      </Tooltip>
                     </Grid>
                     
                     <Grid item xs={12} sm={2.4}>

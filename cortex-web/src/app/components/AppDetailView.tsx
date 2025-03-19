@@ -66,7 +66,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     const fetchAppVersions = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://127.0.0.1:8000/test_app_versions?app=${appName}`);
+        const response = await fetch(`http://127.0.0.1:8000/get_app_versions?app=${appName}`);
         
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);
