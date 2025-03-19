@@ -101,7 +101,7 @@ def diff_and_name_manifest(
     existing_manifests = os.listdir(path_to_existing_manifests)
     print(existing_manifests)
     print("-=====")
-    latest_manifest_number = 1
+    latest_manifest_number = 0
     
     if existing_manifests:
         latest_manifest_filename = sorted(existing_manifests)[-1]
@@ -122,7 +122,8 @@ def diff_and_name_manifest(
         )
         return {
             "path": new_manifest_path,
-            "manifest": new_manifest
+            "manifest": new_manifest,
+            "version": latest_manifest_number+1
         }
     return None
 

@@ -167,7 +167,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .attr('height', d => d.height)
       .attr('rx', 10)
       .attr('ry', 10)
-      .attr('fill', '#FFF5F7')
+      .attr('fill', (d, i) => i === 0 ? '#F8E6EE' : '#FFF5F7') // Slightly darker for first app
       .attr('opacity', 0)
       .transition()
       .duration(400)
@@ -180,7 +180,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .attr('x', d => d.width/2)
       .attr('y', 40)
       .attr('text-anchor', 'middle')
-      .attr('font-size', '24px')
+      .attr('font-size', (d, i) => i === 0 ? '24px' : '20px') // Smaller font for non-main apps
       .attr('font-weight', 'bold')
       .attr('fill', '#4A1D3E')
       .attr('opacity', 0)
@@ -188,21 +188,6 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .transition()
       .duration(800)
       .delay((d, i) => 300 + i * 200)
-      .attr('opacity', 1);
-    
-    // Use the calculated absolute positions for the service nodes
-    const serviceNodes = nodeLayer.selectAll('.service')
-      .data(services)
-      .join('g')
-      .attr('class', 'service')
-      .attr('id', d => d.id)
-      .attr('transform', d => `translate(${d.absX || d.x}, ${d.absY || d.y})`)
-      .attr('opacity', 0)
-      .style('cursor', 'move');
-    
-    serviceNodes.transition()
-      .duration(600)
-      .delay((d, i) => 600 + i * 300)
       .attr('opacity', 1);
     
     function hexagonPath(size: number): string {
@@ -249,98 +234,6 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
           .remove();
       }
     }
-    
-    serviceNodes.each(function(d, i) {
-      createBubbles(d3.select(this as Element) as any, i);
-    });
-
-    serviceNodes.append('path')
-      .attr('class', 'hexagon')
-      .attr('d', hexagonPath(40))
-      .attr('fill', d => {
-        if (d.name === 'service-a' || d.name === 'service-y') return '#EF5350'; // Red
-        if (d.name === 'service-b') return '#90CAF9'; // Light blue
-        return '#FFD54F'; // Yellow for service-s
-      })
-      .attr('stroke', 'none')
-      .transition()
-      .duration(800)
-      .delay((d, i) => 600 + i * 300)
-      .attrTween('d', function() {
-        return function(t) {
-          const elasticT = d3.easeElasticOut.amplitude(1).period(0.3)(t);
-          return hexagonPath(40 * elasticT);
-        };
-      });
-    
-    // Add service name boxes with animation
-    serviceNodes.append('rect')
-      .attr('class', 'name-box')
-      .attr('x', 60)
-      .attr('y', -20)
-      .attr('width', 100)
-      .attr('height', 30)
-      .attr('rx', 5)
-      .attr('ry', 5)
-      .attr('fill', '#CE93D8')
-      .transition()
-      .duration(600)
-      .delay((d, i) => 800 + i * 300)
-      .attr('width', 100);
-    
-    serviceNodes.append('text')
-      .attr('class', 'service-name')
-      .attr('x', 110)
-      .attr('y', -5)
-      .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .attr('fill', '#4A1D3E')
-      .attr('font-weight', 'bold')
-      .attr('opacity', 0)
-      .text(d => d.name)
-      .transition()
-      .duration(400)
-      .delay((d, i) => 1000 + i * 300)
-      .attr('opacity', 1);
-    
-    serviceNodes.append('rect')
-      .attr('class', 'version-box')
-      .attr('x', 60)
-      .attr('y', 20)
-      .attr('width', 100)
-      .attr('height', 20)
-      .attr('rx', 5)
-      .attr('ry', 5)
-      .attr('fill', '#F8BBD0')
-      .transition()
-      .duration(600)
-      .delay((d, i) => 900 + i * 300)
-      .attr('width', 100);
-    
-    serviceNodes.append('text')
-      .attr('class', 'version-number')
-      .attr('x', 110)
-      .attr('y', 31)
-      .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .attr('fill', '#4A1D3E')
-      .attr('font-size', '13px')
-      .attr('font-weight', 'bold')
-      .attr('opacity', 0)
-      .text(d => d.ver)
-      .transition()
-      .duration(400)
-      .delay((d, i) => 1100 + i * 300)
-      .attr('opacity', 1);
-    
-    const links = linkLayer.selectAll('.dependency-link')
-      .data(dependencies)
-      .join('path')
-      .attr('class', 'dependency-link')
-      .attr('fill', 'none')
-      .attr('stroke', '#2C5282')
-      .attr('stroke-width', 2)
-      .attr('opacity', 0);
     
     // Function to calculate the points where links connect to hexagons
     function calculateLinkPoints() {
@@ -402,6 +295,18 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       });
     }
     
+    // Create links with light gray color by default
+    const links = linkLayer.selectAll('.dependency-link')
+      .data(dependencies)
+      .join('path')
+      .attr('class', 'dependency-link')
+      .attr('fill', 'none')
+      .attr('stroke', '#D3D3D3')  // Light gray color
+      .attr('stroke-width', 2)
+      .attr('opacity', 0)
+      .attr('data-source', d => d.source)
+      .attr('data-target', d => d.target);
+    
     // Initial calculation of link paths
     calculateLinkPoints();
     
@@ -416,14 +321,148 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
         };
     });
     
+    // Use the calculated absolute positions for the service nodes
+    const serviceNodes = nodeLayer.selectAll('.service')
+      .data(services)
+      .join('g')
+      .attr('class', 'service')
+      .attr('id', d => d.id)
+      .attr('transform', d => `translate(${d.absX || d.x}, ${d.absY || d.y})`)
+      .attr('opacity', 0)
+      .style('cursor', 'pointer');  // Changed to pointer to indicate interactivity
+    
+    serviceNodes.transition()
+      .duration(600)
+      .delay((d, i) => 600 + i * 300)
+      .attr('opacity', 1);
+    
+    serviceNodes.each(function(d, i) {
+      createBubbles(d3.select(this as Element) as any, i);
+    });
+
+    serviceNodes.append('path')
+      .attr('class', 'hexagon')
+      .attr('d', hexagonPath(40))
+      .attr('fill', d => {
+        if (d.name === 'service-a' || d.name === 'service-y') return '#EF5350'; // Red
+        if (d.name === 'service-b') return '#90CAF9'; // Light blue
+        return '#FFD54F'; // Yellow for service-s
+      })
+      .attr('stroke', 'none')
+      .transition()
+      .duration(800)
+      .delay((d, i) => 600 + i * 300)
+      .attrTween('d', function() {
+        return function(t) {
+          const elasticT = d3.easeElasticOut.amplitude(1).period(0.3)(t);
+          return hexagonPath(40 * elasticT);
+        };
+      });
+    
+    // Add service name boxes with animation
+    serviceNodes.append('rect')
+      .attr('class', 'name-box')
+      .attr('x', 40)
+      .attr('y', -25)
+      .attr('width', 100)
+      .attr('height', 30)
+      .attr('rx', 5)
+      .attr('ry', 5)
+      .attr('fill', '#CE93D8')
+      .transition()
+      .duration(600)
+      .delay((d, i) => 800 + i * 300)
+      .attr('width', 100);
+    
+    serviceNodes.append('text')
+      .attr('class', 'service-name')
+      .attr('x', 90)
+      .attr('y', -10)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'middle')
+      .attr('fill', '#4A1D3E')
+      .attr('font-weight', 'bold')
+      .attr('opacity', 0)
+      .text(d => d.name)
+      .transition()
+      .duration(400)
+      .delay((d, i) => 1000 + i * 300)
+      .attr('opacity', 1);
+    
+    serviceNodes.append('rect')
+      .attr('class', 'version-box')
+      .attr('x', 40)
+      .attr('y', 9)
+      .attr('width', 100)
+      .attr('height', 20)
+      .attr('rx', 5)
+      .attr('ry', 5)
+      .attr('fill', '#F8BBD0')
+      .transition()
+      .duration(600)
+      .delay((d, i) => 900 + i * 300)
+      .attr('width', 100);
+    
+    serviceNodes.append('text')
+      .attr('class', 'version-number')
+      .attr('x', 90)
+      .attr('y', 20)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'middle')
+      .attr('fill', '#4A1D3E')
+      .attr('font-size', '13px')
+      .attr('font-weight', 'bold')
+      .attr('opacity', 0)
+      .text(d => d.ver)
+      .transition()
+      .duration(400)
+      .delay((d, i) => 1100 + i * 300)
+      .attr('opacity', 1);
+    
+    // Add hover effects to service nodes for link highlighting
+    serviceNodes
+      .on('mouseover', function(event, d) {
+        // Highlight the current node
+        d3.select(this).select('.hexagon')
+          .transition()
+          .duration(200)
+          .attr('stroke', '#333')
+          .attr('stroke-width', 2);
+        
+        // Find all connected links (both as source and target)
+        links.each(function(linkData) {
+          if (linkData.source === d.id || linkData.target === d.id) {
+            // Highlight connected links
+            d3.select(this)
+              .transition()
+              .duration(200)
+              .attr('stroke', '#2C5282')  // Darker blue color for highlighted links
+              .attr('stroke-width', 3);
+          }
+        });
+      })
+      .on('mouseout', function() {
+        // Reset node highlighting
+        d3.select(this).select('.hexagon')
+          .transition()
+          .duration(200)
+          .attr('stroke', 'none');
+        
+        // Reset link highlighting
+        links
+          .transition()
+          .duration(200)
+          .attr('stroke', '#D3D3D3')  // Back to light gray
+          .attr('stroke-width', 2);
+      });
+    
     // Make service nodes draggable with updated positioning logic
     serviceNodes.call(
       (d3.drag() as any)
         .on('start', function(this: any, event: any, d: Service) {
-          d3.select(this).raise().attr('stroke', 'black');
+          d3.select(this).raise().select('.hexagon').attr('stroke', '#333');
         })
         .on('drag', function(this: any, event: any, d: Service) {
-          // Update the absolute node position
           d.absX = event.x;
           d.absY = event.y;
           
@@ -434,15 +473,11 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
           const app = apps.find(a => a.id === d.app);
           if (app) {
             // Calculate new relative position
-            d.x = d.absX - app.x;
-            d.y = d.absY - app.y;
+            d.x = (d.absX ? d.absX : 0) - app.x;
+            d.y = (d.absY ? d.absY : 0) - app.y;
           }
           
           // Update links
-          calculateLinkPoints();
-        })
-        .on('end', function(this: any, event: any, d: Service) {
-          d3.select(this).attr('stroke', null);
           calculateLinkPoints();
         })
     );

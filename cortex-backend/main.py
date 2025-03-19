@@ -26,9 +26,12 @@ graph_app1v3_yaml = """
   - app: app1
     svc: service-b
     ver: 0.0.7
-  - app: app5
-    svc: service-t
-    ver: 0.0.4
+  - app: app1
+    svc: service-c
+    ver: 0.0.1
+  - app: app2
+    svc: service-y
+    ver: 0.0.2
 - app: app1
   svc: service-b
   ver: 0.0.7
@@ -36,15 +39,84 @@ graph_app1v3_yaml = """
   - app: shared-app
     svc: service-s
     ver: 0.0.4
-  - app: app2
-    svc: service-y
-    ver: 0.0.2
+  - app: app1
+    svc: service-f
+    ver: 0.0.1
+- app: app1
+  svc: service-c
+  ver: 0.0.1
+  depends_on:
   - app: app3
     svc: service-z
     ver: 0.0.3
   - app: app4
     svc: service-x
     ver: 0.0.9
+- app: app1
+  svc: service-d
+  ver: 0.0.1
+  depends_on:
+  - app: app1
+    svc: service-c
+    ver: 0.0.1
+  - app: app5
+    svc: service-t
+    ver: 0.0.4
+  - app: app1
+    svc: service-e
+    ver: 0.0.8
+- app: app1
+  svc: service-e
+  ver: 0.0.8
+- app: app1
+  svc: service-f
+  ver: 0.0.3
+"""
+
+graph_app1v1_yaml = """
+- app: app1
+  svc: service-a
+  ver: 0.0.36
+  depends_on:
+  - app: app1
+    svc: service-b
+    ver: 0.0.7
+  - app: app1
+    svc: service-c
+    ver: 0.0.1
+  - app: app2
+    svc: service-y
+    ver: 0.0.2
+- app: app1
+  svc: service-b
+  ver: 0.0.7
+  depends_on:
+  - app: shared-app
+    svc: service-s
+    ver: 0.0.4
+- app: app1
+  svc: service-c
+  ver: 0.0.1
+  depends_on:
+  - app: app3
+    svc: service-z
+    ver: 0.0.3
+  - app: app4
+    svc: service-x
+    ver: 0.0.9
+- app: app1
+  svc: service-d
+  ver: 0.0.1
+  depends_on:
+  - app: app1
+    svc: service-c
+    ver: 0.0.1
+  - app: app1
+    svc: service-e
+    ver: 0.0.8
+- app: app1
+  svc: service-e
+  ver: 0.0.8
 """
 
 graph_app1v2_yaml = """
@@ -96,8 +168,8 @@ async def test_app_versions(app: str = "app1"):
     database = {
         "app1": {
             3: {"app": "app1", "version": 3, "graph": graph.calculate_graph("app1", graph_app1v3_yaml)},
-            2: {"app": "app1", "version": 2, "graph": graph_original.calculate_graph(graph_app1v2_yaml)},
-            1: {"app": "app1", "version": 1, "graph": graph_app1v1},
+            2: {"app": "app1", "version": 2, "graph": graph.calculate_graph("app1", graph_app1v2_yaml)},
+            1: {"app": "app1", "version": 1, "graph": graph.calculate_graph("app1", graph_app1v1_yaml)},
         },
         "app2": {
             1: {"app": "app2", "version": 3, "graph": graph_app2v1},
