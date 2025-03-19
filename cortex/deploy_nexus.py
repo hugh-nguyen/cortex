@@ -155,27 +155,27 @@ def deploy_routes(nexus_manifest):
     open("cortex/envoy.yaml", "w").write(
         yaml.dump(envoy_config, sort_keys=False)
     )
-    # open("charts/envoy-gateway/files/envoy.yaml", "w").write(
-    #     yaml.dump(envoy_config, sort_keys=False)
-    # )
-    # print("======== CONNECT TO KUBERNETES =========")
-    # subprocess.run([
-    #     "aws",
-    #     "eks",
-    #     "update-kubeconfig",
-    #     "--region",
-    #     "ap-southeast-2",
-    #     "--name",
-    #     "cluster",
+    open("charts/envoy-gateway/files/envoy.yaml", "w").write(
+        yaml.dump(envoy_config, sort_keys=False)
+    )
+    print("======== CONNECT TO KUBERNETES =========")
+    subprocess.run([
+        "aws",
+        "eks",
+        "update-kubeconfig",
+        "--region",
+        "ap-southeast-2",
+        "--name",
+        "cluster",
        
-    # ], check=True)
+    ], check=True)
 
-    # subprocess.run([
-    #     "helm",
-    #     "upgrade",
-    #     "envoy",
-    #     "./charts/envoy-gateway",
-    # ], check=True)
+    subprocess.run([
+        "helm",
+        "upgrade",
+        "envoy",
+        "./charts/envoy-gateway",
+    ], check=True)
 
 
 if __name__ == '__main__':

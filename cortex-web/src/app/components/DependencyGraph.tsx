@@ -199,7 +199,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       return (d3.line()(points as any) || '') + 'Z';
     }
     
-    function createBubbles(selection: any, index: number): void {
+    function createBubbles(selection: any): void {
       const numBubbles = 8;
       const bubbleGroup = selection.append('g').attr('class', 'bubbles');
       
@@ -207,7 +207,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * 40 + 30;
         const size = Math.random() * 10 + 3;
-        const delay = Math.random() * 200 + (index * 300);
+        const delay = Math.random() * 200 + 800; // Consistent delay base for all nodes
         const duration = Math.random() * 800 + 600;
         
         const bubble = bubbleGroup.append('circle')
@@ -312,7 +312,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
     
     links.transition()
       .duration(1000)
-      .delay((d, i) => 1500 + i * 300)
+      .delay(1500) // Fixed delay for all links
       .attr('opacity', 1)
       .attrTween('stroke-dasharray', function() {
         const length = 10000;
@@ -331,18 +331,21 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .attr('opacity', 0)
       .style('cursor', 'pointer');  // Changed to pointer to indicate interactivity
     
+    // Make all service nodes appear simultaneously
     serviceNodes.transition()
       .duration(600)
-      .delay((d, i) => 600 + i * 300)
+      .delay(600) // Fixed delay for all nodes
       .attr('opacity', 1);
     
-    serviceNodes.each(function(d, i) {
-      createBubbles(d3.select(this as Element) as any, i);
+    // Create bubbles for all nodes with the same timing
+    serviceNodes.each(function() {
+      createBubbles(d3.select(this as Element) as any);
     });
 
+    // Add hexagons to all nodes simultaneously
     serviceNodes.append('path')
       .attr('class', 'hexagon')
-      .attr('d', hexagonPath(40))
+      .attr('d', hexagonPath(0)) // Start with size 0
       .attr('fill', d => {
         if (d.name === 'service-a' || d.name === 'service-y') return '#EF5350'; // Red
         if (d.name === 'service-b') return '#90CAF9'; // Light blue
@@ -351,7 +354,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .attr('stroke', 'none')
       .transition()
       .duration(800)
-      .delay((d, i) => 600 + i * 300)
+      .delay(600) // Same delay for all hexagons
       .attrTween('d', function() {
         return function(t) {
           const elasticT = d3.easeElasticOut.amplitude(1).period(0.3)(t);
@@ -364,14 +367,14 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .attr('class', 'name-box')
       .attr('x', 40)
       .attr('y', -25)
-      .attr('width', 100)
+      .attr('width', 0) // Start with width 0
       .attr('height', 30)
       .attr('rx', 5)
       .attr('ry', 5)
       .attr('fill', '#CE93D8')
       .transition()
       .duration(600)
-      .delay((d, i) => 800 + i * 300)
+      .delay(800) // Same delay for all name boxes
       .attr('width', 100);
     
     serviceNodes.append('text')
@@ -386,21 +389,21 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .text(d => d.name)
       .transition()
       .duration(400)
-      .delay((d, i) => 1000 + i * 300)
+      .delay(1000) // Same delay for all service names
       .attr('opacity', 1);
     
     serviceNodes.append('rect')
       .attr('class', 'version-box')
       .attr('x', 40)
       .attr('y', 9)
-      .attr('width', 100)
+      .attr('width', 0) // Start with width 0
       .attr('height', 20)
       .attr('rx', 5)
       .attr('ry', 5)
       .attr('fill', '#F8BBD0')
       .transition()
       .duration(600)
-      .delay((d, i) => 900 + i * 300)
+      .delay(900) // Same delay for all version boxes
       .attr('width', 100);
     
     serviceNodes.append('text')
@@ -416,7 +419,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
       .text(d => d.ver)
       .transition()
       .duration(400)
-      .delay((d, i) => 1100 + i * 300)
+      .delay(1100) // Same delay for all version numbers
       .attr('opacity', 1);
     
     // Add hover effects to service nodes for link highlighting
