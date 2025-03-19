@@ -2,6 +2,19 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { 
+  Box, 
+  CircularProgress, 
+  Alert, 
+  Paper, 
+  Slider, 
+  IconButton, 
+  Tooltip,
+  Typography
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 // Define proper interfaces for our data types
 interface Service {
@@ -33,18 +46,29 @@ interface GraphData {
   apps: App[];
 }
 
-const DependencyGraph: React.FC = () => {
+interface DependencyGraphProps {
+  customGraphData?: GraphData;
+}
+
+const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) => {
   const svgRef = useRef<HTMLDivElement>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(0.7); // Default to 70%
   
-  // Fetch data from the API
+  // Fetch data from the API when no custom data is provided
   useEffect(() => {
+    if (customGraphData) {
+      setGraphData(customGraphData);
+      setLoading(false);
+      return;
+    }
+    
     const fetchGraphData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:8000/test');
+        const response = await fetch('http://127.0.0.1:8000/test_graph');
         
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);
@@ -62,29 +86,36 @@ const DependencyGraph: React.FC = () => {
     };
 
     fetchGraphData();
-  }, []);
+  }, [customGraphData]);
   
-  // Render the graph when data is available
+  // Render the graph when data is available or zoom changes
   useEffect(() => {
     if (!graphData || !svgRef.current) return;
     
     const { services, dependencies, apps } = graphData;
     
-    const width = 3800;
-    const height = 500;
+    const width = 800;
+    const height = 600;
+    
+    // Clear existing SVG before redrawing
+    d3.select(svgRef.current).selectAll('*').remove();
     
     // Create the main SVG element
-    d3.select(svgRef.current).selectAll('*').remove();
     const svg = d3.select(svgRef.current)
       .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', [0, 0, width, height]);
+      .attr('width', '100%')
+      .attr('height', '100%')
+      .attr('viewBox', [0, 0, width, height])
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+    
+    // Create a group for everything to apply zoom transform
+    const g = svg.append('g')
+      .attr('transform', `scale(${zoomLevel})`);
     
     // Create proper layering for the visualization
-    const backLayer = svg.append('g').attr('class', 'back-layer');  // App backgrounds
-    const linkLayer = svg.append('g').attr('class', 'link-layer');  // Connection lines
-    const nodeLayer = svg.append('g').attr('class', 'node-layer');  // Service nodes
+    const backLayer = g.append('g').attr('class', 'back-layer');  // App backgrounds
+    const linkLayer = g.append('g').attr('class', 'link-layer');  // Connection lines
+    const nodeLayer = g.append('g').attr('class', 'node-layer');  // Service nodes
     
     // Create app backgrounds
     const appGroups = backLayer.selectAll('.app-group')
@@ -204,7 +235,7 @@ const DependencyGraph: React.FC = () => {
       .attr('class', 'hexagon')
       .attr('d', hexagonPath(40))
       .attr('fill', d => {
-        if (d.name === 'service-a') return '#EF5350'; // Red
+        if (d.name === 'service-a' || d.name === 'service-y') return '#EF5350'; // Red
         if (d.name === 'service-b') return '#90CAF9'; // Light blue
         return '#FFD54F'; // Yellow for service-s
       })
@@ -317,8 +348,9 @@ const DependencyGraph: React.FC = () => {
         // Calculate control point for the curve
         let controlPoint;
         
-        if (d.source === 'service-a' && d.target === 'service-b') {
-          // Custom control for this specific connection
+        if ((d.source === 'service-a' && d.target === 'service-b') || 
+            (d.source === 'service-y' && d.target === 'service-s')) {
+          // Custom control for specific connections
           controlPoint = {
             x: sourcePoint.x - 60,
             y: (sourcePoint.y + targetPoint.y) / 2
@@ -426,26 +458,110 @@ const DependencyGraph: React.FC = () => {
     backLayer.lower(); // App backgrounds at the back
     nodeLayer.raise(); // Service nodes at the front
     
-  }, [graphData]);
+  }, [graphData, zoomLevel]);
+  
+  const handleZoomChange = (_event: Event, newValue: number | number[]) => {
+    setZoomLevel(newValue as number);
+  };
+  
+  const zoomIn = () => {
+    setZoomLevel(Math.min(zoomLevel + 0.1, 1.5));
+  };
+  
+  const zoomOut = () => {
+    setZoomLevel(Math.max(zoomLevel - 0.1, 0.3));
+  };
+  
+  const resetZoom = () => {
+    setZoomLevel(0.7);
+  };
   
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
+    <Box sx={{ width: '100%', height: '100%', minHeight: '600px', position: 'relative' }}>
       {loading && (
-        <div className="flex justify-center items-center h-64">
-          <p>Loading graph data...</p>
-        </div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+          <CircularProgress />
+        </Box>
       )}
+      
       {error && (
-        <div className="border border-red-500 bg-red-100 p-4 rounded mb-4">
-          <p className="text-red-700">{error}</p>
-        </div>
+        <Alert severity="error" sx={{ m: 2 }}>
+          {error}
+        </Alert>
       )}
+      
       {!loading && !error && (
-        <div className="rounded p-4 bg-white">
-          <div ref={svgRef} className="w-full h-96"></div>
-        </div>
+        <>
+          <Box 
+            ref={svgRef} 
+            sx={{ 
+              width: '100%', 
+              height: '100%', 
+              minHeight: '600px',
+              bgcolor: 'white',
+              borderRadius: 1
+            }}
+          />
+          
+          {/* Zoom Controls */}
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              position: 'absolute', 
+              bottom: 16, 
+              right: 16, 
+              p: 1.5, 
+              borderRadius: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 1
+            }}
+          >
+            <Typography variant="caption" sx={{ mb: 0.5 }}>
+              Zoom: {Math.round(zoomLevel * 100)}%
+            </Typography>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Tooltip title="Zoom Out">
+                <IconButton 
+                  size="small" 
+                  onClick={zoomOut}
+                  disabled={zoomLevel <= 0.3}
+                >
+                  <RemoveIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              
+              <Slider
+                value={zoomLevel}
+                min={0.3}
+                max={1.5}
+                step={0.1}
+                onChange={handleZoomChange}
+                sx={{ width: 100 }}
+              />
+              
+              <Tooltip title="Zoom In">
+                <IconButton 
+                  size="small" 
+                  onClick={zoomIn}
+                  disabled={zoomLevel >= 1.5}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              
+              <Tooltip title="Reset Zoom">
+                <IconButton size="small" onClick={resetZoom}>
+                  <RestartAltIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Paper>
+        </>
       )}
-    </div>
+    </Box>
   );
 };
 
