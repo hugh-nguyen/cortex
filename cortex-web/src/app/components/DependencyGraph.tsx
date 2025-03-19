@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 
 // Define proper interfaces for our data types
@@ -27,51 +27,51 @@ interface App {
   height: number;
 }
 
+interface GraphData {
+  services: Service[];
+  dependencies: Dependency[];
+  apps: App[];
+}
+
 const DependencyGraph: React.FC = () => {
   const svgRef = useRef<HTMLDivElement>(null);
+  const [graphData, setGraphData] = useState<GraphData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
+  // Fetch data from the API
   useEffect(() => {
+    const fetchGraphData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://127.0.0.1:8000/test');
+        
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setGraphData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching graph data:', err);
+        setError('Failed to load graph data. Please check the console for details.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const yamlContent = `
-- app: app1
-  svc: service-a
-  ver: 0.0.36
-  depends_on:
-  - app: app1
-    svc: service-b
-    ver: 0.0.7
-- app: app1
-  svc: service-b
-  ver: 0.0.7
-  depends_on:
-  - app: shared-app
-    svc: service-s
-    ver: 0.0.4
-  - app: app2
-    svc: service-y
-    ver: 0.0.1
-`;
-
-    const services: Service[] = [
-      { id: "service-a", app: "app1", name: "service-a", ver: "0.0.30", x: 160, y: 150 },
-      { id: "service-b", app: "app1", name: "service-b", ver: "0.0.7", x: 160, y: 320 },
-      { id: "service-s", app: "shared-app", name: "service-s", ver: "0.0.4", x: 580, y: 250 }
-    ];
+    fetchGraphData();
+  }, []);
+  
+  // Render the graph when data is available
+  useEffect(() => {
+    if (!graphData || !svgRef.current) return;
     
-    const dependencies: Dependency[] = [
-      { source: "service-a", target: "service-b" },
-      { source: "service-b", target: "service-s" }
-    ];
-    
-    const apps: App[] = [
-      { id: "app1", name: "app1", x: 40, y: 40, width: 360, height: 430 },
-      { id: "shared-app", name: "shared-app", x: 440, y: 40, width: 360, height: 430 }
-    ];
+    const { services, dependencies, apps } = graphData;
     
     const width = 800;
     const height = 500;
-    
-    if (!svgRef.current) return;
     
     // Create the main SVG element
     d3.select(svgRef.current).selectAll('*').remove();
@@ -386,20 +386,32 @@ const DependencyGraph: React.FC = () => {
     
     function dragEnded(event: d3.D3DragEvent<SVGGElement, Service, Service>, d: Service): void {
       d3.select<SVGGElement, Service>(event.sourceEvent.currentTarget)
-        .attr('stroke', null); // Make sure this semicolon is here
+        .attr('stroke', null);
       
       updateLinks();
       setTimeout(updateLinks, 50);
     }
     
-  }, []);
+  }, [graphData]);
   
   return (
-    <div className={"w-full max-w-4xl mx-auto p-4"}>
-      <h2 className={"text-xl font-bold mb-4"}>Service Dependency Graph</h2>
-      <div className={"border rounded p-4 bg-white"}>
-        <div ref={svgRef} className={"w-full h-96"}></div>
-      </div>
+    <div className="w-full max-w-4xl mx-auto p-4">
+      {/* <h2 className="text-xl font-bold mb-4">Service Dependency Graph</h2> */}
+      {loading && (
+        <div className="flex justify-center items-center h-64">
+          <p>Loading graph data...</p>
+        </div>
+      )}
+      {error && (
+        <div className="border border-red-500 bg-red-100 p-4 rounded mb-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+      {!loading && !error && (
+        <div className="rounded p-4 bg-white">
+          <div ref={svgRef} className="w-full h-96"></div>
+        </div>
+      )}
     </div>
   );
 };
