@@ -70,7 +70,7 @@ const DependencyGraph: React.FC = () => {
     
     const { services, dependencies, apps } = graphData;
     
-    const width = 800;
+    const width = 3800;
     const height = 500;
     
     // Create the main SVG element
@@ -95,7 +95,6 @@ const DependencyGraph: React.FC = () => {
       .attr('transform', d => `translate(${d.x}, ${d.y})`)
       .style('cursor', 'move');
     
-    // Add app background rectangles
     appGroups.append('rect')
       .attr('class', 'app-bg')
       .attr('x', 0)
@@ -105,9 +104,13 @@ const DependencyGraph: React.FC = () => {
       .attr('rx', 10)
       .attr('ry', 10)
       .attr('fill', '#FFF5F7')
+      .attr('opacity', 0)
+      .transition()
+      .duration(800)
+      .delay((d, i) => i * 200)
+      .attr('height', d => d.height)
       .attr('opacity', 0.8);
     
-    // Add app titles
     appGroups.append('text')
       .attr('class', 'app-title')
       .attr('x', d => d.width/2)
@@ -116,16 +119,26 @@ const DependencyGraph: React.FC = () => {
       .attr('font-size', '24px')
       .attr('font-weight', 'bold')
       .attr('fill', '#4A1D3E')
-      .text(d => d.name);
+      .attr('opacity', 0)
+      .text(d => d.name)
+      .transition()
+      .duration(800)
+      .delay((d, i) => 300 + i * 200)
+      .attr('opacity', 1);
     
-    // Create service nodes
     const serviceNodes = nodeLayer.selectAll('.service')
       .data(services)
       .join('g')
       .attr('class', 'service')
       .attr('id', d => d.id)
       .attr('transform', d => `translate(${d.x}, ${d.y})`)
+      .attr('opacity', 0)
       .style('cursor', 'move');
+    
+    serviceNodes.transition()
+      .duration(600)
+      .delay((d, i) => 600 + i * 300)
+      .attr('opacity', 1);
     
     // Calculate relative positions of services to their apps
     const serviceRelativePositions = services.map(service => {
@@ -138,17 +151,55 @@ const DependencyGraph: React.FC = () => {
       };
     });
     
-    // Helper function to create hexagon path
-    function hexagonPath(size) {
-      const points = [];
+    function hexagonPath(size: number): string {
+      const points: [number, number][] = [];
       for (let i = 0; i < 6; i++) {
         const angle = (i * Math.PI / 3) - (Math.PI / 6);
         points.push([size * Math.cos(angle), size * Math.sin(angle)]);
       }
-      return d3.line()(points) + 'Z';
+      return (d3.line()(points as any) || '') + 'Z';
     }
     
-    // Add hexagons to service nodes
+    function createBubbles(selection: any, index: number): void {
+      const numBubbles = 8;
+      const bubbleGroup = selection.append('g').attr('class', 'bubbles');
+      
+      for (let i = 0; i < numBubbles; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 40 + 30;
+        const size = Math.random() * 10 + 3;
+        const delay = Math.random() * 200 + (index * 300);
+        const duration = Math.random() * 800 + 600;
+        
+        const bubble = bubbleGroup.append('circle')
+          .attr('cx', 0)
+          .attr('cy', 0)
+          .attr('r', 0)
+          .attr('fill', () => {
+            const colors = ['#EF5350', '#90CAF9', '#FFD54F'];
+            return colors[Math.floor(Math.random() * colors.length)];
+          })
+          .attr('opacity', 0);
+        
+        bubble.transition()
+          .delay(delay)
+          .duration(duration)
+          .attr('cx', Math.cos(angle) * distance)
+          .attr('cy', Math.sin(angle) * distance)
+          .attr('r', size)
+          .attr('opacity', 0.3)
+          .transition()
+          .duration(400)
+          .attr('opacity', 0)
+          .attr('r', 0)
+          .remove();
+      }
+    }
+    
+    serviceNodes.each(function(d, i) {
+      createBubbles(d3.select(this as Element) as any, i);
+    });
+
     serviceNodes.append('path')
       .attr('class', 'hexagon')
       .attr('d', hexagonPath(40))
@@ -157,9 +208,18 @@ const DependencyGraph: React.FC = () => {
         if (d.name === 'service-b') return '#90CAF9'; // Light blue
         return '#FFD54F'; // Yellow for service-s
       })
-      .attr('stroke', 'none');
+      .attr('stroke', 'none')
+      .transition()
+      .duration(800)
+      .delay((d, i) => 600 + i * 300)
+      .attrTween('d', function() {
+        return function(t) {
+          const elasticT = d3.easeElasticOut.amplitude(1).period(0.3)(t);
+          return hexagonPath(40 * elasticT);
+        };
+      });
     
-    // Add service name boxes
+    // Add service name boxes with animation
     serviceNodes.append('rect')
       .attr('class', 'name-box')
       .attr('x', 60)
@@ -168,9 +228,12 @@ const DependencyGraph: React.FC = () => {
       .attr('height', 30)
       .attr('rx', 5)
       .attr('ry', 5)
-      .attr('fill', '#CE93D8'); // Purple
+      .attr('fill', '#CE93D8')
+      .transition()
+      .duration(600)
+      .delay((d, i) => 800 + i * 300)
+      .attr('width', 100);
     
-    // Add service names
     serviceNodes.append('text')
       .attr('class', 'service-name')
       .attr('x', 110)
@@ -179,9 +242,13 @@ const DependencyGraph: React.FC = () => {
       .attr('dominant-baseline', 'middle')
       .attr('fill', '#4A1D3E')
       .attr('font-weight', 'bold')
-      .text(d => d.name);
+      .attr('opacity', 0)
+      .text(d => d.name)
+      .transition()
+      .duration(400)
+      .delay((d, i) => 1000 + i * 300)
+      .attr('opacity', 1);
     
-    // Add version boxes
     serviceNodes.append('rect')
       .attr('class', 'version-box')
       .attr('x', 60)
@@ -190,9 +257,12 @@ const DependencyGraph: React.FC = () => {
       .attr('height', 30)
       .attr('rx', 5)
       .attr('ry', 5)
-      .attr('fill', '#F8BBD0'); // Light pink
+      .attr('fill', '#F8BBD0')
+      .transition()
+      .duration(600)
+      .delay((d, i) => 900 + i * 300)
+      .attr('width', 100);
     
-    // Add version numbers
     serviceNodes.append('text')
       .attr('class', 'version-number')
       .attr('x', 110)
@@ -201,16 +271,21 @@ const DependencyGraph: React.FC = () => {
       .attr('dominant-baseline', 'middle')
       .attr('fill', '#4A1D3E')
       .attr('font-size', '13px')
-      .text(d => d.ver);
+      .attr('opacity', 0)
+      .text(d => d.ver)
+      .transition()
+      .duration(400)
+      .delay((d, i) => 1100 + i * 300)
+      .attr('opacity', 1);
     
-    // Create links between services
     const links = linkLayer.selectAll('.dependency-link')
       .data(dependencies)
       .join('path')
       .attr('class', 'dependency-link')
       .attr('fill', 'none')
       .attr('stroke', '#2C5282')
-      .attr('stroke-width', 2);
+      .attr('stroke-width', 2)
+      .attr('opacity', 0);
     
     // Function to calculate the points where links connect to hexagons
     function calculateLinkPoints() {
@@ -267,6 +342,17 @@ const DependencyGraph: React.FC = () => {
     
     // Initial calculation of link paths
     calculateLinkPoints();
+    
+    links.transition()
+      .duration(1000)
+      .delay((d, i) => 1500 + i * 300)
+      .attr('opacity', 1)
+      .attrTween('stroke-dasharray', function() {
+        const length = 10000;
+        return function(t: number) {
+          return `${t * length} ${length}`;
+        };
+    });
     
     // Make service nodes draggable
     serviceNodes.call(
