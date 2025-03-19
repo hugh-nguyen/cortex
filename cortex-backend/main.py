@@ -26,6 +26,9 @@ graph_app1v3_yaml = """
   - app: app1
     svc: service-b
     ver: 0.0.7
+  - app: app5
+    svc: service-t
+    ver: 0.0.4
 - app: app1
   svc: service-b
   ver: 0.0.7
@@ -33,6 +36,15 @@ graph_app1v3_yaml = """
   - app: shared-app
     svc: service-s
     ver: 0.0.4
+  - app: app2
+    svc: service-y
+    ver: 0.0.2
+  - app: app3
+    svc: service-z
+    ver: 0.0.3
+  - app: app4
+    svc: service-x
+    ver: 0.0.9
 """
 
 graph_app1v2_yaml = """
