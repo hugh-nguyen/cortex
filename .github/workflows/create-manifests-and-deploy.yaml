@@ -85,9 +85,17 @@ jobs:
           pip install pyyaml requests
 
       - name: Deploy Nexus
-        run: python -m cortex.deploy_nexus
+        run: |
+          python -m cortex.deploy_nexus
         env:
           GH_PERSONAL_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
+      - name: Upload Envoy Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: envoy-manifest
+          path: cortex/envoy.yaml
+      

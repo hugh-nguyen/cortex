@@ -7,4 +7,7 @@ def test_create_nexus_manifest_1():
         os.path.dirname(__file__),
         "test_create_nexus_manifest_1.yaml"
     )
+    # write_path = "tests/create_nexus_manifest/test_create_nexus_manifest_1_compare.yaml"
+    # open(write_path, "w").write(result["manifest"])
+    
     assert result["manifest"] == open(path, "r").read()

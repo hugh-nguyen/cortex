@@ -1,4 +1,4 @@
 /shared-app/service-s/:
-  app: app1
+  app: shared-app
   app_ver: 1
-  svc: service-a
+  svc: service-s

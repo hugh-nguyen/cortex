@@ -45,54 +45,6 @@ static_resources:
                     value: '1'
               - match:
                   prefix: /app1/service-a/
-                route:
-                  cluster: app1-service-a-0-0-36
-                  prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app1
-                - header:
-                    key: X-App-Version
-                    value: '1'
-              - match:
-                  prefix: /app2/main/
-                route:
-                  cluster: app2-service-y-0-0-1
-                  prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app2
-                - header:
-                    key: X-App-Version
-                    value: '1'
-              - match:
-                  prefix: /app2/service-y/
-                route:
-                  cluster: app2-service-y-0-0-1
-                  prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app2
-                - header:
-                    key: X-App-Version
-                    value: '1'
-              - match:
-                  prefix: /shared-app/service-s/
-                route:
-                  cluster: app1-service-a-0-0-36
-                  prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app1
-                - header:
-                    key: X-App-Version
-                    value: '1'
-              - match:
-                  prefix: /app1/service-a/
                   headers:
                   - name: X-App-Name
                     string_match:
@@ -118,17 +70,41 @@ static_resources:
               - match:
                   prefix: /app1/service-a/
                   headers:
-                  - name: X-App-Name
+                  - name: X-App-Version
                     string_match:
-                      exact: app1
+                      exact: '1'
                 route:
                   cluster: app1-service-a-0-0-36
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+              - match:
+                  prefix: /app1/service-a/
+                  headers:
+                  - name: X-App-Version
+                    string_match:
+                      exact: '2'
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
               - match:
                   prefix: /app1/service-a/
                 route:
                   cluster: app1-service-a-0-0-36
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+                - header:
+                    key: X-App-Version
+                    value: '2'
               - match:
                   prefix: /app1/service-b/
                   headers:
@@ -164,9 +140,42 @@ static_resources:
                   prefix_rewrite: /
               - match:
                   prefix: /app1/service-b/
+                  headers:
+                  - name: X-App-Version
+                    string_match:
+                      exact: '1'
                 route:
                   cluster: app1-service-b-0-0-7
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+              - match:
+                  prefix: /app1/service-b/
+                  headers:
+                  - name: X-App-Version
+                    string_match:
+                      exact: '2'
+                route:
+                  cluster: app1-service-b-0-0-8
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+              - match:
+                  prefix: /app2/main/
+                route:
+                  cluster: app2-service-y-0-0-1
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app2
+                - header:
+                    key: X-App-Version
+                    value: '1'
               - match:
                   prefix: /app2/service-y/
                   headers:
@@ -182,17 +191,28 @@ static_resources:
               - match:
                   prefix: /app2/service-y/
                   headers:
-                  - name: X-App-Name
+                  - name: X-App-Version
                     string_match:
-                      exact: app2
+                      exact: '1'
                 route:
                   cluster: app2-service-y-0-0-1
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app2
               - match:
                   prefix: /app2/service-y/
                 route:
                   cluster: app2-service-y-0-0-1
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app2
+                - header:
+                    key: X-App-Version
+                    value: '1'
               - match:
                   prefix: /shared-app/service-s/
                   headers:
@@ -274,17 +294,41 @@ static_resources:
               - match:
                   prefix: /shared-app/service-s/
                   headers:
-                  - name: X-App-Name
+                  - name: X-App-Version
                     string_match:
-                      exact: shared-app
+                      exact: '1'
                 route:
                   cluster: shared-app-service-s-0-0-4
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: shared-app
+              - match:
+                  prefix: /shared-app/service-s/
+                  headers:
+                  - name: X-App-Version
+                    string_match:
+                      exact: '2'
+                route:
+                  cluster: shared-app-service-s-0-0-5
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: shared-app
               - match:
                   prefix: /shared-app/service-s/
                 route:
                   cluster: shared-app-service-s-0-0-4
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: shared-app
+                - header:
+                    key: X-App-Version
+                    value: '1'
               - match:
                   prefix: /
                 direct_response:

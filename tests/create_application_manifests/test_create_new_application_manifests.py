@@ -14,4 +14,5 @@ def test_create_new_application_manifests_1():
         os.path.dirname(__file__),
         "test_create_new_application_manifests_1.yaml"
     )
+    open("t.yaml", "w").write(yaml.dump(result))
     assert yaml.dump(result) == open(path, "r").read()

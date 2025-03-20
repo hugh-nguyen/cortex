@@ -44,53 +44,22 @@ static_resources:
                     key: X-App-Version
                     value: '1'
               - match:
-                  prefix: /app1/service-a/
+                  prefix: /app1/mfe-a/
+                  headers:
+                  - name: X-App-Name
+                    string_match:
+                      exact: app1
+                  - name: X-App-Version
+                    string_match:
+                      exact: '2'
                 route:
-                  cluster: app1-service-a-0-0-36
+                  cluster: app1-mfe-a-0-0-5
                   prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app1
-                - header:
-                    key: X-App-Version
-                    value: '1'
               - match:
-                  prefix: /app2/main/
+                  prefix: /app1/mfe-a/
                 route:
-                  cluster: app2-service-y-0-0-1
+                  cluster: app1-mfe-a-0-0-5
                   prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app2
-                - header:
-                    key: X-App-Version
-                    value: '1'
-              - match:
-                  prefix: /app2/service-y/
-                route:
-                  cluster: app2-service-y-0-0-1
-                  prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app2
-                - header:
-                    key: X-App-Version
-                    value: '1'
-              - match:
-                  prefix: /shared-app/service-s/
-                route:
-                  cluster: app1-service-a-0-0-36
-                  prefix_rewrite: /
-                request_headers_to_add:
-                - header:
-                    key: X-App-Name
-                    value: app1
-                - header:
-                    key: X-App-Version
-                    value: '1'
               - match:
                   prefix: /app1/service-a/
                   headers:
@@ -115,6 +84,18 @@ static_resources:
                 route:
                   cluster: app1-service-a-0-0-36
                   prefix_rewrite: /
+              - match:
+                  prefix: /app1/service-a/
+                route:
+                  cluster: app1-service-a-0-0-36
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app1
+                - header:
+                    key: X-App-Version
+                    value: '2'
               - match:
                   prefix: /app1/service-a/
                   headers:
@@ -168,6 +149,18 @@ static_resources:
                   cluster: app1-service-b-0-0-7
                   prefix_rewrite: /
               - match:
+                  prefix: /app2/main/
+                route:
+                  cluster: app2-service-y-0-0-1
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app2
+                - header:
+                    key: X-App-Version
+                    value: '1'
+              - match:
                   prefix: /app2/service-y/
                   headers:
                   - name: X-App-Name
@@ -181,13 +174,16 @@ static_resources:
                   prefix_rewrite: /
               - match:
                   prefix: /app2/service-y/
-                  headers:
-                  - name: X-App-Name
-                    string_match:
-                      exact: app2
                 route:
                   cluster: app2-service-y-0-0-1
                   prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: app2
+                - header:
+                    key: X-App-Version
+                    value: '1'
               - match:
                   prefix: /app2/service-y/
                 route:
@@ -261,6 +257,18 @@ static_resources:
                   prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
+                route:
+                  cluster: shared-app-service-s-0-0-4
+                  prefix_rewrite: /
+                request_headers_to_add:
+                - header:
+                    key: X-App-Name
+                    value: shared-app
+                - header:
+                    key: X-App-Version
+                    value: '1'
+              - match:
+                  prefix: /shared-app/service-s/
                   headers:
                   - name: X-App-Name
                     string_match:
@@ -270,15 +278,6 @@ static_resources:
                       exact: '2'
                 route:
                   cluster: shared-app-service-s-0-0-5
-                  prefix_rewrite: /
-              - match:
-                  prefix: /shared-app/service-s/
-                  headers:
-                  - name: X-App-Name
-                    string_match:
-                      exact: shared-app
-                route:
-                  cluster: shared-app-service-s-0-0-4
                   prefix_rewrite: /
               - match:
                   prefix: /shared-app/service-s/
@@ -299,6 +298,19 @@ static_resources:
             typed_config:
               '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
+  - name: app1-mfe-a-0-0-5
+    connect_timeout: 0.25s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: app1-mfe-a-0-0-5
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: app1-mfe-a-0-0-5
+                port_value: 80
   - name: app1-service-a-0-0-36
     connect_timeout: 0.25s
     type: STRICT_DNS

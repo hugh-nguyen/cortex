@@ -5,8 +5,8 @@ from cortex.util import *
 def create_route(
     prefix, 
     cluster_name, 
-    headers=None, 
-    custom=False
+    headers=None,
+    headers_to_add=None
 ):
     match_ = { "prefix": prefix }
     if headers:
@@ -19,16 +19,10 @@ def create_route(
         "match": match_,
         "route": route
     }
+
+    if headers_to_add:
+        result["request_headers_to_add"] = headers_to_add
     
-    if custom:
-        del match_["headers"]
-        transform = lambda h: {
-            "header": {"key": h["name"],
-            "value": h["string_match"]["exact"]}
-        }
-        result["request_headers_to_add"] = [
-            transform(h) for h in headers
-        ]
     return result
 
 
@@ -46,6 +40,8 @@ def create_header(header_name, match_value):
         }
     }
 
+def create_header_to_add(key, value):
+    return {"header": {"key": key, "value": value}}
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--clone', action='store_true')
@@ -64,16 +60,20 @@ def create_envoy_config(nexus_manifest):
     envoy_routes = []
     for i, nexus_route in enumerate(nexus_routes):
         prefix, cluster = nexus_route["prefix"], nexus_route["cluster"]
-        custom = nexus_route["custom"]
         
         headers = []
         if "headers" in nexus_route:
             headers = [
-                create_header("X-"+key, str(value))
-                for h in nexus_route["headers"]
-                for key, value in h.items()
+                create_header(k, str(v))
+                for k, v in nexus_route["headers"].items()
             ]
-        envoy_routes.append(create_route(prefix, cluster, headers, custom))
+        headers_to_add = []
+        if "headers_to_add" in nexus_route:
+            headers_to_add = [
+                create_header_to_add(k, str(v))
+                for k, v in nexus_route["headers_to_add"].items()
+            ]
+        envoy_routes.append(create_route(prefix, cluster, headers, headers_to_add))
 
     route = {
         "match": { "prefix": "/" },

@@ -12,17 +12,22 @@ def create_deployment(deployment):
 
 def create_route(
     prefix, 
-    release_name, 
-    app_name=None, 
-    app_version=None, 
-    custom=False
+    release_name,
+    headers,
+    headers_to_add=[],
+    # app_name=None, 
+    # app_version=None,
+    is_custom=False
 ):
     result = {"prefix": prefix}
-    if app_name:
-        result["headers"] = [{"App-Name": app_name}]
-        if app_version:
-            result["headers"].append({"App-Version": app_version})
-    return {**result, "cluster": release_name, "custom": custom}
+    if headers:
+        result["headers"] = headers
+    result = {**result, "cluster": release_name}
+    if headers_to_add:
+        result["headers_to_add"] = headers_to_add
+    if is_custom:
+        result["is_custom"] = True
+    return result
 
 
 def nexus_services_sort_key(service):
@@ -32,15 +37,33 @@ def nexus_services_sort_key(service):
 def nexus_route_sort_key(route):
     app_name_sort_key = "zzzzzzzz"
     app_version_sort_key = 99999999
+    add_app_name_sort_key = "zzzzzzzz"
+    add_app_version_sort_key = 99999999
+    is_custom = False
+    has_headers_to_add = False
     if "headers" in route:
-        app_name_sort_key = route["headers"][0]["App-Name"]
-    if "headers" in route and len(route["headers"]) == 2:
-        app_version_sort_key = route["headers"][1]["App-Version"]
+        if "X-App-Name" in route["headers"]:
+            app_name_sort_key = route["headers"]["X-App-Name"]
+        if "X-App-Version" in route["headers"]:
+            app_version_sort_key = int(route["headers"]["X-App-Version"])
+
+    if "is_custom" in route:
+        is_custom = route["is_custom"]
+    if "headers_to_add" in route:
+        has_headers_to_add = True
+        if "App-Name" in route["headers_to_add"]:
+            add_app_name_sort_key = route["headers_to_add"]["X-App-Name"]
+        if "App-Version" in route["headers_to_add"]:
+            add_app_version_sort_key = int(route["headers_to_add"]["X-App-Version"])
+
     return (
         route["prefix"],
         app_name_sort_key,
         app_version_sort_key,
-        route["custom"],
+        add_app_name_sort_key,
+        add_app_version_sort_key,
+        has_headers_to_add,
+        is_custom,
         route["cluster"]
     )
 
@@ -50,17 +73,18 @@ def create_nexus_manifest(path_to_data):
     path_to_manifests = f"{path_to_data}/cortex-deploy-log"
     path_to_routes = f"{path_to_data}/cortex-routes"
 
-    #
     app_manifest_file_paths = get_all_files(f"{path_to_manifests}/app-manifests")
     app_manifest_lookup = defaultdict(dict)
+
+    nexus_services = []
+    nexus_routes = []
+
+    #
     for path in app_manifest_file_paths:
         app = path.split("/")[-2]
         app_ver = int(path.removesuffix(".yaml").split("-")[-1])
         data = yaml.safe_load(open(path, "r").read())
         app_manifest_lookup[app][app_ver] = {d["svc"]: d["ver"] for d in data}
-
-    nexus_services = []
-    nexus_routes = []
 
     app_dirs = os.listdir(f"{path_to_routes}/apps")
     for app_name in os.listdir(f"{path_to_routes}/apps"):
@@ -69,7 +93,11 @@ def create_nexus_manifest(path_to_data):
             app, svc, app_ver = config["app"], config["svc"], config["app_ver"]
             svc_ver = app_manifest_lookup[app][app_ver][svc]
             release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
-            route = create_route(prefix, release_name, app, app_ver, custom=True)
+            headers_to_add = {
+                "X-App-Name": app,
+                "X-App-Version": app_ver,
+            }
+            route = create_route(prefix, release_name, [], headers_to_add, True)
             nexus_routes.append(route)
 
     #
@@ -89,12 +117,19 @@ def create_nexus_manifest(path_to_data):
 
             prefix = f"/{app}/{svc}/"
             release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
-
-            nexus_routes.append(create_route(prefix, release_name, app, app_ver))
+            
+            headers = {
+                "X-App-Name": app,
+                "X-App-Version": app_ver,
+            }
+            nexus_routes.append(create_route(prefix, release_name, headers))
+            headers = {"X-App-Version": app_ver}
+            headers_to_add = {"X-App-Name": app}
+            nexus_routes.append(create_route(prefix, release_name, headers, headers_to_add))
             
             if prefix not in prefixes:
                 # nexus_routes.append(create_route(prefix, release_name, app))
-                nexus_routes.append(create_route(prefix, release_name))
+                # nexus_routes.append(create_route(prefix, release_name))
 
                 prefixes.add(prefix)
 
@@ -105,11 +140,16 @@ def create_nexus_manifest(path_to_data):
                 prefix = f"/{dep['app']}/{dep['svc']}/"
                 release_name = f"{dep['app']}-{dep['svc']}-{dep['ver'].replace('.', '-')}"
 
-                nexus_routes.append(create_route(prefix, release_name, app, app_ver))
+                headers = {
+                    "X-App-Name": app,
+                    "X-App-Version": app_ver,
+                }
+                nexus_routes.append(create_route(prefix, release_name, headers))
 
                 extended_prefix = prefix+app
                 if extended_prefix not in prefixes:
-                    nexus_routes.append(create_route(prefix, release_name, app))
+                    headers = {"X-App-Name": app}
+                    nexus_routes.append(create_route(prefix, release_name, headers))
                     prefixes.add(extended_prefix)
             
 
@@ -120,6 +160,8 @@ def create_nexus_manifest(path_to_data):
     nexus_routes = set([yaml.dump(r, sort_keys=False) for r in nexus_routes])
     nexus_routes = [yaml.safe_load(r) for r in nexus_routes]
     nexus_routes = sorted(nexus_routes, key=nexus_route_sort_key)
+
+    # nexus_routes[{'prefix': r['prefix'], 'headers': {'X-App'}} for r in nexus_routes]
 
     new_manifest = {"services": nexus_services, "routes": nexus_routes}
     return diff_and_name_manifest(
