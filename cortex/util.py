@@ -13,13 +13,14 @@ HEADERS = {
 
 app_lookup = set(["app1", "app2", "shared-app"])
 
-def get_all_files(directory):
+def get_all_files(directory, suffix):
     file_list = []
     for root, dirs, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
             file_list.append(file_path)
-
+    if suffix:
+        return [f for f in file_list if f.endswith(suffix)]
     return file_list
 
 def get_service_configs(args):

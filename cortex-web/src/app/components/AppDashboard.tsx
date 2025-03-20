@@ -42,7 +42,12 @@ const AppDashboard: React.FC = () => {
         }
         
         const data = await response.json();
-        setAppData(data.apps);
+        
+        const sortedApps = [...data.apps].sort((a, b) => 
+          a.App.localeCompare(b.App)
+        );
+        
+        setAppData(sortedApps);
         setError(null);
       } catch (err) {
         console.error('Error fetching app data:', err);

@@ -85,70 +85,70 @@ def upload_app_version(app_name, version, yaml_data, service_count, change_count
     return response
 
 
-upload_app(
-    "app1",
-    2,
-    1,
-    "Hugh Nguyen"
-)
-upload_app(
-    "app2",
-    1,
-    1,
-    "Hugh Nguyen"
-)
-upload_app(
-    "shared-app",
-    1,
-    1,
-    "Hugh Nguyen"
-)
+# upload_app(
+#     "app1",
+#     2,
+#     1,
+#     "Hugh Nguyen"
+# )
+# upload_app(
+#     "app2",
+#     1,
+#     1,
+#     "Hugh Nguyen"
+# )
+# upload_app(
+#     "shared-app",
+#     1,
+#     1,
+#     "Hugh Nguyen"
+# )
 
-y = """- app: app1
-  svc: service-a
-  ver: 0.0.36
-  depends_on:
-  - app: app1
-    svc: service-b
-    ver: 0.0.7
-- app: app1
-  svc: service-b
-  ver: 0.0.7
-  depends_on:
-  - app: shared-app
-    svc: service-s
-    ver: 0.0.4"""
-upload_app_version(
-    "app1",
-    1,
-    y,
-    2,
-    0
-)
-y = """- app: app2
-  svc: service-y
-  ver: 0.0.1
-  depends_on:
-  - app: shared-app
-    svc: service-s
-    ver: 0.0.4"""
-upload_app_version(
-    "app2",
-    1,
-    y,
-    1,
-    0
-)
-y = """- app: shared-app
-  svc: service-s
-  ver: 0.0.4"""
-upload_app_version(
-    "shared-app",
-    1,
-    y,
-    1,
-    0
-)
+# y = """- app: app1
+#   svc: service-a
+#   ver: 0.0.36
+#   depends_on:
+#   - app: app1
+#     svc: service-b
+#     ver: 0.0.7
+# - app: app1
+#   svc: service-b
+#   ver: 0.0.7
+#   depends_on:
+#   - app: shared-app
+#     svc: service-s
+#     ver: 0.0.4"""
+# upload_app_version(
+#     "app1",
+#     1,
+#     y,
+#     2,
+#     0
+# )
+# y = """- app: app2
+#   svc: service-y
+#   ver: 0.0.1
+#   depends_on:
+#   - app: shared-app
+#     svc: service-s
+#     ver: 0.0.4"""
+# upload_app_version(
+#     "app2",
+#     1,
+#     y,
+#     1,
+#     0
+# )
+# y = """- app: shared-app
+#   svc: service-s
+#   ver: 0.0.4"""
+# upload_app_version(
+#     "shared-app",
+#     1,
+#     y,
+#     1,
+#     0
+# )
 
 #####################
 ##### TEST APP #####

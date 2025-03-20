@@ -13,7 +13,7 @@ def create_deployment(deployment):
 def create_route(
     prefix, 
     release_name,
-    headers,
+    headers=[],
     headers_to_add=[],
     is_custom=False
 ):
@@ -71,32 +71,32 @@ def create_nexus_manifest(path_to_data):
     path_to_manifests = f"{path_to_data}/cortex-deploy-log"
     path_to_routes = f"{path_to_data}/cortex-routes"
 
-    app_manifest_file_paths = get_all_files(f"{path_to_manifests}/app-manifests")
+    app_manifest_file_paths = get_all_files(f"{path_to_manifests}/app-manifests", "yaml")
     app_manifest_lookup = defaultdict(dict)
 
     nexus_services = []
     nexus_routes = []
 
     #
-    for path in app_manifest_file_paths:
-        app = path.split("/")[-2]
-        app_ver = int(path.removesuffix(".yaml").split("-")[-1])
-        data = yaml.safe_load(open(path, "r").read())
-        app_manifest_lookup[app][app_ver] = {d["svc"]: d["ver"] for d in data}
+    # for path in app_manifest_file_paths:
+    #     app = path.split("/")[-2]
+    #     app_ver = int(path.removesuffix(".yaml").split("-")[-1])
+    #     data = yaml.safe_load(open(path, "r").read())
+    #     app_manifest_lookup[app][app_ver] = {d["svc"]: d["ver"] for d in data}
 
-    app_dirs = os.listdir(f"{path_to_routes}/apps")
-    for app_name in os.listdir(f"{path_to_routes}/apps"):
-        routes = yaml.safe_load(open(f"{path_to_routes}/apps/{app_name}/routes.yaml", "r"))
-        for prefix, config in routes.items():
-            app, svc, app_ver = config["app"], config["svc"], config["app_ver"]
-            svc_ver = app_manifest_lookup[app][app_ver][svc]
-            release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
-            headers_to_add = {
-                "X-App-Name": app,
-                "X-App-Version": app_ver,
-            }
-            route = create_route(prefix, release_name, [], headers_to_add, True)
-            nexus_routes.append(route)
+    # app_dirs = os.listdir(f"{path_to_routes}/apps")
+    # for app_name in os.listdir(f"{path_to_routes}/apps"):
+    #     routes = yaml.safe_load(open(f"{path_to_routes}/apps/{app_name}/routes.yaml", "r"))
+    #     for prefix, config in routes.items():
+    #         app, svc, app_ver = config["app"], config["svc"], config["app_ver"]
+    #         svc_ver = app_manifest_lookup[app][app_ver][svc]
+    #         release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
+    #         headers_to_add = {
+    #             "X-App-Name": app,
+    #             "X-App-Version": app_ver,
+    #         }
+    #         route = create_route(prefix, release_name, [], headers_to_add, True)
+    #         nexus_routes.append(route)
 
     #
     prefixes = set()
@@ -127,7 +127,7 @@ def create_nexus_manifest(path_to_data):
             
             if prefix not in prefixes:
                 # nexus_routes.append(create_route(prefix, release_name, app))
-                # nexus_routes.append(create_route(prefix, release_name))
+                nexus_routes.append(create_route(prefix, release_name))
 
                 prefixes.add(prefix)
 

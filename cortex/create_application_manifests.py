@@ -66,9 +66,9 @@ def create_new_application_manifests(service_configs, path_to_app_manifests):
         for dep in sc["service-dependencies"]:
             dependencies[sc["application-name"]][dep["app"]+dep["svc"]] = dep["ver"]
 
-    print("!!!!", dependencies)
-
     for sc in service_configs.values():
+        if sc["latest_tag"] is None:
+            continue
         app, svc = sc['application-name'], sc['service-name']
         application_configs[app][svc] = {
             "app": app,
