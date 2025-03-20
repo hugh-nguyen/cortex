@@ -14,7 +14,7 @@ def test_create_envoy_config_1():
         "test_create_envoy_config_1.yaml"
     )
     
-    # write_path = "tests/deploy_nexus/test_create_envoy_config_1_compare.yaml"
-    # open(write_path, "w").write(yaml.dump(result, sort_keys=False))
+    write_path = "tests/deploy_nexus/test_temp.yaml"
+    open(write_path, "w").write(yaml.dump(result, sort_keys=False))
 
     assert yaml.dump(result, sort_keys=False) == open(path, "r").read()

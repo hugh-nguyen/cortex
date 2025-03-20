@@ -58,23 +58,25 @@ def find_app_from_full_name(name):
     return result
 
 
-def determine_version(svc, ver):
-    if ver == "latest":
-        return service_configs[svc]["latest_tag"]
-    return ver
-
-
 def create_new_application_manifests(service_configs, path_to_app_manifests):
     application_configs = defaultdict(dict)
+
+    dependencies = defaultdict(dict)
+    for sc in service_configs.values():
+        for dep in sc["service-dependencies"]:
+            dependencies[sc["application-name"]][dep["app"]+dep["svc"]] = dep["ver"]
+
+    print("!!!!", dependencies)
+
     for sc in service_configs.values():
         app, svc = sc['application-name'], sc['service-name']
         application_configs[app][svc] = {
             "app": app,
             "svc": svc,
-            "ver": sc["latest_tag"],
+            "ver": dependencies.get(app, {}).get(app+svc, sc["latest_tag"]),
             "depends_on": sc["service-dependencies"]
         }
-
+    
     print("===========Calculating Manifests===========")
     result = []
     for app_name, data in application_configs.items():

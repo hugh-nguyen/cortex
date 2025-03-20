@@ -1,7 +1,7 @@
 import os, yaml
 from cortex.create_application_manifests import create_new_application_manifests
 
-def test_create_new_application_manifests_1():
+def test_create_new_application_manifests_2():
     input_path = os.path.join(
         os.path.dirname(__file__),
         "service_configs.yaml"
@@ -12,7 +12,7 @@ def test_create_new_application_manifests_1():
     )
     path = os.path.join(
         os.path.dirname(__file__),
-        "test_create_new_application_manifests_1.yaml"
+        "test_create_new_application_manifests_2.yaml"
     )
-    open("tests/create_application_manifests/test_temp.yaml", "w").write(yaml.dump(result))
+    open("tests/create_application_manifests_2/test_temp.yaml", "w").write(yaml.dump(result))
     assert yaml.dump(result) == open(path, "r").read()

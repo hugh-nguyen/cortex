@@ -15,8 +15,6 @@ def create_route(
     release_name,
     headers,
     headers_to_add=[],
-    # app_name=None, 
-    # app_version=None,
     is_custom=False
 ):
     result = {"prefix": prefix}

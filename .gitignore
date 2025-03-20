@@ -172,3 +172,5 @@ cython_debug/
 
 ca.crt
 temp/
+
+test_temp*
