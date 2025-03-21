@@ -170,6 +170,7 @@ def deploy_routes(nexus_manifest):
        
     ], check=True)
 
+    print("======== Deploy Routes =========")
     subprocess.run([
         "helm",
         "upgrade",

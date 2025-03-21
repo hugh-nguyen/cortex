@@ -73,7 +73,8 @@ def create_new_application_manifests(service_configs, path_to_app_manifests):
         application_configs[app][svc] = {
             "app": app,
             "svc": svc,
-            "ver": dependencies.get(app, {}).get(app+svc, sc["latest_tag"]),
+            # "ver": dependencies.get(app, {}).get(app+svc, sc["latest_tag"]),
+            "ver": sc["latest_tag"],
             "depends_on": sc["service-dependencies"]
         }
     
