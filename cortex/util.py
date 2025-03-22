@@ -130,7 +130,10 @@ def diff_and_name_manifest(
 
 
 def clone_repo(url, path):
-    subprocess.run(["git", "clone", url, path], check=True)
+    final_url = url
+    if not url.startswith("https://github.com/"):
+        final_url = f"https://github.com/{url}.git"
+    subprocess.run(["git", "clone", final_url, path], check=True)
 
 
 def push_repo(url, path, message):
