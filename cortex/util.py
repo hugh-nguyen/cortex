@@ -13,6 +13,9 @@ HEADERS = {
 
 app_lookup = set(["app1", "app2", "shared-app"])
 
+def manifest_sort(filename):
+    return int(filename.removesuffix(".yaml").split("-")[-1])
+
 def get_all_files(directory, suffix):
     file_list = []
     for root, dirs, files in os.walk(directory):
@@ -147,3 +150,4 @@ def push_repo(url, path, message):
         subprocess.run(["git", "push"], check=True)
     except subprocess.CalledProcessError as e:
         print("No changes to commit or error occurred:", e)
+

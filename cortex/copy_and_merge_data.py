@@ -2,6 +2,48 @@ import os, yaml, subprocess, argparse
 from cortex.util import *
 from collections import defaultdict
 
+import boto3
+import json
+from datetime import datetime
+
+dynamodb = boto3.resource('dynamodb')
+apps_table = dynamodb.Table('Apps')
+app_versions_table = dynamodb.Table('AppVersions')
+
+def upload_app(name, service_count, versions, owner, last_updated=None):
+    if last_updated is None:
+        last_updated = datetime.now().isoformat()
+        
+    response = apps_table.put_item(
+        Item={
+            'name': name,
+            'service_count': service_count,
+            'versions': versions,
+            'last_updated': last_updated,
+            'owner': owner
+        }
+    )
+    
+    print(f"Uploaded app {name} to DynamoDB")
+    return response
+
+
+def upload_app_version(app_name, version, yaml_data, service_count, change_count):
+    response = app_versions_table.put_item(
+        Item={
+            'app_name': app_name,
+            'version': version,
+            'yaml': yaml_data,
+            'service_count': service_count,
+            'change_count': change_count,
+            'created_at': datetime.now().isoformat()
+        }
+    )
+    
+    print(f"Uploaded version {version} of app {app_name} to DynamoDB")
+    return response
+
+
 def get_manifests(app, path_to_source_repo):
     path = f"{path_to_source_repo}/app-version-manifests"
     
@@ -9,7 +51,10 @@ def get_manifests(app, path_to_source_repo):
     for file in os.listdir(path):
         new_manifest = {
             "filename": f"{app}-manifest-{file}",
-            "manifest": open(f"{path}/{file}", "r").read()
+            "manifest": open(f"{path}/{file}", "r").read(),
+            "version": int(file.removesuffix(".yaml")),
+            "app_name": app,
+            "service_count": len(yaml.safe_load(open(f"{path}/{file}", "r").read()))
         }
         new_manifests.append(new_manifest)
 
@@ -23,13 +68,16 @@ def merge_route_overrides(path_to_deploy_log, path_to_source_repo):
     new_manifest = yaml.safe_load(open(path, "r").read())
 
     path = f"{path_to_deploy_log}/route-overrides-manifests"
-    latest_manifest = yaml.safe_load(open(f"{path}/{sorted(os.listdir(path))[-1]}", "r").read())
+    lm_path = f"{path}/{sorted(os.listdir(path), key=manifest_sort)[-1]}"
+    latest_manifest = yaml.safe_load(open(lm_path, "r").read())
     new_version = len(os.listdir(path))
 
-    if new_manifest != latest_manifest:
+    new_manifest_yaml = yaml.dump(new_manifest, sort_keys=False)
+    latest_manifest_yaml = yaml.dump(latest_manifest, sort_keys=False)
+    if new_manifest_yaml != latest_manifest_yaml:
         return {
             "filename": f"route-overrides-manifest-{new_version}.yaml",
-            "manifest": yaml.dump({**latest_manifest, **new_manifest})
+            "manifest": yaml.dump({**latest_manifest, **new_manifest}),
         }
     return None
 
@@ -69,6 +117,14 @@ if __name__ == "__main__":
         new_path = f"{path}/{app}/{new_app_manifest['filename']}"
         open(new_path, "w").write(new_app_manifest["manifest"])
         commit_message += f" {new_app_manifest['filename']}"
+        upload_app(
+            new_app_manifest["app_name"], new_app_manifest["service_count"], 
+            new_app_manifest["version"], "Hugh Nguyen"
+        )
+        upload_app_version(
+            new_app_manifest["app_name"], new_app_manifest["version"], 
+            new_app_manifest["manifest"], new_app_manifest["service_count"], 0
+        )
 
     if new_route_manifest:
         path = f"{path_to_deploy_log}/route-overrides-manifests"
