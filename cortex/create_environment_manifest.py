@@ -71,15 +71,39 @@ def create_environment_manifest(path_to_deploy_log):
 
     env_services = []
     env_routes = []
+    prefixes = set()
 
     # avm_paths -> application_version_manifest_paths
     avm_paths = get_all_files(f"{path_to_deploy_log}/app-version-manifests", "yaml")
-    
 
-
-    prefixes = set()
+    # Create mapping from app.app_ver.svc to svc_ver
+    lookup_svc_ver = {}
     for avm_path in sorted(avm_paths):
-        print(avm_path)
+        avm_services = yaml.safe_load(open(avm_path, "r"))
+        for avm_service in avm_services:
+            app, svc, svc_ver = avm_service["app"], avm_service["svc"], avm_service["ver"]
+            app_ver = int(avm_path.removesuffix(".yaml").split("-")[-1])
+            lookup_svc_ver[f"{app}.{app_ver}.{svc}"] = svc_ver
+
+    path = f"{path_to_deploy_log}/route-overrides-manifests"
+    route_manifest_file_path = sorted(os.listdir(path))[-1]
+    route_manifest = yaml.safe_load(open(f"{path}/{route_manifest_file_path}", "r").read())
+
+    for prefix, route in route_manifest.items():
+        prefixes.add(prefix)
+
+        app, app_ver, svc = route["app"], route["app_ver"], route["svc"]
+        svc_ver = lookup_svc_ver[f"{app}.{app_ver}.{svc}"]
+        release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
+
+        headers_to_add = {
+            "X-App-Version": app_ver,
+            "X-App-Name": app,
+        }
+        env_routes.append(create_route(prefix, release_name, [], headers_to_add, True))
+    #
+
+    for avm_path in sorted(avm_paths):
         avm_services = yaml.safe_load(open(avm_path, "r"))
 
         for avm_service in avm_services:
@@ -98,6 +122,7 @@ def create_environment_manifest(path_to_deploy_log):
 
             # 2
             if prefix not in prefixes:
+                prefixes.add(prefix)
                 env_routes.append(create_route(prefix, release_name))
             
             # 3
