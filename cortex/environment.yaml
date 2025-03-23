@@ -1,0 +1,41 @@
+services:
+- app: app1
+  svc: mfe-a
+  svc_ver: 0.0.1
+- app: app1
+  svc: service-b
+  svc_ver: 0.0.1
+- app: shared-app
+  svc: service-s
+  svc_ver: 0.0.1
+routes:
+- prefix: /app1/mfe-a/
+  headers:
+    X-App-Version: 1
+  cluster: app1-mfe-a-0-0-1
+  headers_to_add:
+    X-App-Name: app1
+- prefix: /app1/mfe-a/
+  cluster: app1-mfe-a-0-0-1
+- prefix: /app1/service-b/
+  headers:
+    X-App-Version: 1
+    X-App-Name: app1
+  cluster: app1-service-b-0-0-1
+  headers_to_add:
+    X-App-Name: app1
+- prefix: /app1/service-b/
+  cluster: app1-service-b-0-0-1
+- prefix: /shared-app/service-s/
+  headers:
+    X-App-Version: 1
+    X-App-Name: app1
+  cluster: shared-app-service-s-0-0-1
+- prefix: /shared-app/service-s/
+  headers:
+    X-App-Version: 1
+  cluster: shared-app-service-s-0-0-1
+  headers_to_add:
+    X-App-Name: shared-app
+- prefix: /shared-app/service-s/
+  cluster: shared-app-service-s-0-0-1

@@ -9,7 +9,7 @@ on:
         type: string
 
 jobs:
-  pull-manifests-and-routes:
+  copy-manifests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -31,10 +31,12 @@ jobs:
           pip install pyyaml requests boto3
 
       - name: Generate Application Manifests
-        run: python -m cortex.1-pull-manifests-and-routes ${{ github.event.inputs.source_repo }}
+        run: python -m cortex.copy_and_merge_data --sr ${{ github.event.inputs.source_repo }}
         env:
           GH_PERSONAL_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ap-southeast-2
+
+
