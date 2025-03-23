@@ -133,6 +133,24 @@ def calculate_dependency_tiers(services, dependencies):
     
     return tiers
 
+def add_context(main_app, data):
+    services = yaml.safe_load(data)
+    lookup = {}
+    for s in services:
+        lookup[s["svc"]] = s["ver"]
+    
+    for s in services:
+        service = {**s}
+        if "depends_on" in s:
+            for d in s["depends_on"]:
+                if "app" not in d:
+                    d["app"] = main_app
+                if "ver" not in d:
+                    d["ver"] = lookup[d["svc"]]
+        
+    return services
+
+
 def calculate_graph(main_app, data):
     coords = [
         {"x": 130, "y": 110},
@@ -140,7 +158,8 @@ def calculate_graph(main_app, data):
         {"x": 110, "y": 110},
     ]
     
-    yaml_data = yaml.safe_load(data)
+    yaml_data = add_context(main_app, data)
+    print(yaml_data)
     
     services = []
     seen = set()
