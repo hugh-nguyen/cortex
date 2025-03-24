@@ -78,15 +78,25 @@ def create_environment_manifest(path_to_deploy_log):
 
     # Create mapping from app.app_ver.svc to svc_ver
     lookup_svc_ver = {}
-    lookup_deps = {}
     for avm_path in sorted(avm_paths, key=manifest_sort):
         avm_services = yaml.safe_load(open(avm_path, "r"))
         for avm_service in avm_services:
             app, svc, svc_ver = avm_service["app"], avm_service["svc"], avm_service["ver"]
             app_ver = int(avm_path.removesuffix(".yaml").split("-")[-1])
             lookup_svc_ver[f"{app}.{app_ver}.{svc}"] = svc_ver
-            lookup_deps[f"{app}.{app_ver}.{svc}"] = avm_service.get("depends_on", [])
-
+    
+    def fill_data(data, app, app_ver, svc):
+        if "app" in data:
+            return data
+        return {**data, "app": app, "ver": lookup_svc_ver[f"{app}.{app_ver}.{data['svc']}"]}
+    lookup_deps = {}
+    for avm_path in sorted(avm_paths, key=manifest_sort):
+        avm_services = yaml.safe_load(open(avm_path, "r"))
+        for avm_service in avm_services:
+            app, svc, svc_ver = avm_service["app"], avm_service["svc"], avm_service["ver"]
+            app_ver = int(avm_path.removesuffix(".yaml").split("-")[-1])
+            lookup_deps[f"{app}.{app_ver}.{svc}"] = [fill_data(d, app, app_ver, svc) for d in avm_service.get("depends_on", [])]
+            
     path = f"{path_to_deploy_log}/route-overrides-manifests"
     route_manifest_file_path = sorted(os.listdir(path), key=manifest_sort)[-1]
     route_manifest = yaml.safe_load(open(f"{path}/{route_manifest_file_path}", "r").read())
@@ -105,9 +115,7 @@ def create_environment_manifest(path_to_deploy_log):
         env_routes.append(create_route(prefix, release_name, [], headers_to_add, True))
 
         for dep in lookup_deps[f"{app}.{app_ver}.{svc}"]:
-            prefix = f"/{app}/{dep['svc']}/"
-            prefixes.add(prefix)
-            app, app_ver, svc = route["app"], route["app_ver"], dep["svc"]
+            app, app_ver, svc = dep["app"], dep["app_ver"], dep["svc"]
             svc_ver = lookup_svc_ver[f"{app}.{app_ver}.{svc}"]
             release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
             env_routes.append(create_route(prefix, release_name, [], headers_to_add, True))
@@ -190,10 +198,10 @@ if __name__ == '__main__':
         path = f"{path_to_deploy_log}/environment-manifests"
         new_path = f"{path}/{new_manifest['filename']}"
         open(new_path, "w").write(new_manifest["manifest"])
-        # open("cortex/environment.yaml", "w").write(new_manifest["manifest"])
+        open("cortex/environment.yaml", "w").write(new_manifest["manifest"])
     
-    push_repo(
-        "github.com/hugh-nguyen/cortex-deploy-log.git", 
-        path_to_deploy_log,
-        f"Updated {new_manifest['filename']}"
-    )
+    # push_repo(
+    #     "github.com/hugh-nguyen/cortex-deploy-log.git", 
+    #     path_to_deploy_log,
+    #     f"Updated {new_manifest['filename']}"
+    # )

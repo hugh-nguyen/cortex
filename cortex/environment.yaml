@@ -24,12 +24,6 @@ services:
   svc: service-s
   svc_ver: 0.0.3
 routes:
-- prefix: /app1/main/
-  cluster: app1-mfe-a-0-0-1
-  headers_to_add:
-    X-App-Version: 2
-    X-App-Name: app1
-  is_override: true
 - prefix: /app1/mfe-a/
   headers:
     X-App-Version: 1
@@ -58,32 +52,18 @@ routes:
     X-App-Version: 1
     X-App-Name: app1
   is_override: true
-- prefix: /app2/main/
-  cluster: app2-mfe-x-0-0-1
-  headers_to_add:
-    X-App-Version: 1
-    X-App-Name: app2
-  is_override: true
 - prefix: /app2/mfe-x/
   headers:
     X-App-Version: 1
   cluster: app2-mfe-x-0-0-1
 - prefix: /app2/mfe-x/
   cluster: app2-mfe-x-0-0-1
-  headers_to_add:
-    X-App-Version: 1
-    X-App-Name: app2
-  is_override: true
 - prefix: /app2/service-y/
   headers:
     X-App-Version: 1
   cluster: app2-service-y-0-0-1
 - prefix: /app2/service-y/
   cluster: app2-service-y-0-0-1
-  headers_to_add:
-    X-App-Version: 1
-    X-App-Name: app2
-  is_override: true
 - prefix: /shared-app/service-s/
   headers:
     X-App-Name: app1
