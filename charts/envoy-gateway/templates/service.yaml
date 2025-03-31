@@ -11,3 +11,27 @@ spec:
       name: http
   selector:
     app: envoy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-control-plane-grpc
+spec:
+  selector:
+    app: envoy-control-plane
+  ports:
+    - port: 18000
+      targetPort: 18000
+      name: grpc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-control-plane-rest
+spec:
+  selector:
+    app: envoy-control-plane
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: rest
