@@ -79,6 +79,7 @@ def create_environment_manifest(path_to_deploy_log):
     # Create mapping from app.app_ver.svc to svc_ver
     lookup_svc_ver = {}
     lookup_deps = {}
+    app_default_vers = {}
     for avm_path in sorted(avm_paths, key=manifest_sort):
         avm_services = yaml.safe_load(open(avm_path, "r"))
         for avm_service in avm_services:
@@ -111,6 +112,8 @@ def create_environment_manifest(path_to_deploy_log):
             svc_ver = lookup_svc_ver[f"{app}.{app_ver}.{svc}"]
             release_name = f"{app}-{svc}-{svc_ver.replace('.', '-')}"
             env_routes.append(create_route(prefix, release_name, [], headers_to_add, True))
+        
+        app_default_vers[app] = app_ver
     #
 
     for avm_path in sorted(avm_paths, key=manifest_sort):
