@@ -35,20 +35,20 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: envoy-control-plane
+  name: envoy-controlplane
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: envoy-control-plane
+      app: envoy-controlplane
   template:
     metadata:
       labels:
-        app: envoy-control-plane
+        app: envoy-controlplane
     spec:
       containers:
         - name: control-plane
-          image: "495599745704.dkr.ecr.ap-southeast-2.amazonaws.com/envoy-gateway"
+          image: "495599745704.dkr.ecr.ap-southeast-2.amazonaws.com/envoy-controlplane:0.0.1"
           ports:
             - containerPort: 18000
               name: grpc

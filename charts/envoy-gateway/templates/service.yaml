@@ -15,10 +15,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: envoy-control-plane-grpc
+  name: envoy-controlplane-grpc
 spec:
   selector:
-    app: envoy-control-plane
+    app: envoy-controlplane
   ports:
     - port: 18000
       targetPort: 18000
@@ -27,10 +27,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: envoy-control-plane-rest
+  name: envoy-controlplane-rest
 spec:
   selector:
-    app: envoy-control-plane
+    app: envoy-controlplane
   ports:
     - port: 9000
       targetPort: 9000

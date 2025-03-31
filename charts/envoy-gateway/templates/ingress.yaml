@@ -29,7 +29,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: envoy-control-plane-rest
+                name: envoy-controlplane-rest
                 port:
                   number: 9000
           - path: /
