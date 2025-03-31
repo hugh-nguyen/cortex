@@ -1,4 +1,4 @@
-name: Build Envoy
+name: Build Envoy Control Plane
 
 on:
   workflow_dispatch:
