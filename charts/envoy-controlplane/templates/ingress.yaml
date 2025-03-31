@@ -22,7 +22,7 @@ spec:
       port:
         number: 9000
   rules:
-    - host: hn-cortex.click
+    - host: control-plane.hn-cortex.click
       http:
         paths:
           - path: /*
