@@ -15,15 +15,20 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-healthy-threshold-count: "2"
     alb.ingress.kubernetes.io/healthcheck-unhealthy-threshold-count: "2"
 spec:
+  ingressClassName: alb
+  defaultBackend:
+    service:
+      name: envoy-control-plane-rest
+      port:
+        number: 9000
   rules:
-  - host: hn-cortex.click
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: envoy-control-plane-rest
-            port:
-              number: 9000
-
+    - host: hn-cortex.click
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: envoy-control-plane-rest
+                port:
+                  number: 9000
