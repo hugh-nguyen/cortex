@@ -25,7 +25,14 @@ spec:
     - host: hn-cortex.click
       http:
         paths:
-          - path: /*
+          - path: /controlplane
+            pathType: Prefix
+            backend:
+              service:
+                name: envoy-control-plane-rest
+                port:
+                  number: 9000
+          - path: /
             pathType: ImplementationSpecific
             backend:
               service:
