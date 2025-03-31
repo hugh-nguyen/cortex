@@ -87,6 +87,11 @@ def clone_or_pull(repo_name, clone_url):
         print(f"Pulling latest changes in {repo_path}...")
         subprocess.run(["git", "-C", repo_path, "pull"], check=True)
 
+def get_tags(repo_full_name):
+    url = f"{GITHUB_ENDPOINT}/repos/{repo_full_name}/tags"
+    result = get_endpoint_data(url)
+    return [r["name"] for r in result]
+    
 
 def get_latest_tag(repo_full_name):
     url = f"{GITHUB_ENDPOINT}/repos/{repo_full_name}/tags"

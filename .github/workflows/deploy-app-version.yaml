@@ -8,12 +8,6 @@ on:
         type: string
 
 jobs:
-  say-hello:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print the username
-        run: echo "Hello ${{ inputs.username }}!"
-  
   test:
     needs: say-hello
     runs-on: ubuntu-latest
@@ -37,6 +31,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
 
-      - name: Test Python
-        run: python -m cortex.test
+      - name: Create Application Manifest
+        run: python -m cortex.create_application_manifest
         

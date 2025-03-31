@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy-control-plane
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy-control-plane
+  template:
+    metadata:
+      labels:
+        app: envoy-control-plane
+    spec:
+      containers:
+        - name: control-plane
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 18000
+              name: grpc
+            - containerPort: 9000
+              name: rest

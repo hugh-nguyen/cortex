@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: 495599745704.dkr.ecr.ap-southeast-2.amazonaws.com/envoy-controlplane
+  tag: 0.0.1
+  pullPolicy: Always
+
