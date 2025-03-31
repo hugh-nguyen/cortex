@@ -1,0 +1,39 @@
+name: Build Envoy
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker image tag'
+        required: true
+        default: 'latest'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ap-southeast-2 --no-verify-ssl | docker login --username AWS --password-stdin 495599745704.dkr.ecr.ap-southeast-2.amazonaws.com
+
+      - name: Build Docker Image
+        run: |
+          ECR_REPO="495599745704.dkr.ecr.ap-southeast-2.amazonaws.com/envoy-controlplane"
+          cd envoy-controlplane
+          docker build -t "$ECR_REPO:${{ inputs.tag }}" .
+          docker push "$ECR_REPO:${{ inputs.tag }}"
