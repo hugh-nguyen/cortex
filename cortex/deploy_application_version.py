@@ -66,7 +66,7 @@ def deploy_routes(app_name, input_routes):
             r["headers_to_add"] = transform_headers(r["headers_to_add"])
         deploy_routes.append(r)
 
-    url = "http://hn-cortex.click:8082/controlplane/api/v1/routes"
+    url = "http://hn-cortex.click/api/v1/routes"
     payload = {
         "app_name": app_name,
         "routes": deploy_routes
