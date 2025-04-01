@@ -27,7 +27,7 @@ dynamic_resources:
 
 static_resources:
   listeners:
-  - name: local_listener
+  - name: bootstrap_listener
     address:
       socket_address:
         address: 0.0.0.0
