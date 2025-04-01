@@ -25,7 +25,6 @@ dynamic_resources:
     resource_api_version: V3
     ads: {}
 
-static_resources:
   listeners:
   - name: local_listener
     address:
