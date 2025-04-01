@@ -6,6 +6,15 @@ on:
       app_name:
         required: true
         type: string
+    secrets:
+      GH_PERSONAL_TOKEN:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
   workflow_dispatch:
     inputs:
       app_name:
