@@ -31,9 +31,9 @@ jobs:
           python -m pip install --upgrade pip
 
       - name: Create Application Version Manifest
-        run: python -m cortex.create_application_manifest --clone
+        run: python -m cortex.create_application_manifest --clone --app_name ${{ inputs.app_name }}
 
-  create-manifest:
+  deploy-app-version:
     runs-on: ubuntu-latest
     needs: create-manifest
     steps:
@@ -57,4 +57,4 @@ jobs:
           python -m pip install --upgrade pip
 
       - name: Create Application Version Manifest
-        run: python -m cortex.create_application_manifest --clone
+        run: python -m cortex.create_application_manifest --app_name ${{ inputs.app_name }} --
