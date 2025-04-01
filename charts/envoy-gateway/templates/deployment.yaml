@@ -19,6 +19,7 @@ spec:
       containers:
         - name: envoy
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 8080
               protocol: TCP
@@ -48,6 +49,7 @@ spec:
       containers:
         - name: control-plane
           image: "495599745704.dkr.ecr.ap-southeast-2.amazonaws.com/envoy-controlplane:0.0.1"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 18000
               name: grpc
