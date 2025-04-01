@@ -85,8 +85,9 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
 
     app_ver = 1
     path_to_env_manifests = f"{path_to_deploy_log}/app-version-manifests/{app_name}"
-    existing_manifests = os.listdir(path_to_env_manifests)
-    if existing_manifests:
+    existing_manifests = []
+    if os.path.exists(path_to_env_manifests):
+        existing_manifests = os.listdir(path_to_env_manifests)
         app_ver = len(existing_manifests)+1
 
     path = f"temp/{app_name}-cortex-command/package.yaml"
@@ -125,7 +126,7 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
             routes.append(create_route(prefix, release_name))
         
     
-    for dep in package_yaml["dependencies"]:
+    for dep in package_yaml.get("dependencies", []):
         dep_lookup = list(dep.keys())[0]
         dep_app = dep_lookup.split("/")[0]
         dep_svc = dep_lookup.split("/")[1]
@@ -159,7 +160,6 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
 
     new_manifest = {"services": services, "routes": routes}
     new_manifest = yaml.dump(new_manifest, sort_keys=False)
-    existing_manifests = os.listdir(path_to_env_manifests)
 
     manifest_name = f"{app_ver}.yaml"
     if existing_manifests:
@@ -228,12 +228,13 @@ if __name__ == '__main__':
 
     if new_manifest:
         path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{args.app_name}"
+        os.makedirs(path, exist_ok=True)
         new_path = f"{path}/{new_manifest['filename']}"
         open(new_path, "w").write(new_manifest["manifest"])
         # open(new_manifest["filename"], "w").write(new_manifest["manifest"])
     
-    push_repo(
-        "github.com/hugh-nguyen/cortex-deploy-log.git", 
-        DEPLOY_LOG_PATH,
-        f"Updated {new_manifest['filename']}"
-    )
+        push_repo(
+            "github.com/hugh-nguyen/cortex-deploy-log.git", 
+            DEPLOY_LOG_PATH,
+            f"Updated {new_manifest['filename']}"
+        )
