@@ -29,6 +29,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install pyyaml requests
 
       - name: Create Application Version Manifest
         run: python -m cortex.create_application_version_manifest --clone --app_name ${{ inputs.app_name }}
@@ -55,6 +56,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install pyyaml requests
 
       - name: Create Application Version Manifest
         run: python -m cortex.create_application_manifest --app_name ${{ inputs.app_name }} --
