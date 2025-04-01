@@ -156,3 +156,52 @@ def push_repo(url, path, message):
     except subprocess.CalledProcessError as e:
         print("No changes to commit or error occurred:", e)
 
+
+def env_services_sort_key(service):
+    return service["app"], service["svc"], service["svc_ver"]
+
+
+def env_route_sort_key(route):
+    app_name_sort_key = "zzzzzzzz"
+    app_version_sort_key = 99999999
+    add_app_name_sort_key = "zzzzzzzz"
+    add_app_version_sort_key = 99999999
+    is_override = False
+    has_headers_to_add = False
+
+    if "headers" in route:
+        if "X-App-Name" in route["headers"]:
+            app_name_sort_key = route["headers"]["X-App-Name"]
+        if "X-App-Version" in route["headers"]:
+            app_version_sort_key = int(route["headers"]["X-App-Version"])
+
+    if "is_override" in route:
+        is_override = route["is_override"]
+
+    if "headers_to_add" in route:
+        has_headers_to_add = True
+        if "App-Name" in route["headers_to_add"]:
+            add_app_name_sort_key = route["headers_to_add"]["X-App-Name"]
+        if "App-Version" in route["headers_to_add"]:
+            add_app_version_sort_key = int(route["headers_to_add"]["X-App-Version"])
+
+    return (
+        route["prefix"],
+        app_name_sort_key,
+        app_version_sort_key,
+        add_app_name_sort_key,
+        add_app_version_sort_key,
+        has_headers_to_add,
+        is_override,
+        route["cluster"]
+    )
+
+def sort_services(services):
+    services = set([yaml.dump(ns, sort_keys=False) for ns in services])
+    services = [yaml.safe_load(d) for d in services]
+    return sorted(services, key=env_services_sort_key)
+    
+def sort_routes(routes):
+    routes = set([yaml.dump(r, sort_keys=False) for r in routes])
+    routes = [yaml.safe_load(r) for r in routes]
+    return sorted(routes, key=env_route_sort_key)

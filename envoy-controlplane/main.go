@@ -264,31 +264,53 @@ func generateSnapshot() error {
 func handleAddRoute(w http.ResponseWriter, r *http.Request) {
     configMutex.Lock()
     defer configMutex.Unlock()
-
+    
     var data struct {
-        AppName string  `json:"app_name"`
         Routes  []struct {
             Prefix       string   `json:"prefix"`
             Cluster      string   `json:"cluster"`
-            Headers      []Header `json:"headers,omitempty"`
-            HeadersToAdd []Header `json:"headers_to_add,omitempty"`
+            Headers      []Header `json:"headers,omitempty"`       
+            HeadersToAdd []Header `json:"headers_to_add,omitempty"` 
             Port         *int     `json:"port,omitempty"`
         } `json:"routes"`
     }
+    
     if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
         http.Error(w, "Error parsing request: "+err.Error(), http.StatusBadRequest)
         return
     }
 
     for _, rt := range data.Routes {
-        port := 80
+        port := 80 
         if rt.Port != nil {
             port = *rt.Port
         }
         clusters[rt.Cluster] = makeCluster(rt.Cluster, rt.Cluster, uint32(port))
     }
-
-    var vhRoutes []*route.Route
+    
+    routes["local_routes"] = &route.RouteConfiguration{
+        Name: "backend",
+        VirtualHosts: []*route.VirtualHost{
+            {
+                Name:    "backend",
+                Domains: []string{"*"},
+                Cors: &route.CorsPolicy{
+                    AllowOriginStringMatch: []*matcher.StringMatcher{
+                        {
+                            MatchPattern: &matcher.StringMatcher_Exact{
+                                Exact: "*",
+                            },
+                        },
+                    },
+                    AllowMethods:  "GET, POST, OPTIONS",
+                    AllowHeaders:  "X-Stack-Version, Content-Type",
+                    ExposeHeaders: "X-Stack-Version",
+                },
+                Routes: []*route.Route{},
+            },
+        },
+    }
+    
     for _, rt := range data.Routes {
         if rt.Headers == nil {
             rt.Headers = []Header{}
@@ -296,77 +318,49 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
         if rt.HeadersToAdd == nil {
             rt.HeadersToAdd = []Header{}
         }
-        vhRoutes = append(vhRoutes, makeRoute(
-            rt.Prefix,
-            rt.Cluster,
-            rt.Headers,
-            rt.HeadersToAdd,
-        ))
+        
+        routes["local_routes"].VirtualHosts[0].Routes = append(
+            routes["local_routes"].VirtualHosts[0].Routes,
+            makeRoute(
+                rt.Prefix,
+                rt.Cluster,
+                rt.Headers,
+                rt.HeadersToAdd,
+            ),
+        )
     }
-    vhRoutes = append(vhRoutes, &route.Route{
-        Match: &route.RouteMatch{
-            PathSpecifier: &route.RouteMatch_Prefix{
-                Prefix: "/",
+    
+    routes["local_routes"].VirtualHosts[0].Routes = append(
+        routes["local_routes"].VirtualHosts[0].Routes,
+        &route.Route{
+            Match: &route.RouteMatch{
+                PathSpecifier: &route.RouteMatch_Prefix{
+                    Prefix: "/",
+                },
             },
-        },
-        Action: &route.Route_DirectResponse{
-            DirectResponse: &route.DirectResponseAction{
-                Status: 404,
-                Body: &core.DataSource{
-                    Specifier: &core.DataSource_InlineString{
-                        InlineString: "Invalid API Route",
+            Action: &route.Route_DirectResponse{
+                DirectResponse: &route.DirectResponseAction{
+                    Status: 404,
+                    Body: &core.DataSource{
+                        Specifier: &core.DataSource_InlineString{
+                            InlineString: "Invalid API Route",
+                        },
                     },
                 },
             },
         },
-    })
-
-    newVH := &route.VirtualHost{
-        Name:    data.AppName,
-        Domains: []string{"*"},
-        Cors: &route.CorsPolicy{
-            AllowOriginStringMatch: []*matcher.StringMatcher{
-                {
-                    MatchPattern: &matcher.StringMatcher_Exact{
-                        Exact: "*",
-                    },
-                },
-            },
-            AllowMethods:  "GET, POST, OPTIONS",
-            AllowHeaders:  "X-Stack-Version, Content-Type",
-            ExposeHeaders: "X-Stack-Version",
-        },
-        Routes: vhRoutes,
-    }
-
-    rc, exists := routes["local_routes"]
-    if !exists {
-        rc = &route.RouteConfiguration{
-            Name:         "local_routes",
-            VirtualHosts: []*route.VirtualHost{},
-        }
-        routes["local_routes"] = rc
-    }
-
-    var updatedVHosts []*route.VirtualHost
-    for _, vh := range rc.VirtualHosts {
-        if vh.Name != data.AppName {
-            updatedVHosts = append(updatedVHosts, vh)
-        }
-    }
-    updatedVHosts = append(updatedVHosts, newVH)
-    rc.VirtualHosts = updatedVHosts
-
+    )
+    
     listeners["local_listener"] = makeListener("local_listener", "0.0.0.0", 8080, "local_routes")
-
+    
     if err := generateSnapshot(); err != nil {
         http.Error(w, "Error generating snapshot: "+err.Error(), http.StatusInternalServerError)
         return
     }
-
-    log.Printf("Updated route configuration for '%s' with %d routes", data.AppName, len(newVH.Routes))
+    
+    log.Printf("Added route configuration with %d routes", len(routes["local_listener"].VirtualHosts[0].Routes))
     w.WriteHeader(http.StatusOK)
-    w.Write([]byte(fmt.Sprintf("Routes for '%s' updated successfully", data.AppName)))
+    w.Write([]byte(fmt.Sprintf("Routes updated successfully")))
 }
 
 func handleListResources(w http.ResponseWriter, r *http.Request) {

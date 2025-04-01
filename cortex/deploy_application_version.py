@@ -2,6 +2,18 @@ import yaml, os, subprocess, argparse, json, requests
 from cortex.util import *
 
 
+def transform_routes(routes):
+    result = []
+    for route in routes:
+        r = {**route}
+        if "headers" in r:
+            r["headers"] = transform_headers(r["headers"])
+        if "headers_to_add" in r:
+            r["headers_to_add"] = transform_headers(r["headers_to_add"])
+        result.append(r)
+    return sort_routes(result)
+
+
 def transform_headers(headers):
     return [{"Name": str(k), "Value": str(v)} for k, v in headers.items()]
 
@@ -55,25 +67,21 @@ def deploy_services(nexus_services):
         ], check=True)
 
 
-def deploy_routes(app_name, input_routes):
+def deploy_routes(path_to_deploy_log):
 
-    deploy_routes = []
-    for input_route in input_routes:
-        r = {**input_route}
-        if "headers" in r:
-            r["headers"] = transform_headers(r["headers"])
-        if "headers_to_add" in r:
-            r["headers_to_add"] = transform_headers(r["headers_to_add"])
-        deploy_routes.append(r)
-
+    path = f"{path_to_deploy_log}/app-version-manifests"
+    avm_paths = get_all_files(path, "yaml")
+    
+    routes = []
+    sort_key = lambda x: x.split("/")[-1].removesuffix(".yaml")
+    for avm_path in sorted(avm_paths, key=sort_key):
+        routes += yaml.safe_load(open(avm_path, "r").read()).get("routes", [])
+    
     url = "http://hn-cortex.click/api/v1/routes"
-    payload = {
-        "app_name": app_name,
-        "routes": deploy_routes
-    }
+    payload = {"routes": transform_routes(routes)}
     print(json.dumps(payload))
-    response = requests.post(url, json=payload)
-    print("!!",response.text)
+    # response = requests.post(url, json=payload)
+    # print("!!",response.text)
 
 
 if __name__ == '__main__':
@@ -100,5 +108,5 @@ if __name__ == '__main__':
     
     manifest = yaml.safe_load(open(path, "r").read())
 
-    deploy_services(manifest["services"])
-    deploy_routes(app_name, manifest["routes"])
+    # deploy_services(manifest["services"])
+    deploy_routes(DEPLOY_LOG_PATH)
