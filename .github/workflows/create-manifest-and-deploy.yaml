@@ -33,6 +33,11 @@ jobs:
 
       - name: Create Application Version Manifest
         run: python -m cortex.create_application_version_manifest --clone --app_name ${{ inputs.app_name }}
+        env:
+          GH_PERSONAL_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   deploy-app-version:
     runs-on: ubuntu-latest
@@ -58,5 +63,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml requests boto3
 
-      - name: Create Application Version Manifest
-        run: python -m cortex.create_application_manifest --app_name ${{ inputs.app_name }} --
+      - name: Deploy App Version
+        run: python -m cortex.deploy_application_version --app_name ${{ inputs.app_name }}
+        env:
+          GH_PERSONAL_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
