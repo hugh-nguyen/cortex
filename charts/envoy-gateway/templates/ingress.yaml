@@ -25,7 +25,7 @@ spec:
     - host: hn-cortex.click
       http:
         paths:
-          - path: /controlplane
+          - path: /api
             pathType: Prefix
             backend:
               service:
