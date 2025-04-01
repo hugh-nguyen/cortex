@@ -230,4 +230,10 @@ if __name__ == '__main__':
         path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{args.app_name}"
         new_path = f"{path}/{new_manifest['filename']}"
         open(new_path, "w").write(new_manifest["manifest"])
-        open(new_manifest["filename"], "w").write(new_manifest["manifest"])
+        # open(new_manifest["filename"], "w").write(new_manifest["manifest"])
+    
+    push_repo(
+        "github.com/hugh-nguyen/cortex-deploy-log.git", 
+        DEPLOY_LOG_PATH,
+        f"Updated {new_manifest['filename']}"
+    )
