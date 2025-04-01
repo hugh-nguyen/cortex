@@ -1,9 +1,9 @@
-import yaml, os, subprocess, argparse, json
+import yaml, os, subprocess, argparse, json, requests
 from cortex.util import *
 
 
 def transform_headers(headers):
-    return [{"Name": k, "Value": v} for k, v in headers.items()]
+    return [{"Name": str(k), "Value": str(v)} for k, v in headers.items()]
 
 
 def deploy_services(nexus_services):
@@ -55,7 +55,7 @@ def deploy_services(nexus_services):
         ], check=True)
 
 
-def deploy_routes(input_routes):
+def deploy_routes(app_name, input_routes):
 
     deploy_routes = []
     for input_route in input_routes:
@@ -66,7 +66,14 @@ def deploy_routes(input_routes):
             r["headers_to_add"] = transform_headers(r["headers_to_add"])
         deploy_routes.append(r)
 
-    open("j.json", "w").write(json.dumps(deploy_routes))
+    url = "http://hn-cortex.click/controlplane/api/v1/routes"
+    payload = {
+        "app_name": app_name,
+        "routes": deploy_routes
+    }
+    print(json.dumps(payload))
+    response = requests.post(url, json=payload)
+    print(response.text)
 
 
 if __name__ == '__main__':
@@ -77,16 +84,21 @@ if __name__ == '__main__':
     parser.add_argument('--app_ver')
     args = parser.parse_args()
     
-    # DEPLOY_LOG_PATH = "temp/cortex-deploy-log"
-    # if os.path.exists("temp"):
-    #     subprocess.run(["rm", "-rf", "temp"], check=True)
-    # clone_repo(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
+    DEPLOY_LOG_PATH = "temp/cortex-deploy-log"
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
+    clone_repo(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
 
     app_name, app_ver = args.app_name, args.app_ver
+
+    if not app_ver:
+        path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/"
+        app_ver = len(os.listdir(path))
+        print(app_ver)
+
     path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/{app_ver}.yaml"
     
     manifest = yaml.safe_load(open(path, "r").read())
-    print(manifest)
 
-    # deploy_services(manifest["services"])
-    deploy_routes(manifest["routes"])
+    deploy_services(manifest["services"])
+    deploy_routes(app_name, manifest["routes"])
