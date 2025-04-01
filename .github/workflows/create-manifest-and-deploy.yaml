@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: hugh-nguyen/cortex
+          token: ${{ secrets.GH_PERSONAL_TOKEN }}
 
       - name: Configure Git
         run: |
