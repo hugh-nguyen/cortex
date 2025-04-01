@@ -79,9 +79,8 @@ def deploy_routes(path_to_deploy_log):
     
     url = "http://hn-cortex.click/api/v1/routes"
     payload = {"routes": transform_routes(routes)}
-    print(json.dumps(payload))
-    # response = requests.post(url, json=payload)
-    # print("!!",response.text)
+    response = requests.post(url, json=payload)
+    print("!!",response.text)
 
 
 if __name__ == '__main__':
@@ -108,5 +107,5 @@ if __name__ == '__main__':
     
     manifest = yaml.safe_load(open(path, "r").read())
 
-    # deploy_services(manifest["services"])
+    deploy_services(manifest["services"])
     deploy_routes(DEPLOY_LOG_PATH)
