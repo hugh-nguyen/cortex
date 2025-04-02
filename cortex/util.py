@@ -1,4 +1,5 @@
 import os, requests, subprocess, yaml
+from collections import defaultdict
 
 
 GITHUB_ENDPOINT = "https://api.github.com"
@@ -196,12 +197,37 @@ def env_route_sort_key(route):
         route["cluster"]
     )
 
+
 def sort_services(services):
     services = set([yaml.dump(ns, sort_keys=False) for ns in services])
     services = [yaml.safe_load(d) for d in services]
     return sorted(services, key=env_services_sort_key)
-    
+
+
+def choose_route(routes):
+    most_recent = routes[0]
+    for r in routes:
+        if r.get("custom") == True:
+            return r
+        if r["cluster"] > most_recent["cluster"]:
+            most_recent = r
+    return most_recent
+
+
 def sort_routes(routes):
     routes = set([yaml.dump(r, sort_keys=False) for r in routes])
     routes = [yaml.safe_load(r) for r in routes]
-    return sorted(routes, key=env_route_sort_key)
+
+    groups = defaultdict(list)
+    for r in routes:
+        signature = r["prefix"]
+        if "headers" in r:
+            for h in r["headers"]:
+                signature += h["Value"] 
+        groups[signature].append(r)
+    
+    result = []
+    for k, group in groups.items():
+        result.append(choose_route(group))
+
+    return sorted(result, key=env_route_sort_key)
