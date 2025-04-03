@@ -15,7 +15,8 @@ import {
 } from '@mui/material';
 import { purple } from '@mui/material/colors';
 import { useRouter } from 'next/navigation';
-import { getRelativeTimeString } from '@/app/utils/relativeTime'; // Import the utility
+import { getRelativeTimeString } from '@/app/utils/relativeTime';
+import { useGlobal } from '@/app/GlobalContext';
 
 interface AppData {
   App: string;
@@ -27,6 +28,11 @@ interface AppData {
 
 const AppDashboard: React.FC = () => {
   const router = useRouter();
+  const { 
+    apps, 
+    appsLoading, 
+    selectedTeam 
+  } = useGlobal();
   const [appData, setAppData] = useState<AppData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +67,6 @@ const AppDashboard: React.FC = () => {
   }, []);
 
   const handleAppClick = (appName: string) => {
-    // Instead of state management, use router to navigate
     router.push(`/appdetail/${appName}`);
   };
   

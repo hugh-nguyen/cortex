@@ -27,6 +27,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckIcon from '@mui/icons-material/Check';
 import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
+import { useGlobal } from '@/app/GlobalContext';
 
 // Custom icons that match the screenshot
 const ApplicationsIcon = () => (
@@ -59,12 +60,18 @@ interface Team {
 }
 
 const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
-  const [teams, setTeams] = useState<Team[]>([]);
+  const { 
+    teams, 
+    selectedTeam, 
+    setSelectedTeam, 
+    teamsLoading 
+  } = useGlobal();
+  // const [teams, setTeams] = useState<Team[]>([]);
   const [team, setTeam] = useState<string>(""); // Default to empty
   const [selectedApp, setSelectedApp] = useState("");
   const [anchorElTeam, setAnchorElTeam] = useState<HTMLElement | null>(null);
   const [anchorElApp, setAnchorElApp] = useState<HTMLElement | null>(null);
-  const [teamsLoading, setTeamsLoading] = useState(true);
+  // const [teamsLoading, setTeamsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTeams = async () => {

@@ -16,6 +16,7 @@ import {
 import { purple } from '@mui/material/colors';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { useGlobal } from '@/app/GlobalContext';
 
 // Dynamically import with no SSR
 const DependencyGraph = dynamic(
@@ -52,6 +53,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
   initialVersion = null,
   isRoutedPage = false
 }) => {
+  const { selectedTeam } = useGlobal();
   const router = useRouter();
   const [appVersions, setAppVersions] = useState<AppVersions | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
