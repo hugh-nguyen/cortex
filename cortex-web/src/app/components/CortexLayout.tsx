@@ -90,7 +90,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
-      {/* Sidebar */}
       <Drawer
         variant="permanent"
         sx={{
@@ -108,10 +107,29 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
       >
         <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="white" style={{ marginRight: 8 }}>
-              <path d="M19.5 12.5V12h2v-.5A8.5 8.5 0 0 0 4.03 6.974l.835.323A7.5 7.5 0 0 1 20.5 11.5V12h2v-.5A9.5 9.5 0 0 0 3.255 6.316l.837.324A8.5 8.5 0 0 1 21.5 11.5V12h2v-.5a10.5 10.5 0 0 0-21 0s0 0 0 0H1.033C1.015 11.67 1 11.837 1 12h2c0-.17.014-.337.033-.5h-.533s0 0 0 0a11.5 11.5 0 0 1 23 0V12h-6v.5h.5Z"></path>
-            </svg>
-            <Typography variant="h6">snyk</Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              marginRight: 2,
+              backgroundColor: 'white',
+              borderRadius: '50%', // Make it circular
+              padding: '-12px',
+              height: 38,
+              width: 38,
+              overflow: 'hidden' // Ensure content stays within circle
+            }}>
+              <img 
+                src="/cortex-logo.png" 
+                alt="Cortex Logo" 
+                style={{ 
+                  height: '85%', // Slightly reduced to prevent overflow issues
+                  width: '85%',
+                  objectFit: 'contain'
+                }} 
+              />
+            </Box>
+            <Typography variant="h6">Cortex</Typography>
           </Box>
           <IconButton sx={{ color: 'white' }}>
             <MenuIcon />
@@ -170,11 +188,18 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
 
         {/* Main navigation */}
         <List sx={{ px: 0 }}>
-          <ListItem 
-            button
+          <ListItem
+            component="a"
+            href="#"
             sx={{ 
               py: 1.5,
-              pl: 2
+              pl: 2,
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -183,11 +208,18 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
             <ListItemText primary="Applications" />
           </ListItem>
 
-          <ListItem 
-            button
+          <ListItem
+            component="a"
+            href="#"
             sx={{ 
               py: 1.5,
-              pl: 2
+              pl: 2,
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -196,11 +228,18 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
             <ListItemText primary="Routes" />
           </ListItem>
 
-          <ListItem 
-            button
+          <ListItem
+            component="a"
+            href="#"
             sx={{ 
               py: 1.5,
-              pl: 2
+              pl: 2,
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -209,11 +248,18 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
             <ListItemText primary="Members" />
           </ListItem>
           
-          <ListItem 
-            button
+          <ListItem
+            component="a"
+            href="#"
             sx={{ 
               py: 1.5,
-              pl: 2
+              pl: 2,
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -376,11 +422,14 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
             </Box>
             <List sx={{ p: 0 }}>
               <ListItem 
-                button 
                 onClick={() => handleTeamSelect("Team Alpha")}
                 sx={{ 
                   borderBottom: '1px solid #e0e0e0',
-                  py: 1.5
+                  py: 1.5,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  }
                 }}
               >
                 <Box 
@@ -401,9 +450,14 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                 {team === "Team Alpha" && <CheckIcon sx={{ color: 'primary.main' }} />}
               </ListItem>
               <ListItem 
-                button 
                 onClick={() => handleTeamSelect("Team Beta")}
-                sx={{ py: 1.5 }}
+                sx={{ 
+                  py: 1.5,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  }
+                }}
               >
                 <Box 
                   sx={{ 
@@ -459,20 +513,28 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
             </Box>
             <List sx={{ p: 0 }}>
               <ListItem 
-                button 
                 onClick={() => handleAppSelect("app1")}
                 sx={{ 
                   borderBottom: '1px solid #e0e0e0',
-                  py: 1.5
+                  py: 1.5,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  }
                 }}
               >
                 <ListItemText primary="app1" />
                 {selectedApp === "app1" && <CheckIcon sx={{ color: 'primary.main' }} />}
               </ListItem>
               <ListItem 
-                button 
                 onClick={() => handleAppSelect("app2")}
-                sx={{ py: 1.5 }}
+                sx={{ 
+                  py: 1.5,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                  }
+                }}
               >
                 <ListItemText primary="app2" />
                 {selectedApp === "app2" && <CheckIcon sx={{ color: 'primary.main' }} />}

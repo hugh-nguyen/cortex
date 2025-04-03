@@ -35,7 +35,7 @@ const AppDashboard: React.FC = () => {
     const fetchAppData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:8000/get_apps');
+        const response = await fetch('http://127.0.0.1:8000/get_apps?team_id=1');
         
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);

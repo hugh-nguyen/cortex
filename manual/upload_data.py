@@ -6,25 +6,7 @@ dynamodb = boto3.resource('dynamodb')
 apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
 
-def upload_app(name, service_count, versions, owner, last_updated=None):
-    if last_updated is None:
-        last_updated = datetime.now().isoformat()
-        
-    response = apps_table.put_item(
-        Item={
-            'name': name,
-            'service_count': service_count,
-            'versions': versions,
-            'last_updated': last_updated,
-            'owner': owner
-        }
-    )
-    
-    print(f"Uploaded app {name} to DynamoDB")
-    return response
-
-
-def upload_app_version(app_name, version, yaml_data, service_count, change_count):
+def upload_app_version(app_name="", version=None, yaml_data=None, service_count=None, change_count=None):
     response = app_versions_table.put_item(
         Item={
             'app_name': app_name,
@@ -40,67 +22,119 @@ def upload_app_version(app_name, version, yaml_data, service_count, change_count
     return response
 
 
-upload_app(
-    "app1",
-    2,
-    1,
-    "Hugh Nguyen"
-)
-upload_app(
-    "app2",
-    1,
-    1,
-    "Hugh Nguyen"
-)
-upload_app(
-    "shared-app",
-    1,
-    1,
-    "Hugh Nguyen"
+#####################
+##### SHARED APP ###
+###################
+y = """
+- app: shared-app
+  svc: service-s
+  ver: 0.0.1
+  depends_on: []
+"""
+upload_app_version(
+    app_name="shared-app",
+    version=1,
+    yaml_data=y,
+    service_count=1,
+    change_count=0
 )
 
-y = """- app: app1
-  svc: service-a
-  ver: 0.0.36
+y = """
+- app: shared-app
+  svc: service-s
+  ver: 0.0.2
+  depends_on: []
+"""
+upload_app_version(
+    app_name="shared-app",
+    version=2,
+    yaml_data=y,
+    service_count=1,
+    change_count=0
+)
+
+y = """
+- app: shared-app
+  svc: service-s
+  ver: 0.0.3
+  depends_on: []
+"""
+upload_app_version(
+    app_name="shared-app",
+    version=3,
+    yaml_data=y,
+    service_count=1,
+    change_count=0
+)
+
+#####################
+##### APP1 ###
+###################
+y = """
+- app: app1
+  svc: mfe-a
+  ver: 0.0.1
   depends_on:
-  - app: app1
-    svc: service-b
-    ver: 0.0.7
+  - svc: service-b
 - app: app1
   svc: service-b
-  ver: 0.0.7
+  ver: 0.0.1
   depends_on:
   - app: shared-app
     svc: service-s
-    ver: 0.0.4"""
+    ver: 0.0.1
+"""
 upload_app_version(
-    "app1",
-    1,
-    y,
-    2,
-    0
+    app_name="app1",
+    version=1,
+    yaml_data=y,
+    service_count=2,
+    change_count=0
 )
-y = """- app: app2
+
+y = """
+- app: app1
+  svc: mfe-a
+  ver: 0.0.1
+  depends_on:
+  - svc: service-b
+- app: app1
+  svc: service-b
+  ver: 0.0.2
+  depends_on:
+  - app: shared-app
+    svc: service-s
+    ver: 0.0.3
+"""
+upload_app_version(
+    app_name="app1",
+    version=2,
+    yaml_data=y,
+    service_count=2,
+    change_count=0
+)
+
+#####################
+##### APP2 ###
+###################
+y = """
+- app: app2
+  svc: mfe-x
+  ver: 0.0.1
+  depends_on:
+  - svc: service-y
+- app: app2
   svc: service-y
   ver: 0.0.1
   depends_on:
   - app: shared-app
     svc: service-s
-    ver: 0.0.4"""
+    ver: 0.0.2
+"""
 upload_app_version(
-    "app2",
-    1,
-    y,
-    1,
-    0
-)
-y = """- app: shared-app
-  svc: service-s
-  ver: 0.0.4"""
-upload_app_version(
-    "shared-app",
-    1,
-    y,
-    1,
-    0
+    app_name="app2",
+    version=1,
+    yaml_data=y,
+    service_count=2,
+    change_count=0
 )

@@ -45,13 +45,31 @@ if __name__ == "__main__":
     print("\nDeleting items from AppVersions table...")
     delete_all_table_items('AppVersions', region)
     
+    print("\nDeleting items from Teams table...")
+    delete_all_table_items('Teams', region)
+    
     print("\nDeletion complete!")
 
 dynamodb = boto3.resource('dynamodb')
 apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
+teams_table = dynamodb.Table('Teams')
 
-def upload_app(name, service_count, versions, owner, last_updated=None):
+def upload_team(team_id=None, team_name=None, last_updated=None):
+  if last_updated is None:
+        last_updated = datetime.now().isoformat()
+  
+  response = teams_table.put_item(
+        Item={
+            'team_id': team_id,
+            'team_name': team_name,
+            'last_updated': last_updated
+        }
+    )
+  return response
+
+
+def upload_app(name=None, service_count=None, versions=None, team_id=None, last_updated=None):
     if last_updated is None:
         last_updated = datetime.now().isoformat()
         
@@ -61,7 +79,7 @@ def upload_app(name, service_count, versions, owner, last_updated=None):
             'service_count': service_count,
             'versions': versions,
             'last_updated': last_updated,
-            'owner': owner
+            'team_id': team_id
         }
     )
     
@@ -69,7 +87,7 @@ def upload_app(name, service_count, versions, owner, last_updated=None):
     return response
 
 
-def upload_app_version(app_name, version, yaml_data, service_count, change_count):
+def upload_app_version(app_name="", version=None, yaml_data=None, service_count=None, change_count=None):
     response = app_versions_table.put_item(
         Item={
             'app_name': app_name,
@@ -85,81 +103,53 @@ def upload_app_version(app_name, version, yaml_data, service_count, change_count
     return response
 
 
-# upload_app(
-#     "app1",
-#     2,
-#     1,
-#     "Hugh Nguyen"
-# )
-# upload_app(
-#     "app2",
-#     1,
-#     1,
-#     "Hugh Nguyen"
-# )
-# upload_app(
-#     "shared-app",
-#     1,
-#     1,
-#     "Hugh Nguyen"
-# )
-
-# y = """- app: app1
-#   svc: service-a
-#   ver: 0.0.36
-#   depends_on:
-#   - app: app1
-#     svc: service-b
-#     ver: 0.0.7
-# - app: app1
-#   svc: service-b
-#   ver: 0.0.7
-#   depends_on:
-#   - app: shared-app
-#     svc: service-s
-#     ver: 0.0.4"""
-# upload_app_version(
-#     "app1",
-#     1,
-#     y,
-#     2,
-#     0
-# )
-# y = """- app: app2
-#   svc: service-y
-#   ver: 0.0.1
-#   depends_on:
-#   - app: shared-app
-#     svc: service-s
-#     ver: 0.0.4"""
-# upload_app_version(
-#     "app2",
-#     1,
-#     y,
-#     1,
-#     0
-# )
-# y = """- app: shared-app
-#   svc: service-s
-#   ver: 0.0.4"""
-# upload_app_version(
-#     "shared-app",
-#     1,
-#     y,
-#     1,
-#     0
-# )
+#####################
+##### TEAMS #####
+###################
+upload_team(
+    team_id=1,
+    team_name="Team Alpha",
+)
+upload_team(
+    team_id=2,
+    team_name="Team Beta",
+)
+upload_team(
+    team_id=3,
+    team_name="Team Gamma",
+)
 
 #####################
-##### TEST APP #####
+##### APPS #####
 ###################
-
+upload_app(
+    "app1",
+    2,
+    1,
+    1
+)
+upload_app(
+    "app2",
+    1,
+    1,
+    1
+)
+upload_app(
+    "shared-app",
+    1,
+    1,
+    2
+)
 upload_app(
     "test-app",
     6,
     3,
-    "Hugh Nguyen"
+    2
 )
+
+#####################
+##### TEST APP #####
+###################
 
 y = """- app: test-app
   svc: service-a
@@ -293,3 +283,4 @@ upload_app_version(
     6,
     0
 )
+
