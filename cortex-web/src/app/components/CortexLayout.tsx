@@ -25,6 +25,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckIcon from '@mui/icons-material/Check';
 import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
+import Breadcrumb from '@/app/components/BreadCrumb';
 import { useGlobal } from '@/app/GlobalContext';
 
 // Custom icons that match the screenshot
@@ -521,6 +522,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
           bgcolor: '#f9fafb'
         }}
       >
+        <Breadcrumb />
         {children}
       </Box>
     </Box>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 // Define interfaces for your data structures
 interface Team {
@@ -31,6 +32,7 @@ interface GlobalContextType {
   appsError: string | null;
   selectedApp: string;
   setSelectedApp: (app: string) => void;
+  selectedAppVersion: string;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -47,6 +49,10 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [selectedApp, setSelectedApp] = useState("");
   const [appsLoading, setAppsLoading] = useState(false);
   const [appsError, setAppsError] = useState<string | null>(null);
+
+  // AppVer state
+  const [selectedAppVersion, setSelectedAppVersion] = useState("");
+  const [appVersions, setAppVersions] = useState("");
 
   // Fetch teams on initial load
   useEffect(() => {
@@ -87,6 +93,24 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     fetchTeams();
   }, []);
+
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname) {
+      const parts = pathname.split('/');
+      console.log(parts)
+      if (parts.length <= 1) return;
+
+      const pageType = parts[1];
+      
+      if (pageType == "appdetail") {
+        setSelectedApp(parts[2]);
+        setSelectedAppVersion(parts[3]);
+      }
+
+    }
+  }, [pathname]);
 
   // Fetch apps when selected team changes
   useEffect(() => {
@@ -143,7 +167,8 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       appsLoading,
       appsError,
       selectedApp,
-      setSelectedApp
+      setSelectedApp,
+      selectedAppVersion,
     }}>
       {children}
     </GlobalContext.Provider>
