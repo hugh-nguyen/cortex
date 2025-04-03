@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -18,7 +18,6 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useGlobal } from '@/app/GlobalContext';
 
-// Dynamically import with no SSR
 const DependencyGraph = dynamic(
   () => import('@/app/components/DependencyGraph'),
   { ssr: false }
@@ -44,101 +43,52 @@ interface AppDetailViewProps {
   appName: string;
   onBack?: () => void;
   initialVersion?: number | null;
-  isRoutedPage?: boolean;
 }
 
 const AppDetailView: React.FC<AppDetailViewProps> = ({ 
   appName, 
-  onBack, 
-  initialVersion = null,
-  isRoutedPage = false
 }) => {
-  const { selectedTeam } = useGlobal();
+  const { 
+    selectedTeam,
+    loading, error, appVersions, 
+    selectedAppVersion, setSelectedAppVersion, 
+    graphData, setGraphData 
+  } = useGlobal();
   const router = useRouter();
-  const [appVersions, setAppVersions] = useState<AppVersions | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeVersion, setActiveVersion] = useState<number | null>(initialVersion);
-  const [graphData, setGraphData] = useState<GraphData | null>(null);
-  
-  // Add a graphKey state to force re-render when switching versions
   const [graphKey, setGraphKey] = useState(0);
   
-  useEffect(() => {
-    const fetchAppVersions = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`http://127.0.0.1:8000/get_app_versions?app=${appName}`);
-        
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setAppVersions(data.app_versions);
-        
-        // If no initial version is provided or it's invalid, set to highest version
-        if (activeVersion === null || !data.app_versions[activeVersion]) {
-          const highestVersion = Math.max(...Object.keys(data.app_versions).map(Number));
-          setActiveVersion(highestVersion);
-          
-          // Update URL if using routing
-          if (isRoutedPage) {
-            router.replace(`/appdetail/${appName}/${highestVersion}`);
-          }
-          
-          // Set the graph data for the active version
-          setGraphData(data.app_versions[highestVersion].graph);
-        } else {
-          // Set graph data for specified initial version
-          setGraphData(data.app_versions[activeVersion].graph);
-        }
-        
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching app versions:', err);
-        setError('Failed to load app versions. Please check the console for details.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const defaultModule = "team"
+  const defaultSubModule = "applications"
 
-    fetchAppVersions();
-  }, [appName, router, activeVersion, initialVersion, isRoutedPage]);
 
   const handleVersionClick = (version: number) => {
-    if (activeVersion === version) return;
+    if (selectedAppVersion === version) return;
     
-    setActiveVersion(version);
+    setSelectedAppVersion(version);
     
     if (appVersions && appVersions[version]) {
       setGraphData(appVersions[version].graph);
       
-      // Update key to force re-render of the graph
       setGraphKey(prevKey => prevKey + 1);
       
-      // Update URL if using routing
-      if (isRoutedPage) {
-        router.replace(`/appdetail/${appName}/${version}`);
-      }
+      router.replace(`/${defaultModule}/${selectedTeam?.team_id}/${defaultSubModule}/app1/version/${version}`);
     }
   };
 
   const handleBackClick = () => {
-    if (onBack) {
-      onBack();
-    } else if (isRoutedPage) {
-      router.push('/');
-    }
+    // if (onBack) {
+    //   onBack();
+    // } else if (isRoutedPage) {
+    //   router.push('/');
+    // }
   };
   
   return (
     <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
-      {/* Side panel with versions */}
       <Box 
         component={Paper} 
         sx={{ 
-          width: 215, 
+          width: 140, 
           bgcolor: '#FDF4FA', 
           flexShrink: 0,
           borderRight: '1px solid #E0E0E0',
@@ -157,7 +107,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
             }}
             onClick={handleBackClick}
           >
-            {appName}
+            Versions
           </Typography>
         </Box>
         <Divider />
@@ -177,13 +127,14 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
             {appVersions && 
               Object.keys(appVersions)
                 .map(Number)
-                .sort((a, b) => b - a) // Sort versions in descending order
+                .sort((a, b) => b - a)
                 .map((version) => (
                   <ListItem key={version} disablePadding>
                     <ListItemButton 
-                      selected={activeVersion === version}
+                      selected={selectedAppVersion === version}
                       onClick={() => handleVersionClick(version)}
                       sx={{ 
+                        padding: '4px',
                         pl: 2,
                         '&.Mui-selected': {
                           bgcolor: purple[50],
@@ -201,7 +152,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                         primaryTypographyProps={{
                           sx: { 
                             color: purple[900],
-                            fontWeight: activeVersion === version ? 'bold' : 'normal'
+                            fontWeight: selectedAppVersion === version ? 'bold' : 'normal'
                           }
                         }}
                       />
@@ -212,7 +163,6 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
         )}
       </Box>
       
-      {/* Main content with dependency graph */}
       <Box sx={{ flexGrow: 1, p: 2, overflow: 'auto' }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>

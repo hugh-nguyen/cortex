@@ -14,7 +14,7 @@ import {
   Tooltip
 } from '@mui/material';
 import { purple } from '@mui/material/colors';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { getRelativeTimeString } from '@/app/utils/relativeTime';
 import { useGlobal } from '@/app/GlobalContext';
 
@@ -28,6 +28,7 @@ interface AppData {
 
 const AppDashboard: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { 
     apps, 
     appsLoading, 
@@ -35,9 +36,9 @@ const AppDashboard: React.FC = () => {
     setSelectedApp
   } = useGlobal();
 
-  const handleAppClick = (appName: string) => {
-    setSelectedApp(appName);
-    router.push(`/appdetail/${appName}`);
+  const handleAppClick = (app: AppData) => {
+    setSelectedApp(app.App);
+    router.push(`${pathname}/${app.App}/version/${app.Versions}`);
   };
   
   return (
@@ -72,7 +73,7 @@ const AppDashboard: React.FC = () => {
                 transition: 'all 0.2s'
               }}
             >
-              <CardActionArea onClick={() => handleAppClick(app.App)}>
+              <CardActionArea onClick={() => handleAppClick(app)}>
                 <CardContent>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={2.4}>
@@ -114,14 +115,6 @@ const AppDashboard: React.FC = () => {
                       </Tooltip>
                     </Grid>
                     
-                    <Grid item xs={12} sm={2.4}>
-                      <Typography color={purple[800]} fontWeight="bold" component="span">
-                        Owner:
-                      </Typography>
-                      <Typography color="text.primary" component="span" sx={{ ml: 1 }}>
-                        {app.Owner}
-                      </Typography>
-                    </Grid>
                   </Grid>
                 </CardContent>
               </CardActionArea>

@@ -150,7 +150,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
 
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
 
-        {/* Tenant selector */}
         <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>TEAM</Typography>
           <Box 
@@ -200,7 +199,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
 
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', my: 1 }} />
 
-        {/* Main navigation */}
         <List sx={{ px: 0 }}>
           <ListItem
             component="a"
@@ -287,7 +285,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
           </ListItem>
         </List>
 
-        {/* Application picker */}
         <Box sx={{ px: 2, py: 1, mt: 1 }}>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>APPLICATION</Typography>
           <Box 
@@ -322,12 +319,10 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
           </Box>
         </Box>
 
-        {/* Flexible spacer to push the footer to the bottom */}
         <Box sx={{ flexGrow: 1 }} />
 
         <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
         
-        {/* Bottom section */}
         <Box sx={{ p: 2 }}>
           <Box 
             sx={{ 
@@ -381,7 +376,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
           </Box>
         </Box>
 
-        {/* Team selector popover */}
         <Popover
           open={openTeam}
           anchorEl={anchorElTeam}
@@ -513,7 +507,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
         </Popover>
       </Drawer>
       
-      {/* Main content */}
       <Box 
         component="main" 
         sx={{ 
