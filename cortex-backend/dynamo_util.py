@@ -39,43 +39,27 @@ def get_dynamodb_resource():
 dynamodb = get_dynamodb_resource()
 apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
+teams_table = dynamodb.Table('Teams')
 
-# Functions for Apps table
-def get_all_apps():
-    """
-    Get all apps from DynamoDB
-    
-    Returns:
-    list: List of app items
-    """
+def get_teams():
     try:
-        response = apps_table.scan()
+        response = teams_table.scan()
         items = response.get('Items', [])
         
         # Format the response to match the existing API
-        formatted_apps = []
+        result = []
         for item in items:
-            formatted_apps.append({
-                "App": item.get('name'),
-                "Service Count": item.get('service_count'),
-                "Versions": item.get('versions'),
-                "Last Updated": item.get('last_updated'),
-                "Owner": item.get('owner')
+            result.append({
+                "team_id": item.get('team_id'),
+                "team_name": item.get('team_name'),
             })
         
-        return formatted_apps
+        return result
     except Exception as e:
         print(f"Error in get_all_apps: {str(e)}")
-        # Return empty list as fallback
         return []
 
 def get_apps(team_id=None):
-    """
-    Get all apps from DynamoDB
-    
-    Returns:
-    list: List of app items
-    """
     try:
         response = apps_table.scan()
         items = response.get('Items', [])
@@ -83,7 +67,6 @@ def get_apps(team_id=None):
         # Format the response to match the existing API
         formatted_apps = []
         for item in items:
-            print(item.get("team_id", "0"), int(team_id))
             if team_id and int(item.get("team_id", "0")) == int(team_id):
                 formatted_apps.append({
                     "App": item.get('name'),
@@ -96,19 +79,9 @@ def get_apps(team_id=None):
         return formatted_apps
     except Exception as e:
         print(f"Error in get_all_apps: {str(e)}")
-        # Return empty list as fallback
         return []
 
 def get_app_by_name(name):
-    """
-    Get an app by name
-    
-    Parameters:
-    name (str): App name
-    
-    Returns:
-    dict: App item or None if not found
-    """
     try:
         response = apps_table.get_item(
             Key={

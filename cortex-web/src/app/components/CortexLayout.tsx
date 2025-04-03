@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -14,7 +14,9 @@ import {
   TextField,
   InputAdornment,
   Paper,
-  Popover
+  Popover,
+  CircularProgress,
+  
 } from '@mui/material';
 import Link from 'next/link';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -51,11 +53,40 @@ interface CortexLayoutProps {
   children: React.ReactNode;
 }
 
+interface Team {
+  team_id: number;
+  team_name: string;
+}
+
 const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
-  const [team, setTeam] = useState("Team Alpha");
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [team, setTeam] = useState<string>(""); // Default to empty
   const [selectedApp, setSelectedApp] = useState("");
   const [anchorElTeam, setAnchorElTeam] = useState<HTMLElement | null>(null);
   const [anchorElApp, setAnchorElApp] = useState<HTMLElement | null>(null);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      setTeamsLoading(true);
+      const response = await fetch('http://127.0.0.1:8000/get_teams');
+      
+      const data = await response.json();
+      
+      const sortedTeams = data.teams.sort((a: Team, b: Team) => 
+        a.team_name.localeCompare(b.team_name)
+      );
+      
+      setTeams(sortedTeams);
+      
+      if (sortedTeams.length > 0) {
+        setTeam(sortedTeams[0].team_name);
+      }
+        
+    };
+
+    fetchTeams();
+  }, []);
 
   const handleTeamClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElTeam(event.currentTarget);
@@ -140,7 +171,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
 
         {/* Tenant selector */}
         <Box sx={{ px: 2, py: 1 }}>
-          <Typography variant="caption" sx={{ opacity: 0.7 }}>TENANT</Typography>
+          <Typography variant="caption" sx={{ opacity: 0.7 }}>TEAM</Typography>
           <Box 
             sx={{ 
               display: 'flex', 
@@ -162,7 +193,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                 mr: 1
               }}
             >
-              <Typography>{team === "Team Alpha" ? "A" : "B"}</Typography>
+              <Typography>{team && team.split(" ")[1].charAt(0)}</Typography>
             </Box>
             <Typography sx={{ flexGrow: 1 }}>{team}</Typography>
             <IconButton 
@@ -420,62 +451,39 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                 }}
               />
             </Box>
+            
             <List sx={{ p: 0 }}>
-              <ListItem 
-                onClick={() => handleTeamSelect("Team Alpha")}
-                sx={{ 
-                  borderBottom: '1px solid #e0e0e0',
-                  py: 1.5,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                  }
-                }}
-              >
-                <Box 
+              {teams.map((teamItem) => (
+                <ListItem 
+                  key={teamItem.team_id}
+                  onClick={() => handleTeamSelect(teamItem.team_name)}
                   sx={{ 
-                    width: 28, 
-                    height: 28, 
-                    borderRadius: '50%', 
-                    bgcolor: '#f48c06', 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    mr: 2
+                    borderBottom: '1px solid #e0e0e0',
+                    py: 1.5,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                    }
                   }}
                 >
-                  <Typography>A</Typography>
-                </Box>
-                <ListItemText primary="Team Alpha" />
-                {team === "Team Alpha" && <CheckIcon sx={{ color: 'primary.main' }} />}
-              </ListItem>
-              <ListItem 
-                onClick={() => handleTeamSelect("Team Beta")}
-                sx={{ 
-                  py: 1.5,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                  }
-                }}
-              >
-                <Box 
-                  sx={{ 
-                    width: 28, 
-                    height: 28, 
-                    borderRadius: '50%', 
-                    bgcolor: '#3f51b5', 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    mr: 2
-                  }}
-                >
-                  <Typography>B</Typography>
-                </Box>
-                <ListItemText primary="Team Beta" />
-                {team === "Team Beta" && <CheckIcon sx={{ color: 'primary.main' }} />}
-              </ListItem>
+                  <Box 
+                    sx={{ 
+                      width: 28, 
+                      height: 28, 
+                      borderRadius: '50%', 
+                      bgcolor: '#f48c06', 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center',
+                      mr: 2
+                    }}
+                  >
+                    <Typography>{teamItem.team_name.split(" ")[1].charAt(0)}</Typography>
+                  </Box>
+                  <ListItemText primary={teamItem.team_name} />
+                  {team === teamItem.team_name && <CheckIcon sx={{ color: 'primary.main' }} />}
+                </ListItem>
+              ))}
             </List>
           </Paper>
         </Popover>

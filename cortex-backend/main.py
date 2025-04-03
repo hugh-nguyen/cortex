@@ -19,10 +19,14 @@ app.add_middleware(
 async def read_root():
     return {"message": "Hello World"}
 
+@app.get("/get_teams")
+async def get_teams():
+    result = dynamo_util.get_teams()
+    return {"teams": result}
+
 @app.get("/get_apps")
 async def get_apps(team_id: int = "team_id"):
     result = dynamo_util.get_apps(team_id)
-    print(result)
     return {"apps": result}
 
 @app.get("/get_app_versions")
