@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import MuiClientProvider from '@/app/components/MuiClientProvider';
 import CortexLayout from '@/app/components/CortexLayout';
+import { GlobalProvider } from '@/app/GlobalContext';
 
 // Dynamically import to prevent SSR hydration issues
 const AppDetailView = dynamic(
@@ -25,7 +26,8 @@ export default function AppDetailPage() {
   }
   
   return (
-    <MuiClientProvider>
+    <GlobalProvider>
+      <MuiClientProvider>
       <CortexLayout>
         <AppDetailView 
           appName={appName} 
@@ -34,5 +36,6 @@ export default function AppDetailPage() {
         />
       </CortexLayout>
     </MuiClientProvider>
+    </GlobalProvider>
   );
 }

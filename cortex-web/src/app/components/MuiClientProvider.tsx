@@ -15,6 +15,22 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: '"Geist", "Arial", sans-serif',
+    fontSize: 12.8,
+    body1: {
+      fontSize: '0.8rem',
+    },
+    body2: {
+      fontSize: '0.8rem',
+    },
+    button: {
+      fontSize: '0.8rem',
+    },
+    caption: {
+      fontSize: '0.7rem', // Slightly smaller for captions
+    },
+    h6: {
+      fontSize: '1rem', // Adjust headings as needed
+    },
   },
 });
 

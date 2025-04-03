@@ -31,11 +31,12 @@ const AppDashboard: React.FC = () => {
   const { 
     apps, 
     appsLoading, 
-    selectedTeam,
-    appsError
+    appsError,
+    setSelectedApp
   } = useGlobal();
 
   const handleAppClick = (appName: string) => {
+    setSelectedApp(appName);
     router.push(`/appdetail/${appName}`);
   };
   

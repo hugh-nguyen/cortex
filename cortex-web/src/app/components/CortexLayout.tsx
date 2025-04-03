@@ -62,7 +62,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
     teams, 
     selectedTeam, 
     setSelectedTeam, 
-    teamsLoading 
   } = useGlobal();
 
   const [selectedApp, setSelectedApp] = useState("");
@@ -105,10 +104,10 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
       <Drawer
         variant="permanent"
         sx={{
-          width: 280,
+          width: 190,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: 280,
+            width: 190,
             boxSizing: 'border-box',
             bgcolor: "#220459",
             color: "white",
@@ -158,7 +157,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               display: 'flex', 
               alignItems: 'center', 
               mt: 1, 
-              cursor: 'pointer' 
+              cursor: 'pointer',
             }}
             onClick={handleTeamClick}
           >
@@ -213,7 +212,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               cursor: 'pointer',
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }
+              },
+              padding: '6px 9px'
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -233,7 +233,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               cursor: 'pointer',
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }
+              },
+              padding: '6px 9px'
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -253,7 +254,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               cursor: 'pointer',
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }
+              },
+              padding: '6px 9px'
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -273,7 +275,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               cursor: 'pointer',
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }
+              },
+              padding: '6px 9px'
             }}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
@@ -332,32 +335,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               mb: 2 
             }}
           >
-            <Box 
-              sx={{ 
-                position: 'relative',
-                mr: 1
-              }}
-            >
-              <NotificationsIcon />
-              <Box 
-                sx={{ 
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  bgcolor: 'red',
-                  borderRadius: '50%',
-                  width: 16,
-                  height: 16,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  fontSize: 10
-                }}
-              >
-                1
-              </Box>
-            </Box>
-            <Typography>Product updates</Typography>
           </Box>
           
           <Box 
@@ -398,7 +375,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
             >
               <Typography>H</Typography>
             </Box>
-            <Typography variant="body2" sx={{ opacity: 0.8, flexGrow: 1 }}>Hugh.Nguyen1@iag.com</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8, flexGrow: 1 }}>Hugh.Nguyen</Typography>
             <ArrowDropDownIcon />
           </Box>
         </Box>

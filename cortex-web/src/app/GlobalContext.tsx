@@ -44,9 +44,9 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Apps state
   const [apps, setApps] = useState<AppData[]>([]);
+  const [selectedApp, setSelectedApp] = useState("");
   const [appsLoading, setAppsLoading] = useState(false);
   const [appsError, setAppsError] = useState<string | null>(null);
-  const [selectedApp, setSelectedApp] = useState("");
 
   // Fetch teams on initial load
   useEffect(() => {
@@ -91,7 +91,6 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Fetch apps when selected team changes
   useEffect(() => {
     const fetchApps = async () => {
-      console.log("!!!!")
       if (!selectedTeam) return;
 
       try {
