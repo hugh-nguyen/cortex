@@ -2,7 +2,36 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
-// ... existing interfaces
+// Define interfaces for your data structures
+interface Team {
+  team_id: number;
+  team_name: string;
+}
+
+interface AppData {
+  App: string;
+  'Service Count': number;
+  Versions: number;
+  'Last Updated': string;
+  Owner: string;
+}
+
+interface GlobalContextType {
+  // Teams-related state
+  teams: Team[];
+  selectedTeam: Team | null;
+  setSelectedTeam: (team: Team) => void;
+  teamsLoading: boolean;
+
+  // Apps-related state
+  apps: AppData[];
+  setApps: (apps: AppData[]) => void;
+  appsLoading: boolean;
+  selectedApp: string;
+  setSelectedApp: (app: string) => void;
+}
+
+const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Teams state
@@ -29,10 +58,8 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         setTeams(sortedTeams);
         
-        // Explicitly set the first team as selected
         if (sortedTeams.length > 0) {
-          const firstTeam = sortedTeams[0];
-          setSelectedTeam(firstTeam);
+          setSelectedTeam(sortedTeams[0]);
         }
       } catch (error) {
         console.error('Failed to fetch teams', error);
@@ -93,4 +120,13 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       {children}
     </GlobalContext.Provider>
   );
+};
+
+// Custom hook to use the global context
+export const useGlobal = () => {
+  const context = useContext(GlobalContext);
+  if (context === undefined) {
+    throw new Error('useGlobal must be used within a GlobalProvider');
+  }
+  return context;
 };
