@@ -31,40 +31,9 @@ const AppDashboard: React.FC = () => {
   const { 
     apps, 
     appsLoading, 
-    selectedTeam 
+    selectedTeam,
+    appsError
   } = useGlobal();
-  const [appData, setAppData] = useState<AppData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const fetchAppData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://127.0.0.1:8000/get_apps?team_id=1');
-        
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        const sortedApps = [...data.apps].sort((a, b) => 
-          a.App.localeCompare(b.App)
-        );
-        
-        setAppData(sortedApps);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching app data:', err);
-        setError('Failed to load app data. Please check the console for details.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAppData();
-  }, []);
 
   const handleAppClick = (appName: string) => {
     router.push(`/appdetail/${appName}`);
@@ -72,21 +41,21 @@ const AppDashboard: React.FC = () => {
   
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {loading && (
+      {appsLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
           <CircularProgress />
         </Box>
       )}
       
-      {error && (
+      {appsError && (
         <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
+          {appsError}
         </Alert>
       )}
       
-      {!loading && !error && (
+      {!appsLoading &&  (
         <Box sx={{ mt: 2 }}>
-          {appData.map((app) => (
+          {apps.map((app) => (
             <Card 
               key={app.App} 
               variant="outlined" 

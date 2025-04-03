@@ -14,9 +14,7 @@ import {
   TextField,
   InputAdornment,
   Paper,
-  Popover,
-  CircularProgress,
-  
+  Popover
 } from '@mui/material';
 import Link from 'next/link';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -66,34 +64,10 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
     setSelectedTeam, 
     teamsLoading 
   } = useGlobal();
-  // const [teams, setTeams] = useState<Team[]>([]);
-  const [team, setTeam] = useState<string>(""); // Default to empty
+
   const [selectedApp, setSelectedApp] = useState("");
   const [anchorElTeam, setAnchorElTeam] = useState<HTMLElement | null>(null);
   const [anchorElApp, setAnchorElApp] = useState<HTMLElement | null>(null);
-  // const [teamsLoading, setTeamsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTeams = async () => {
-      setTeamsLoading(true);
-      const response = await fetch('http://127.0.0.1:8000/get_teams');
-      
-      const data = await response.json();
-      
-      const sortedTeams = data.teams.sort((a: Team, b: Team) => 
-        a.team_name.localeCompare(b.team_name)
-      );
-      
-      setTeams(sortedTeams);
-      
-      if (sortedTeams.length > 0) {
-        setTeam(sortedTeams[0].team_name);
-      }
-        
-    };
-
-    fetchTeams();
-  }, []);
 
   const handleTeamClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElTeam(event.currentTarget);
@@ -113,8 +87,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
     setAnchorElApp(null);
   };
 
-  const handleTeamSelect = (newTeam: string) => {
-    setTeam(newTeam);
+  const handleTeamSelect = (newTeam: Team) => {
+    setSelectedTeam(newTeam);
     handleCloseTeam();
   };
 
@@ -151,17 +125,17 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               justifyContent: 'center',
               marginRight: 2,
               backgroundColor: 'white',
-              borderRadius: '50%', // Make it circular
+              borderRadius: '50%',
               padding: '-12px',
               height: 38,
               width: 38,
-              overflow: 'hidden' // Ensure content stays within circle
+              overflow: 'hidden'
             }}>
               <img 
                 src="/cortex-logo.png" 
                 alt="Cortex Logo" 
                 style={{ 
-                  height: '85%', // Slightly reduced to prevent overflow issues
+                  height: '85%', 
                   width: '85%',
                   objectFit: 'contain'
                 }} 
@@ -200,9 +174,11 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                 mr: 1
               }}
             >
-              <Typography>{team && team.split(" ")[1].charAt(0)}</Typography>
+              <Typography>
+                {selectedTeam ? selectedTeam.team_name.split(" ")[1].charAt(0) : ''}
+              </Typography>
             </Box>
-            <Typography sx={{ flexGrow: 1 }}>{team}</Typography>
+            <Typography sx={{ flexGrow: 1 }}>{selectedTeam?.team_name}</Typography>
             <IconButton 
               size="small" 
               sx={{ 
@@ -463,7 +439,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               {teams.map((teamItem) => (
                 <ListItem 
                   key={teamItem.team_id}
-                  onClick={() => handleTeamSelect(teamItem.team_name)}
+                  onClick={() => handleTeamSelect(teamItem)}
                   sx={{ 
                     borderBottom: '1px solid #e0e0e0',
                     py: 1.5,
@@ -488,7 +464,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                     <Typography>{teamItem.team_name.split(" ")[1].charAt(0)}</Typography>
                   </Box>
                   <ListItemText primary={teamItem.team_name} />
-                  {team === teamItem.team_name && <CheckIcon sx={{ color: 'primary.main' }} />}
+                  {selectedTeam?.team_name === teamItem.team_name && <CheckIcon sx={{ color: 'primary.main' }} />}
                 </ListItem>
               ))}
             </List>
