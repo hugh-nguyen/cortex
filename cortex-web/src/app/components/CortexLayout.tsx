@@ -62,7 +62,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
   const { 
     teams, 
     selectedTeam, 
-    setSelectedTeam, 
+    setSelectedTeam,
+    loading,
   } = useGlobal();
 
   const [selectedApp, setSelectedApp] = useState("");
@@ -174,8 +175,12 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               }}
             >
               <Typography>
-                {selectedTeam ? selectedTeam.team_name.split(" ")[1].charAt(0) : ''}
-              </Typography>
+                {selectedTeam && selectedTeam.team_name
+                  ? (selectedTeam.team_name.includes(" ")
+                    ? selectedTeam.team_name.split(" ")[1].charAt(0)
+                    : selectedTeam.team_name.charAt(0))
+                  : ''}
+            </Typography>
             </Box>
             <Typography sx={{ flexGrow: 1 }}>{selectedTeam?.team_name}</Typography>
             <IconButton 
@@ -408,7 +413,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
             </Box>
             
             <List sx={{ p: 0 }}>
-              {teams.map((teamItem) => (
+              {teams && teams.length > 0 ? teams.map((teamItem) => (
                 <ListItem 
                   key={teamItem.team_id}
                   onClick={() => handleTeamSelect(teamItem)}
@@ -433,12 +438,20 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                       mr: 2
                     }}
                   >
-                    <Typography>{teamItem.team_name.split(" ")[1].charAt(0)}</Typography>
+                    <Typography>
+                      {teamItem.team_name && teamItem.team_name.includes(" ") 
+                        ? teamItem.team_name.split(" ")[1].charAt(0)
+                        : teamItem.team_name ? teamItem.team_name.charAt(0) : ''}
+                    </Typography>
                   </Box>
                   <ListItemText primary={teamItem.team_name} />
                   {selectedTeam?.team_name === teamItem.team_name && <CheckIcon sx={{ color: 'primary.main' }} />}
                 </ListItem>
-              ))}
+              )) : (
+                <ListItem>
+                  <ListItemText primary={loading ? "Loading teams..." : "No teams available"} />
+                </ListItem>
+              )}
             </List>
           </Paper>
         </Popover>

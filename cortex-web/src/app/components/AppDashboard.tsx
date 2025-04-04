@@ -31,8 +31,8 @@ const AppDashboard: React.FC = () => {
   const pathname = usePathname();
   const { 
     apps, 
-    appsLoading, 
-    appsError,
+    loading, 
+    error,
     setSelectedApp
   } = useGlobal();
 
@@ -43,19 +43,19 @@ const AppDashboard: React.FC = () => {
   
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {appsLoading && (
+      {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
           <CircularProgress />
         </Box>
       )}
       
-      {appsError && (
+      {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
-          {appsError}
+          {error}
         </Alert>
       )}
       
-      {!appsLoading &&  (
+      {!loading &&  (
         <Box sx={{ mt: 2 }}>
           {apps.map((app) => (
             <Card 

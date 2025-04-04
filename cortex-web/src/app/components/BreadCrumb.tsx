@@ -37,7 +37,7 @@ const Breadcrumb = () => {
       )}
       
       {!selectedApp && 
-        <Typography onClick={handleApplicationsClick} style={{cursor: 'pointer'}} color="text.primary" fontWeight="medium" fontSize="0.8rem">
+        <Typography onClick={handleApplicationsClick} style={{cursor: 'pointer', textDecoration: 'underline'}} color="text.primary" fontWeight="medium" fontSize="0.8rem">
           Applications
         </Typography>
       }
