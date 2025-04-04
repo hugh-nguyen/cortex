@@ -2,7 +2,13 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { fetchTeams, fetchAppVersions } from '@/app/utils/fetch';
+import { 
+  onloadEffect, 
+  pathNameTeamsEffect, 
+  appVersionsEffect, 
+  selectedTeamEffect,
+  appVersionsSelectedAppVersionEffect,
+} from '@/app/utils/effects';
 
 export const defaultModule = "team"
 export const defaultSubModule = "applications"
@@ -81,87 +87,15 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const router = useRouter();
 
   
+  onloadEffect(setTeams, setLoading, setError)
 
-  useEffect(() => {
-    fetchTeams(setTeams, setLoading, setError);
-  }, []);
-
-  useEffect(() => {
-    if (pathname && teams.length > 0) {
-      const parts = pathname.split('/').filter(x => x);
-      if (parts.length == 0) {
-        router.replace(`/${defaultModule}/${teams[0].team_id}/${defaultSubModule}/`);
-      }
-
-      const moduleType = parts.length > 0 ? parts[0] : null;
-
-      if (moduleType === "team") {
-        const teamId = parts.length > 0 ? parts[1] : null;
-        const appName = parts.length > 2 ? parts[3] : null;
-        const version = parts.length > 4 ? Number(parts[5]) : null;
-
-        if (teamId) {
-          const teamMap = Object.fromEntries(teams.map(t => [t.team_id, t]))
-          setSelectedTeam(teamMap[teamId]);
-        }
-        if (appName) {
-          fetchAppVersions(appName, setAppVersions, setLoading, setError)
-        }
-        if (version) {
-          setSelectedAppVersion(version)
-        }
-      }
-    }
-  }, [pathname, teams]);
-
-  useEffect(() => {
-    if (!selectedAppVersion) {
-      setSelectedAppVersion(appVersions ? Object.keys(appVersions).length : 0);
-    }
-  }, [appVersions])
-
-  useEffect(() => {
-    setGraphData(appVersions ? appVersions[selectedAppVersion].graph : null);
-  }, [appVersions, selectedAppVersion])
-
-  useEffect(() => {
-    const fetchApps = async () => {
-      if (!selectedTeam) return;
-
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await fetch(`http://127.0.0.1:8000/get_apps?team_id=${selectedTeam.team_id}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch apps: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log(data)
-        setLoading(false);
-        
-        const sortedApps = [...data.apps].sort((a, b) => 
-          a.App.localeCompare(b.App)
-        );
-        
-        setApps(sortedApps);
-      } catch (error) {
-        const errorMessage = error instanceof Error 
-          ? error.message 
-          : 'An unknown error occurred while fetching apps';
-        
-        setError(errorMessage);
-        console.error('Apps fetch error:', errorMessage);
-        setApps([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchApps();
-  }, [selectedTeam]);
+  appVersionsEffect(selectedAppVersion, appVersions, setSelectedAppVersion)
+  appVersionsSelectedAppVersionEffect(appVersions, selectedAppVersion, setGraphData)
+  pathNameTeamsEffect(
+    pathname, teams, router, setAppVersions, 
+    setLoading, setError, setSelectedTeam, setSelectedAppVersion
+  )
+  selectedTeamEffect(selectedTeam, setLoading, setError, setApps)
 
   return (
     <GlobalContext.Provider value={{ 
