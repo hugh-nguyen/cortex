@@ -42,19 +42,24 @@ export function pathNameTeamsEffect(
   setLoading: any, 
   setError: any, 
   setSelectedTeam: any, 
-  setSelectedAppVersion: any
+  setSelectedAppVersion: any,
+  setSubModule: any,
 ) {
   useEffect(() => {
+    console.log("?!")
     if (pathname && teams.length > 0) {
       const parts = pathname.split('/').filter((x: string) => x);
       if (parts.length == 0) {
+        setSubModule(defaultSubModule)
         router.replace(`/${defaultModule}/${teams[0].team_id}/${defaultSubModule}/`);
+        console.log("$")
       }
 
       const moduleType = parts.length > 0 ? parts[0] : null;
 
       if (moduleType === "team") {
         const teamId = parts.length > 0 ? parts[1] : null;
+        const subModule = parts.length > 1 ? parts[2] : null;
         const appName = parts.length > 2 ? parts[3] : null;
         const version = parts.length > 4 ? Number(parts[5]) : null;
 
@@ -62,13 +67,28 @@ export function pathNameTeamsEffect(
           const teamMap = Object.fromEntries(teams.map((t: any) => [t.team_id, t]))
           setSelectedTeam(teamMap[teamId]);
         }
-        if (appName) {
-          fetchAppVersions(appName, setAppVersions, setLoading, setError)
+
+        setSubModule(subModule)
+
+        if (subModule == "applications") {
+          if (appName) {
+            fetchAppVersions(appName, setAppVersions, setLoading, setError)
+          }
+          if (version) {
+            setSelectedAppVersion(version)
+          }
         }
-        if (version) {
-          setSelectedAppVersion(version)
+        
+        if (subModule == "xroutes") {
+          // if (appName) {
+          //   fetchAppVersions(appName, setAppVersions, setLoading, setError)
+          // }
+          // if (version) {
+          //   setSelectedAppVersion(version)
+          // }
         }
       }
+
     }
   }, [pathname, teams]);
 }
@@ -90,7 +110,6 @@ export function selectedTeamEffect(selectedTeam: any, setLoading: any, setError:
         }
         
         const data = await response.json();
-        console.log(data)
         setLoading(false);
         
         const sortedApps = [...data.apps].sort((a, b) => 
@@ -131,11 +150,12 @@ export function pathNameSelectedAppEffect(
 export function pathNameSelectedTeamEffect(
   pathname: any, 
   router: any,
-  selectedTeam: any 
+  selectedTeam: any,
+  subModule: any,
 ) {
   useEffect(() => {
     if (selectedTeam) {
-      router.push(`/team/${selectedTeam.team_id}/applications`);
+      router.push(`/team/${selectedTeam.team_id}/${subModule}`);
     }
   }, [pathname, selectedTeam]);
 }

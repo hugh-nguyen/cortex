@@ -62,7 +62,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
     teams, 
     selectedTeam, 
     setSelectedTeam,
-    // setSelectedApp,
+    subModule,
   } = useGlobal();
 
   const [anchorElTeam, setAnchorElTeam] = useState<HTMLElement | null>(null);
@@ -97,7 +97,13 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
   // };
 
   const handleApplicationsClick = () => {
+    console.log("imposible2")
     router.push(`/team/${selectedTeam?.team_id}/applications`);
+  }
+
+  const handleRoutesClick = () => {
+    console.log("??!!!")
+    router.push(`/team/${selectedTeam?.team_id}/xroutes`);
   }
 
   const openTeam = Boolean(anchorElTeam);
@@ -180,7 +186,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                 {selectedTeam ? selectedTeam.team_name.split(" ")[1].charAt(0) : ''}
               </Typography>
             </Box>
-            <Typography sx={{ flexGrow: 1 }}>{(()=> {console.log(selectedTeam); return selectedTeam?.team_name})() }</Typography>
+            <Typography sx={{ flexGrow: 1 }}>{selectedTeam?.team_name}</Typography>
             <IconButton 
               size="small" 
               sx={{ 
@@ -214,7 +220,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
               },
-              padding: '6px 9px'
+              padding: '6px 9px',
+              backgroundColor: (subModule == 'applications' ?  'purple' : null)
             }}
             onClick={handleApplicationsClick}
           >
@@ -236,8 +243,10 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
               },
-              padding: '6px 9px'
+              padding: '6px 9px',
+              backgroundColor: (subModule == 'routes' ?  'purple' : null)
             }}
+            onClick={handleRoutesClick}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
               <RoutesIcon />

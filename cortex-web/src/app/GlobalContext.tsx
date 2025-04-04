@@ -29,6 +29,9 @@ interface AppData {
 }
 
 interface GlobalContextType {
+  subModule: string;
+  setSubModule: (subModule: string) => void;
+
   teams: Team[];
   setTeams: (team: Team[]) => void;
   selectedTeam: Team | null;
@@ -71,6 +74,8 @@ interface AppVersions {
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [subModule, setSubModule] = useState("");
+
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
 
@@ -94,15 +99,18 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   appVersionsEffect(selectedAppVersion, appVersions, setSelectedAppVersion)
   appVersionsSelectedAppVersionEffect(appVersions, selectedAppVersion, setGraphData)
   pathNameTeamsEffect(
-    pathname, teams, router, setAppVersions, 
-    setLoading, setError, setSelectedTeam, setSelectedAppVersion
+    pathname, teams, router, setAppVersions, setLoading, 
+    setError, setSelectedTeam, setSelectedAppVersion, setSubModule
   )
   selectedTeamEffect(selectedTeam, setLoading, setError, setApps)
   pathNameSelectedAppEffect(pathname, selectedApp, router, selectedTeam)
-  pathNameSelectedTeamEffect(pathname, router, selectedTeam)
+  pathNameSelectedTeamEffect(pathname, router, selectedTeam, subModule)
 
   return (
-    <GlobalContext.Provider value={{ 
+    <GlobalContext.Provider value={{
+      subModule,
+      setSubModule,
+
       // Teams
       teams, 
       setTeams,

@@ -15,7 +15,7 @@ export default function Home() {
     <GlobalProvider>
       <MuiClientProvider>
         <CortexLayout>
-          <AppDashboard />
+         <>HI</>
         </CortexLayout>
       </MuiClientProvider>
     </GlobalProvider>
