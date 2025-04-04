@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { 
   Box, 
   Card, 
@@ -37,8 +37,8 @@ const AppDashboard: React.FC = () => {
   } = useGlobal();
 
   const handleAppClick = (app: AppData) => {
-    setSelectedApp(app.App);
-    router.push(`${pathname}/${app.App}/version/${app.Versions}`);
+    setSelectedApp(app);
+    // router.push(`${pathname}/${app.App}/version/${app.Versions}`);
   };
   
   return (

@@ -17,13 +17,13 @@ const theme = createTheme({
     fontFamily: '"Geist", "Arial", sans-serif',
     fontSize: 12.8,
     body1: {
-      fontSize: '0.8rem',
+      fontSize: '0.9rem',
     },
     body2: {
-      fontSize: '0.8rem',
+      fontSize: '0.9rem',
     },
     button: {
-      fontSize: '0.8rem',
+      fontSize: '0.9rem',
     },
     caption: {
       fontSize: '0.7rem', // Slightly smaller for captions

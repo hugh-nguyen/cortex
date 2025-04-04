@@ -115,3 +115,27 @@ export function selectedTeamEffect(selectedTeam: any, setLoading: any, setError:
   }, [selectedTeam])
 }
 
+export function pathNameSelectedAppEffect(
+  pathname: any, 
+  selectedApp: any, 
+  router: any,
+  selectedTeam: any 
+) {
+  useEffect(() => {
+    if (selectedTeam && selectedApp && selectedApp.App && selectedApp.Versions) {
+      router.push(`${pathname}/${selectedApp.App}/version/${selectedApp.Versions}`);
+    }
+  }, [pathname, selectedApp]);
+}
+
+export function pathNameSelectedTeamEffect(
+  pathname: any, 
+  router: any,
+  selectedTeam: any 
+) {
+  useEffect(() => {
+    if (selectedTeam) {
+      router.push(`/team/${selectedTeam.team_id}/applications`);
+    }
+  }, [pathname, selectedTeam]);
+}

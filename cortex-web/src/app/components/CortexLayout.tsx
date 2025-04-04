@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -21,25 +21,22 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/Help';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckIcon from '@mui/icons-material/Check';
 import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
 import Breadcrumb from '@/app/components/BreadCrumb';
 import { useGlobal } from '@/app/GlobalContext';
+import TerminalIcon from '@mui/icons-material/Terminal';
+import AltRouteIcon from '@mui/icons-material/AltRoute';
+import { useRouter, usePathname } from 'next/navigation';
 
 // Custom icons that match the screenshot
 const ApplicationsIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/>
-    <circle cx="12" cy="12" r="4"/>
-  </svg>
+  <TerminalIcon sx={{ fontSize: 20 }} />
 );
 
 const RoutesIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6"/>
-  </svg>
+  <AltRouteIcon sx={{ fontSize: 20 }} />
 );
 
 const ExternalLinkIcon = () => (
@@ -59,43 +56,49 @@ interface Team {
 }
 
 const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
+  const router = useRouter();
+  const pathname = usePathname();
   const { 
     teams, 
     selectedTeam, 
     setSelectedTeam,
+    // setSelectedApp,
   } = useGlobal();
 
-  const [selectedApp, setSelectedApp] = useState("");
   const [anchorElTeam, setAnchorElTeam] = useState<HTMLElement | null>(null);
   const [anchorElApp, setAnchorElApp] = useState<HTMLElement | null>(null);
 
-  const handleTeamClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleTeamPopoverClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElTeam(event.currentTarget);
     setAnchorElApp(null);
   };
 
-  const handleAppClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElApp(event.currentTarget);
-    setAnchorElTeam(null);
-  };
+  // const handleAppClick = (event: React.MouseEvent<HTMLElement>) => {
+  //   setAnchorElApp(event.currentTarget);
+  //   setAnchorElTeam(null);
+  // };
 
   const handleCloseTeam = () => {
     setAnchorElTeam(null);
   };
 
-  const handleCloseApp = () => {
-    setAnchorElApp(null);
-  };
+  // const handleCloseApp = () => {
+  //   setAnchorElApp(null);
+  // };
 
   const handleTeamSelect = (newTeam: Team) => {
     setSelectedTeam(newTeam);
     handleCloseTeam();
   };
 
-  const handleAppSelect = (newApp: string) => {
-    setSelectedApp(newApp);
-    handleCloseApp();
-  };
+  // const handleAppSelect = (newApp: string) => {
+  //   setSelectedApp(newApp);
+  //   handleCloseApp();
+  // };
+
+  const handleApplicationsClick = () => {
+    router.push(`/team/${selectedTeam?.team_id}/applications`);
+  }
 
   const openTeam = Boolean(anchorElTeam);
   const openApp = Boolean(anchorElApp);
@@ -105,10 +108,10 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
       <Drawer
         variant="permanent"
         sx={{
-          width: 190,
+          width: 210,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: 190,
+            width: 210,
             boxSizing: 'border-box',
             bgcolor: "#220459",
             color: "white",
@@ -159,7 +162,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               mt: 1, 
               cursor: 'pointer',
             }}
-            onClick={handleTeamClick}
+            onClick={handleTeamPopoverClick}
           >
             <Box 
               sx={{ 
@@ -177,7 +180,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                 {selectedTeam ? selectedTeam.team_name.split(" ")[1].charAt(0) : ''}
               </Typography>
             </Box>
-            <Typography sx={{ flexGrow: 1 }}>{selectedTeam?.team_name}</Typography>
+            <Typography sx={{ flexGrow: 1 }}>{(()=> {console.log(selectedTeam); return selectedTeam?.team_name})() }</Typography>
             <IconButton 
               size="small" 
               sx={{ 
@@ -202,7 +205,6 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
         <List sx={{ px: 0 }}>
           <ListItem
             component="a"
-            href="#"
             sx={{ 
               py: 1.5,
               pl: 2,
@@ -214,6 +216,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               },
               padding: '6px 9px'
             }}
+            onClick={handleApplicationsClick}
           >
             <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
               <ApplicationsIcon />
@@ -285,7 +288,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
           </ListItem>
         </List>
 
-        <Box sx={{ px: 2, py: 1, mt: 1 }}>
+        {/* <Box sx={{ px: 2, py: 1, mt: 1 }}>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>APPLICATION</Typography>
           <Box 
             sx={{ 
@@ -317,7 +320,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               <ExternalLinkIcon />
             </IconButton>
           </Box>
-        </Box>
+        </Box> */}
 
         <Box sx={{ flexGrow: 1 }} />
 
@@ -443,8 +446,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
           </Paper>
         </Popover>
 
-        {/* App selector popover */}
-        <Popover
+        {/* <Popover
           open={openApp}
           anchorEl={anchorElApp}
           onClose={handleCloseApp}
@@ -504,7 +506,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               </ListItem>
             </List>
           </Paper>
-        </Popover>
+        </Popover> */}
       </Drawer>
       
       <Box 

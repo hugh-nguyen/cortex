@@ -8,6 +8,8 @@ import {
   appVersionsEffect, 
   selectedTeamEffect,
   appVersionsSelectedAppVersionEffect,
+  pathNameSelectedAppEffect,
+  pathNameSelectedTeamEffect
 } from '@/app/utils/effects';
 
 export const defaultModule = "team"
@@ -34,8 +36,8 @@ interface GlobalContextType {
 
   apps: AppData[];
   setApps: (apps: AppData[]) => void;
-  selectedApp: string;
-  setSelectedApp: (app: string) => void;
+  selectedApp: AppData | null;
+  setSelectedApp: (app: AppData) => void;
   selectedAppVersion: number;
   setSelectedAppVersion: (version: number) => void;
   appVersions: AppVersions | null;
@@ -73,7 +75,7 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
 
   const [apps, setApps] = useState<AppData[]>([]);
-  const [selectedApp, setSelectedApp] = useState("");
+  const [selectedApp, setSelectedApp] = useState<AppData | null>(null);
 
   const [selectedAppVersion, setSelectedAppVersion] = useState<number>(0);
   const [appVersions, setAppVersions] = useState<AppVersions | null>(null);
@@ -96,6 +98,8 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLoading, setError, setSelectedTeam, setSelectedAppVersion
   )
   selectedTeamEffect(selectedTeam, setLoading, setError, setApps)
+  pathNameSelectedAppEffect(pathname, selectedApp, router, selectedTeam)
+  pathNameSelectedTeamEffect(pathname, router, selectedTeam)
 
   return (
     <GlobalContext.Provider value={{ 

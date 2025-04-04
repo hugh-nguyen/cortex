@@ -46,7 +46,7 @@ const Breadcrumb = () => {
         <>
           <Typography color="text.primary" fontWeight="medium" fontSize="0.8rem">Applications</Typography>
           <ChevronRightIcon sx={{ mx: 1, fontSize: '1rem', color: 'text.secondary' }} />
-          <Typography component="span" fontSize="0.8rem">{selectedApp}</Typography>
+          <Typography component="span" fontSize="0.8rem">{selectedApp.App}</Typography>
         </>
       )}
 
