@@ -11,7 +11,7 @@ import boto3
 import json
 from datetime import datetime
 
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2')
 apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
 
