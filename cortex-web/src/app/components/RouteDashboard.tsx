@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Card, 
@@ -19,6 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { useGlobal } from '@/app/GlobalContext';
+import RouteEditModal from './RouteEditModal';
 
 interface Target {
   app: string;
@@ -37,25 +38,69 @@ const RouteDashboard: React.FC = () => {
   const { 
     loading, 
     error,
-    routes
+    routes,
+    selectedTeam,
+    setRoutes
   } = useGlobal();
   
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  
+  // Function to refresh routes after edits
+  const fetchRoutes = async () => {
+    if (!selectedTeam) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/get_routes?team_id=${selectedTeam.team_id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch routes');
+      }
+      
+      const data = await response.json();
+      if (data.routes) {
+        setRoutes(data.routes);
+      }
+    } catch (error) {
+      console.error('Error fetching routes:', error);
+    }
+  };
+
+  // Refresh routes when modal closes
+  useEffect(() => {
+    if (!modalOpen) {
+      fetchRoutes();
+    }
+  }, [modalOpen, selectedTeam]);
+  
+  const handleEditRoute = (route: Route) => {
+    setSelectedRoute(route);
+    setModalOpen(true);
+  };
+  
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedRoute(null);
+  };
+  
   const handleAddRoute = () => {
-    console.log('Add new route');
-    // Add your logic to add a new route
+    // Create a new empty route template
+    setSelectedRoute(null);
+    setModalOpen(true);
+  };
+  
+  const handleDeleteRoute = async (route: Route) => {
+    // Confirm deletion
+    if (!window.confirm(`Are you sure you want to delete route: ${route.prefix}?`)) {
+      return;
+    }
+    
+    // In a real app, you would call a delete API endpoint here
+    console.log('Delete route:', route.prefix);
+    // For now, we'll just refresh the routes list
+    fetchRoutes();
   };
 
   const RouteCard = ({ route }: { route: Route }) => {
-    const handleEdit = () => {
-      console.log('Edit route:', route.prefix);
-      // Add your edit logic here
-    };
-    
-    const handleDelete = () => {
-      console.log('Delete route:', route.prefix);
-      // Add your delete logic here
-    };
-    
     return (
       <Card 
         variant="outlined" 
@@ -84,7 +129,7 @@ const RouteDashboard: React.FC = () => {
           <Tooltip title="Edit route">
             <IconButton 
               size="small" 
-              onClick={handleEdit}
+              onClick={() => handleEditRoute(route)}
               sx={{ 
                 bgcolor: purple[50],
                 transition: 'all 0.2s ease',
@@ -100,7 +145,7 @@ const RouteDashboard: React.FC = () => {
           <Tooltip title="Delete route">
             <IconButton 
               size="small" 
-              onClick={handleDelete}
+              onClick={() => handleDeleteRoute(route)}
               sx={{ 
                 bgcolor: '#ffebee',
                 transition: 'all 0.2s ease',
@@ -142,14 +187,23 @@ const RouteDashboard: React.FC = () => {
                 fontWeight: 'medium',
                 transition: 'all 0.2s ease',
                 position: 'relative',
-                border: '3px solid transparent',
+                zIndex: 1,
                 '&:hover': {
                   backgroundColor: '#388E3C',
                   transform: 'scale(1.02)',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                 },
-                '.route-card:hover &': {
-                  borderColor: purple[300]
+                '.route-card:hover &::after': {
+                  content: '""',
+                  position: 'absolute',
+                  top: -2,
+                  left: -2,
+                  right: -2,
+                  bottom: -2,
+                  borderRadius: '4px',
+                  border: `3px solid ${purple[300]}`,
+                  pointerEvents: 'none',
+                  zIndex: 2
                 }
               }}
             >
@@ -251,7 +305,7 @@ const RouteDashboard: React.FC = () => {
                     <Box 
                       sx={{ 
                         display: 'flex', 
-                        width: '100%',
+                        width: 'fit-content',
                         maxWidth: 500,
                         border: '3px solid transparent',
                         borderRadius: '4px',
@@ -361,6 +415,13 @@ const RouteDashboard: React.FC = () => {
           <AddIcon />
         </Fab>
       </Tooltip>
+      
+      {/* Edit Route Modal */}
+      <RouteEditModal 
+        open={modalOpen}
+        onClose={handleCloseModal}
+        route={selectedRoute}
+      />
     </Container>
   );
 };
