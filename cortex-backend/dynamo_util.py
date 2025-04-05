@@ -211,3 +211,13 @@ def get_routes(team_id):
     except Exception as e:
         print(f"Error in get_routes: {str(e)}")
         return None
+
+def put_route(payload):
+    response = routes_table.put_item(
+        Item={
+            'prefix': payload["prefix"],
+            'team_id': payload["team_id"],
+            'targets': payload["targets"],
+        }
+    )
+    return response

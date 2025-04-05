@@ -9,7 +9,6 @@ import {
   Alert, 
   Container,
   Typography,
-  Divider,
   Paper,
   IconButton,
   Fab,
@@ -38,13 +37,14 @@ const RouteDashboard: React.FC = () => {
   const { 
     loading, 
     error,
-    subModule,
-    selectedTeam,
     routes
   } = useGlobal();
   
-  // No need for the fetch effect since routes are now coming from context
-  
+  const handleAddRoute = () => {
+    console.log('Add new route');
+    // Add your logic to add a new route
+  };
+
   const RouteCard = ({ route }: { route: Route }) => {
     const handleEdit = () => {
       console.log('Edit route:', route.prefix);
@@ -138,28 +138,18 @@ const RouteDashboard: React.FC = () => {
                 px: 2,
                 borderRadius: 1,
                 width: 'fit-content',
-                minWidth: 260,
+                minWidth: 160,
                 fontWeight: 'medium',
                 transition: 'all 0.2s ease',
                 position: 'relative',
-                zIndex: 1,
+                border: '3px solid transparent',
                 '&:hover': {
                   backgroundColor: '#388E3C',
                   transform: 'scale(1.02)',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                 },
-                '.route-card:hover &::after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: -2,
-                  left: -2,
-                  right: -2,
-                  bottom: -2,
-                  borderRadius: '6px',
-                  border: `3px solid ${purple[300]}`,
-                  animation: 'pulse 1.5s infinite',
-                  pointerEvents: 'none',
-                  zIndex: 2
+                '.route-card:hover &': {
+                  borderColor: purple[300]
                 }
               }}
             >
@@ -181,12 +171,7 @@ const RouteDashboard: React.FC = () => {
                 position: 'absolute',
                 height: 2, 
                 width: '100%', 
-                bgcolor: '#333',
-                transition: 'all 0.2s ease',
-                '.app-group:hover &': {
-                  height: 3,
-                  bgcolor: '#111'
-                }
+                bgcolor: '#333'
               }} />
               
               {route.targets.length > 1 && (
@@ -261,50 +246,34 @@ const RouteDashboard: React.FC = () => {
                     flex: 1, 
                     display: 'flex', 
                     alignItems: 'center',
-                    ml: 2,
-                    position: 'relative',
-                    '.route-card:hover &::after': {
-                      content: '""',
-                      position: 'absolute',
-                      top: -2,
-                      left: -2,
-                      right: -2,
-                      bottom: -2,
-                      borderRadius: '6px',
-                      border: `3px solid ${purple[300]}`,
-                      animation: 'pulse 1.5s infinite',
-                      animationDelay: '0.1s',
-                      pointerEvents: 'none',
-                      zIndex: 2
-                    },
-                    '@keyframes pulse': {
-                      '0%': {
-                        borderColor: purple[200],
-                      },
-                      '50%': {
-                        borderColor: purple[400],
-                      },
-                      '100%': {
-                        borderColor: purple[200],
-                      }
-                    }
+                    ml: 2
                   }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      width: '100%',
-                      maxWidth: 500
-                    }}>
-                      <Box sx={{ 
+                    <Box 
+                      sx={{ 
                         display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
+                        width: '100%',
+                        maxWidth: 500,
+                        border: '3px solid transparent',
+                        borderRadius: '4px',
+                        position: 'relative',
+                        '.route-card:hover &': {
+                          borderColor: purple[300]
+                        }
+                      }}
+                    >
+                      <Box sx={{ 
                         backgroundColor: blue[700],
                         color: 'white',
                         padding: '8px 16px',
                         borderRadius: '4px 0 0 4px',
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
-                        minWidth: 220
+                        minWidth: 220,
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: blue[800],
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                        }
                       }}>
                         {`${target.app}-${target.svc} @ V${target.app_ver}`}
                       </Box>
@@ -320,8 +289,6 @@ const RouteDashboard: React.FC = () => {
                         minWidth: 60,
                         maxWidth: 120,
                         transition: 'all 0.2s ease',
-                        position: 'relative',
-                        zIndex: 1,
                         '&:hover': {
                           backgroundColor: amber[600],
                           boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
@@ -338,11 +305,6 @@ const RouteDashboard: React.FC = () => {
         </CardContent>
       </Card>
     );
-  };
-  
-  const handleAddRoute = () => {
-    console.log('Add new route');
-    // Add your logic to add a new route
   };
 
   return (
