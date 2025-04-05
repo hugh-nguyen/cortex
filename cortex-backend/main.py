@@ -5,6 +5,9 @@ import graph
 import graph_original
 import dynamo_util
 
+from fastapi import FastAPI, Body
+from typing import List, Dict, Any
+
 app = FastAPI()
 
 app.add_middleware(
@@ -44,6 +47,12 @@ async def get_apps_versions(app: str = "app1"):
 @app.get("/get_routes")
 async def get_routes(team_id: int = "team_id"):
     result = dynamo_util.get_routes(team_id)
+    return {"routes": result}
+
+@app.put("/put_route")
+async def put_route(payload: Dict[str, Any] = Body(...)):
+    print(payload)
+    result = dynamo_util.put_route(payload)
     return {"routes": result}
 
 @app.get("/hello/{name}")

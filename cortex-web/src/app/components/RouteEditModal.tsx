@@ -103,9 +103,11 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
   const handleTargetChange = (index: number, field: keyof Target, value: string | number) => {
     const newTargets = [...targets];
     
-    // Convert string to number for numeric fields
     if (field === 'app_ver' || field === 'weight') {
-      newTargets[index][field] = Number(value);
+      // Convert string to number for numeric fields, but handle already-numeric values
+      newTargets[index][field] = typeof value === 'string' ? 
+        Number(value) : // Convert strings to numbers
+        value;          // Keep numbers as they are
     } else {
       newTargets[index][field] = value as string;
     }
@@ -147,34 +149,43 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
         return;
       }
       
-      // Prepare payload
+      // Prepare payload to match the fastapi endpoint's expectations
       const payload = {
         prefix: prefix,
-        team_id: selectedTeam.team_id,
+        team_id: selectedTeam.team_id, // Don't convert this to number if it's already a number
         targets: targets.map(t => ({
           app: t.app,
           svc: t.svc,
-          app_ver: t.app_ver,
-          weight: t.weight
+          app_ver: t.app_ver, // Use as is if it's already a number
+          weight: t.weight    // Use as is if it's already a number
         }))
       };
       
-      // Send to API
+      // Send to API - Make sure we're sending the payload directly in the request body
+      // In your handleApply function:
       const response = await fetch('http://localhost:8000/put_route', {
-        method: 'PUT',
-        headers: {
+          method: 'PUT',
+          headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+          },
+          body: JSON.stringify(payload),
+          // Add this to handle responses
+      }).then(response => {
+          if (!response.ok) {
+          return response.text().then(text => {
+              throw new Error(text || response.statusText);
+          });
+          }
+          return response.json();
+      }).then(data => {
+          console.log("Success:", data);
+          onClose(); // Close modal on success
+      }).catch(error => {
+          console.error("Error:", error);
+          alert('Failed to save route');
+      }).finally(() => {
+          setIsSubmitting(false);
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update route');
-      }
-      
-      // Close modal and refresh routes (this will happen in the parent component)
-      onClose();
-      
     } catch (error) {
       console.error('Error saving route:', error);
       alert('Failed to save route');
