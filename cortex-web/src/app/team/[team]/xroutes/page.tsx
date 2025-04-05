@@ -5,8 +5,8 @@ import { GlobalProvider } from '@/app/GlobalContext';
 import MuiClientProvider from '@/app/components/MuiClientProvider';
 import CortexLayout from '@/app/components/CortexLayout';
 
-const AppDashboard = dynamic(
-  () => import('@/app/components/AppDashboard'),
+const RouteDashboard = dynamic(
+  () => import('@/app/components/RouteDashboard'),
   { ssr: false }
 );
 
@@ -15,7 +15,7 @@ export default function Home() {
     <GlobalProvider>
       <MuiClientProvider>
         <CortexLayout>
-         <>HI</>
+          <RouteDashboard></RouteDashboard>
         </CortexLayout>
       </MuiClientProvider>
     </GlobalProvider>

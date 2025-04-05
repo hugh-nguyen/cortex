@@ -40,6 +40,7 @@ dynamodb = get_dynamodb_resource()
 apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
 teams_table = dynamodb.Table('Teams')
+routes_table = dynamodb.Table('Routes')
 
 def get_teams():
     try:
@@ -64,7 +65,6 @@ def get_apps(team_id=None):
         response = apps_table.scan()
         items = response.get('Items', [])
         
-        # Format the response to match the existing API
         formatted_apps = []
         for item in items:
             if team_id and int(item.get("team_id", "0")) == int(team_id):
@@ -109,12 +109,10 @@ def get_app_versions(app_name):
             KeyConditionExpression=Key('app_name').eq(app_name)
         )
         
-        # Format response to match existing structure
         result = []
         for item in response.get('Items', []):
             version_num = item.get('version')
             
-            # If the graph is stored as a JSON string, parse it
             graph_data = item.get('graph', {})
             if isinstance(graph_data, str):
                 import json
@@ -201,3 +199,15 @@ def ensure_tables_exist():
     except Exception as e:
         print(f"Error ensuring tables exist: {str(e)}")
         return False
+    
+
+def get_routes(team_id):
+    try:
+        response = routes_table.query(
+            IndexName='TeamIdIndex',
+            KeyConditionExpression=Key('team_id').eq(team_id)
+        )
+        return response.get('Items', [])
+    except Exception as e:
+        print(f"Error in get_routes: {str(e)}")
+        return None

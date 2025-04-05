@@ -17,19 +17,21 @@ const theme = createTheme({
     fontFamily: '"Geist", "Arial", sans-serif',
     fontSize: 12.8,
     body1: {
-      fontSize: '0.9rem',
+      fontSize: '0.95rem',
     },
     body2: {
-      fontSize: '0.9rem',
+      fontSize: '0.95rem',
     },
     button: {
-      fontSize: '0.9rem',
+      fontSize: '0.95rem',
     },
     caption: {
       fontSize: '0.7rem', // Slightly smaller for captions
     },
     h6: {
-      fontSize: '1rem', // Adjust headings as needed
+      fontSize: '1.1rem', // Adjust headings as needed
+      fontWeight: 800,
+      margin: '-6px'
     },
   },
 });

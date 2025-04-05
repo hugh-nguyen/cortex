@@ -54,6 +54,7 @@ dynamodb = boto3.resource('dynamodb')
 apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
 teams_table = dynamodb.Table('Teams')
+routes_table = dynamodb.Table('Routes')
 
 def upload_team(team_id=None, team_name=None, last_updated=None):
   if last_updated is None:
@@ -100,6 +101,17 @@ def upload_app_version(app_name="", version=None, yaml_data=None, service_count=
     )
     
     print(f"Uploaded version {version} of app {app_name} to DynamoDB")
+    return response
+
+
+def upload_routes(prefix="", team_id=None, targets=None):
+    response = routes_table.put_item(
+        Item={
+            'prefix': prefix,
+            'team_id': team_id,
+            'targets': targets
+        }
+    )
     return response
 
 
@@ -284,3 +296,34 @@ upload_app_version(
     0
 )
 
+upload_routes(
+    "/app1/main/",
+    1,
+    [
+      {
+        "app": "app1",
+        "svc": "service-a",
+        "app_ver": 1,
+        "weight": 60
+      },
+      {
+        "app": "app1",
+        "svc": "service-a",
+        "app_ver": 2,
+        "weight": 40
+      }
+    ]
+)
+
+upload_routes(
+    "/app1/service-a/",
+    1,
+    [
+      {
+        "app": "app1",
+        "svc": "service-a",
+        "app_ver": 1,
+        "weight": 100
+      }
+    ]
+)

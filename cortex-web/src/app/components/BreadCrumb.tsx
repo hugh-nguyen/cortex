@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 const Breadcrumb = () => {
     const router = useRouter();
-    const { selectedTeam, selectedApp, selectedAppVersion } = useGlobal();
+    const { selectedTeam, selectedApp, selectedAppVersion, subModule } = useGlobal();
 
   const handleApplicationsClick = () => {
     console.log("impossible")
@@ -37,13 +37,13 @@ const Breadcrumb = () => {
         </>
       )}
       
-      {!selectedApp && 
+      {!selectedApp && subModule =='applications' &&
         <Typography onClick={handleApplicationsClick} style={{cursor: 'pointer', textDecoration: 'underline'}} color="text.primary" fontWeight="medium" fontSize="0.8rem">
           Applications
         </Typography>
       }
       
-      {selectedApp && (
+      {selectedApp && subModule =='applications' && (
         <>
           <Typography color="text.primary" fontWeight="medium" fontSize="0.8rem">Applications</Typography>
           <ChevronRightIcon sx={{ mx: 1, fontSize: '1rem', color: 'text.secondary' }} />
@@ -51,7 +51,13 @@ const Breadcrumb = () => {
         </>
       )}
 
-      {selectedAppVersion !== 0 && (
+      {subModule =='xroutes' &&
+        <Typography onClick={handleApplicationsClick} style={{cursor: 'pointer', textDecoration: 'underline'}} color="text.primary" fontWeight="medium" fontSize="0.8rem">
+          Routes
+        </Typography>
+      }
+
+      {selectedAppVersion !== 0 && subModule =='applications' && (
         <>
           <ChevronRightIcon sx={{ mx: 1, fontSize: '1rem', color: 'text.secondary' }} />
           <Typography color="text.primary" fontWeight="medium" fontSize="0.8rem">Versions</Typography>

@@ -136,8 +136,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               backgroundColor: 'white',
               borderRadius: '50%',
               padding: '-12px',
-              height: 38,
-              width: 38,
+              height: 32,
+              width: 32,
               overflow: 'hidden'
             }}>
               <img 
@@ -244,7 +244,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
               },
               padding: '6px 9px',
-              backgroundColor: (subModule == 'routes' ?  'purple' : null)
+              backgroundColor: (subModule == 'xroutes' ?  'purple' : null)
             }}
             onClick={handleRoutesClick}
           >

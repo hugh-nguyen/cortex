@@ -1,0 +1,29 @@
+{
+    "AttributeDefinitions": [
+      {
+        "AttributeName": "team_id",
+        "AttributeType": "N"
+      }
+    ],
+    "TableName": "Routes",
+    "GlobalSecondaryIndexUpdates": [
+      {
+        "Create": {
+          "IndexName": "TeamIdIndex",
+          "KeySchema": [
+            {
+              "AttributeName": "team_id",
+              "KeyType": "HASH"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "ALL"
+          },
+          "ProvisionedThroughput": {
+            "ReadCapacityUnits": 1,
+            "WriteCapacityUnits": 1
+          }
+        }
+      }
+    ]
+  }

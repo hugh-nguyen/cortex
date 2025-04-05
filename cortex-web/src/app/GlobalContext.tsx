@@ -46,6 +46,9 @@ interface GlobalContextType {
   appVersions: AppVersions | null;
   setAppVersions: (versions: AppVersions | null) => void;
 
+  routes: Route[];
+  setRoutes: (routes: Route[]) => void;
+
   graphData: GraphData | null;
   setGraphData: (data: GraphData | null) => void;
 
@@ -71,6 +74,19 @@ interface AppVersions {
   [key: number]: VersionData;
 }
 
+interface Route {
+  prefix: string,
+  team_id: number,
+  targets: Target[],
+}
+
+interface Target {
+  app: string;
+  svc: string;
+  app_ver: number;
+  weight: number;
+}
+
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -87,6 +103,8 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [graphData, setGraphData] = useState<GraphData | null>(null);
 
+  const [routes, setRoutes] = useState<Route[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -100,7 +118,7 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   appVersionsSelectedAppVersionEffect(appVersions, selectedAppVersion, setGraphData)
   pathNameTeamsEffect(
     pathname, teams, router, setAppVersions, setLoading, 
-    setError, setSelectedTeam, setSelectedAppVersion, setSubModule
+    setError, setSelectedTeam, setSelectedAppVersion, setSubModule, setRoutes
   )
   selectedTeamEffect(selectedTeam, setLoading, setError, setApps)
   pathNameSelectedAppEffect(pathname, selectedApp, router, selectedTeam)
@@ -126,6 +144,9 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       appVersions,
       setAppVersions,
       setSelectedAppVersion,
+
+      routes,
+      setRoutes,
 
       graphData,
       setGraphData,

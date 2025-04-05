@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { fetchTeams, fetchAppVersions } from '@/app/utils/fetch';
+import { fetchTeams, fetchAppVersions, fetchRoutes } from '@/app/utils/fetch';
 import { defaultModule, defaultSubModule } from '@/app/GlobalContext';
 
 
@@ -44,6 +44,7 @@ export function pathNameTeamsEffect(
   setSelectedTeam: any, 
   setSelectedAppVersion: any,
   setSubModule: any,
+  setRoutes: any,
 ) {
   useEffect(() => {
     console.log("?!")
@@ -80,6 +81,7 @@ export function pathNameTeamsEffect(
         }
         
         if (subModule == "xroutes") {
+          fetchRoutes(teamId, setRoutes, setLoading, setError)
           // if (appName) {
           //   fetchAppVersions(appName, setAppVersions, setLoading, setError)
           // }

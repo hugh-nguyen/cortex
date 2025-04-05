@@ -28,11 +28,33 @@ export const fetchAppVersions = async (appName: string, setAppVersions: any, set
         const response = await fetch(`http://127.0.0.1:8000/get_app_versions?app=${appName}`);
         
         if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+            throw new Error(`API request failed with status ${response.status}`);
         }
         
         const data = await response.json();
         setAppVersions(data.app_versions)
+        
+        setError(null);
+    } catch (err) {
+        console.error('Error fetching app versions:', err);
+        setError('Failed to load app versions. Please check the console for details.');
+    } finally {
+        setLoading(false);
+    }
+}
+
+export const fetchRoutes = async (teamId: string, setRoutes: any, setLoading: any, setError: any) => {
+    try {
+        setLoading(true);
+        const response = await fetch(`http://127.0.0.1:8000/get_routes?team_id=${teamId}`);
+        
+        if (!response.ok) {
+            throw new Error(`API request failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setRoutes(data.routes)
+        console.log(data.routes)
         
         setError(null);
     } catch (err) {

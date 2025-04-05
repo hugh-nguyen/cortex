@@ -41,6 +41,11 @@ async def get_apps_versions(app: str = "app1"):
     app_versions = {int(av["version"]): transform(av) for av in app_versions}
     return {"app_versions": app_versions}
 
+@app.get("/get_routes")
+async def get_routes(team_id: int = "team_id"):
+    result = dynamo_util.get_routes(team_id)
+    return {"routes": result}
+
 @app.get("/hello/{name}")
 async def read_hello(name: str):
     return {"message": f"Hello {name}"}
