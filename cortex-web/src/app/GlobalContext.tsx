@@ -46,7 +46,7 @@ interface GlobalContextType {
   appVersions: AppVersions | null;
   setAppVersions: (versions: AppVersions | null) => void;
 
-  routes: Route[];
+  routes: Route[];  
   setRoutes: (routes: Route[]) => void;
 
   graphData: GraphData | null;
