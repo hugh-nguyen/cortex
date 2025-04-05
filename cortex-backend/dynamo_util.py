@@ -5,7 +5,6 @@ from botocore.config import Config
 from boto3.dynamodb.conditions import Key, Attr
 CERT_PATH = os.environ.get("CERT_PATH", None)
 
-
 def get_dynamodb_resource():
     warnings.filterwarnings('ignore', message='Unverified HTTPS request')
     
@@ -41,6 +40,19 @@ apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
 teams_table = dynamodb.Table('Teams')
 routes_table = dynamodb.Table('Routes')
+
+def get_all_rows(table_name, region_name='ap-southeast-2'):
+    dynamodb = boto3.resource('dynamodb', region_name=region_name)
+    
+    all_items = []
+    response = routes_table.scan()
+    all_items.extend(response.get('Items', []))
+    
+    while 'LastEvaluatedKey' in response:
+        response = routes_table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        all_items.extend(response.get('Items', []))
+    
+    return all_items
 
 def get_teams():
     try:

@@ -4,6 +4,7 @@ import yaml
 import graph
 import graph_original
 import dynamo_util
+import envoy_util
 
 from fastapi import FastAPI, Body
 from typing import List, Dict, Any
@@ -54,6 +55,13 @@ async def put_route(payload: Dict[str, Any] = Body(...)):
     print(payload)
     result = dynamo_util.put_route(payload)
     return {"routes": result}
+
+@app.get("/update_envoy")
+async def update_envoy():
+    url = "http://hn-cortex.click/api/v1/routes"
+    # payload = {"routes": transform_routes(routes)}
+    envoy_util.update_envoy()
+    return {"result": "SUCCESS"}
 
 @app.get("/hello/{name}")
 async def read_hello(name: str):

@@ -302,13 +302,13 @@ upload_routes(
     [
       {
         "app": "app1",
-        "svc": "service-a",
+        "svc": "mfe-a",
         "app_ver": 1,
         "weight": 60
       },
       {
         "app": "app1",
-        "svc": "service-a",
+        "svc": "mfe-a",
         "app_ver": 2,
         "weight": 40
       }
@@ -316,12 +316,12 @@ upload_routes(
 )
 
 upload_routes(
-    "/app1/service-a/",
+    "/app1/mfe-a/",
     1,
     [
       {
         "app": "app1",
-        "svc": "service-a",
+        "svc": "mfe-a",
         "app_ver": 1,
         "weight": 100
       }

@@ -45,6 +45,7 @@ export function pathNameTeamsEffect(
   setSelectedAppVersion: any,
   setSubModule: any,
   setRoutes: any,
+  selectedTeam: any,
 ) {
   useEffect(() => {
     console.log("?!")
@@ -66,7 +67,11 @@ export function pathNameTeamsEffect(
 
         if (teamId) {
           const teamMap = Object.fromEntries(teams.map((t: any) => [t.team_id, t]))
-          setSelectedTeam(teamMap[teamId]);
+          console.log("%", teamId, selectedTeam)
+          if (!selectedTeam || teamId != selectedTeam.team_id) {
+            console.log("^^^^^")
+            setSelectedTeam(teamMap[teamId]);
+          }
         }
 
         setSubModule(subModule)
@@ -155,9 +160,9 @@ export function pathNameSelectedTeamEffect(
   selectedTeam: any,
   subModule: any,
 ) {
-  useEffect(() => {
-    if (selectedTeam) {
-      router.push(`/team/${selectedTeam.team_id}/${subModule}`);
-    }
-  }, [pathname, selectedTeam]);
+  // useEffect(() => {
+  //   if (selectedTeam) {
+  //     router.push(`/team/${selectedTeam.team_id}/${subModule}`);
+  //   }
+  // }, [pathname, selectedTeam]);
 }

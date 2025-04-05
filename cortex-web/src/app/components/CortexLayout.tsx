@@ -87,7 +87,8 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
   // };
 
   const handleTeamSelect = (newTeam: Team) => {
-    setSelectedTeam(newTeam);
+    // setSelectedTeam(newTeam);
+    router.replace(`/team/${newTeam.team_id}/${subModule}`);
     handleCloseTeam();
   };
 

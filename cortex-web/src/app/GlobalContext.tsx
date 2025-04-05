@@ -118,7 +118,8 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   appVersionsSelectedAppVersionEffect(appVersions, selectedAppVersion, setGraphData)
   pathNameTeamsEffect(
     pathname, teams, router, setAppVersions, setLoading, 
-    setError, setSelectedTeam, setSelectedAppVersion, setSubModule, setRoutes
+    setError, setSelectedTeam, setSelectedAppVersion, setSubModule,
+    setRoutes, selectedTeam
   )
   selectedTeamEffect(selectedTeam, setLoading, setError, setApps)
   pathNameSelectedAppEffect(pathname, selectedApp, router, selectedTeam)

@@ -64,10 +64,22 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
   };
   
   const handleAddTarget = () => {
-    setTargets([...targets, { app: '', svc: '', app_ver: 1, weight: 0 }]);
+    // Get values from the most recent target
+    const lastTarget = targets[targets.length - 1];
+    
+    // Create a new target with copied values (except weight)
+    const newTarget = {
+      app: lastTarget.app,
+      svc: lastTarget.svc,
+      app_ver: lastTarget.app_ver,
+      weight: 0 // Start with 0 weight
+    };
+    
+    // Add the new target to the list
+    const newTargets = [...targets, newTarget];
+    setTargets(newTargets);
     
     // Recalculate weights to ensure they sum to 100%
-    const newTargets = [...targets, { app: '', svc: '', app_ver: 1, weight: 0 }];
     distributeWeights(newTargets);
   };
   
@@ -105,9 +117,25 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
     
     if (field === 'app_ver' || field === 'weight') {
       // Convert string to number for numeric fields, but handle already-numeric values
-      newTargets[index][field] = typeof value === 'string' ? 
-        Number(value) : // Convert strings to numbers
-        value;          // Keep numbers as they are
+      const numValue = typeof value === 'string' ? Number(value) : value;
+      
+      // Special handling for weight to ensure they sum to 100%
+      if (field === 'weight' && newTargets.length === 2) {
+        // Only adjust weights automatically when there are exactly 2 targets
+        const otherIndex = index === 0 ? 1 : 0;
+        
+        // Make sure weight is between 0 and 100
+        const clampedValue = Math.max(0, Math.min(100, numValue));
+        
+        // Set this target's weight
+        newTargets[index].weight = clampedValue;
+        
+        // Adjust the other target's weight to maintain sum of 100
+        newTargets[otherIndex].weight = 100 - clampedValue;
+      } else {
+        // For other numeric fields or when not exactly 2 targets
+        newTargets[index][field] = numValue;
+      }
     } else {
       newTargets[index][field] = value as string;
     }
@@ -162,29 +190,12 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
       };
       
       // Send to API - Make sure we're sending the payload directly in the request body
-      // In your handleApply function:
       const response = await fetch('http://localhost:8000/put_route', {
-          method: 'PUT',
-          headers: {
+        method: 'PUT',
+        headers: {
           'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-          // Add this to handle responses
-      }).then(response => {
-          if (!response.ok) {
-          return response.text().then(text => {
-              throw new Error(text || response.statusText);
-          });
-          }
-          return response.json();
-      }).then(data => {
-          console.log("Success:", data);
-          onClose(); // Close modal on success
-      }).catch(error => {
-          console.error("Error:", error);
-          alert('Failed to save route');
-      }).finally(() => {
-          setIsSubmitting(false);
+        },
+        body: JSON.stringify(payload),
       });
     } catch (error) {
       console.error('Error saving route:', error);
