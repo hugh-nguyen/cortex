@@ -147,8 +147,9 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
         routes.append(create_route(prefix, release_name, headers))
 
 
+
     services = sort_services(services)
-    routes = sort_routes(routes)
+    routes = sort_routes(routes, False)
 
     new_manifest = {"services": services, "routes": routes}
     new_manifest = yaml.dump(new_manifest, sort_keys=False)
@@ -241,10 +242,10 @@ if __name__ == '__main__':
             new_manifest["manifest"], len(new_manifest["service"]), 0
         )
         
-        push_repo(
-            "github.com/hugh-nguyen/cortex-deploy-log.git", 
-            DEPLOY_LOG_PATH,
-            f"Updated {new_manifest['filename']}"
-        )
+        # push_repo(
+        #     "github.com/hugh-nguyen/cortex-deploy-log.git", 
+        #     DEPLOY_LOG_PATH,
+        #     f"Updated {new_manifest['filename']}"
+        # )
         
         
