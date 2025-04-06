@@ -268,4 +268,6 @@ def calculate_graph(main_app, data):
         "apps": apps
     }
     
+    print("!!",result)
+    
     return result

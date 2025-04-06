@@ -36,13 +36,14 @@ async def get_apps(team_id: int = "team_id"):
 @app.get("/get_app_versions")
 async def get_apps_versions(app: str = "app1"):
     app_versions = dynamo_util.get_app_versions(app)
-    print(app_versions)
+    print("!",app_versions)
     transform = lambda av: {
       "app": av["app_name"],
       "version": av["version"],
       "graph": graph.calculate_graph(av["app_name"], av["yaml"])
     }
     app_versions = {int(av["version"]): transform(av) for av in app_versions}
+    print("!!!!!!!", app_versions)
     return {"app_versions": app_versions}
 
 @app.get("/get_routes")

@@ -261,11 +261,11 @@ if __name__ == '__main__':
         # open(new_manifest["filename"], "w").write(new_manifest["manifest"])
 
         upload_app(
-            app_name, len(new_manifest["services"]), 
-            new_manifest["version"], team_lookup[app_name]
+            args.app_name, len(new_manifest["services"]), 
+            new_manifest["version"], team_lookup[args.app_name]
         )
         upload_app_version(
-            app_name, new_manifest["version"], 
+            args.app_name, new_manifest["version"], 
             new_manifest["manifest"], len(new_manifest["services"]), 0
         )
         
