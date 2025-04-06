@@ -151,8 +151,8 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
     for link in package_yaml.get("links", []):
         src_app, src_svc = getComponents(link["source"])
         tgt_app, tgt_svc = getComponents(link["source"])
-        source = {"app": src_app, svc: src_svc}
-        target = {"app": tgt_app, svc: tgt_svc}
+        source = {"app": src_app, "svc": src_svc}
+        target = {"app": tgt_app, "svc": tgt_svc}
         links.append({"source": source, "target": target})
             
 
