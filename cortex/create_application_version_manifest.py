@@ -243,10 +243,10 @@ if __name__ == '__main__':
             new_manifest["manifest"], len(new_manifest["services"]), 0
         )
         
-        # push_repo(
-        #     "github.com/hugh-nguyen/cortex-deploy-log.git", 
-        #     DEPLOY_LOG_PATH,
-        #     f"Updated {new_manifest['filename']}"
-        # )
+        push_repo(
+            "github.com/hugh-nguyen/cortex-deploy-log.git", 
+            DEPLOY_LOG_PATH,
+            f"Updated {new_manifest['filename']}"
+        )
         
         
