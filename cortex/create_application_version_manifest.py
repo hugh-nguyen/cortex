@@ -146,12 +146,20 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
         headers = {"X-App-Name": app_name}
         routes.append(create_route(prefix, release_name, headers))
 
-
+    links = []
+    getComponents = lambda x: (x.split("/")[0], x.split("/")[1]) if "/" in x else (app_name, x)
+    for link in package_yaml.get("links", []):
+        src_app, src_svc = getComponents(link["source"])
+        tgt_app, tgt_svc = getComponents(link["source"])
+        source = {"app": src_app, svc: src_svc}
+        target = {"app": tgt_app, svc: tgt_svc}
+        links.append({"source": source, "target": target})
+            
 
     services = sort_services(services)
     routes = sort_routes(routes, False)
 
-    new_manifest = {"services": services, "routes": routes}
+    new_manifest = {"services": services, "routes": routes, "links": links}
     new_manifest = yaml.dump(new_manifest, sort_keys=False)
 
     manifest_name = f"{app_ver}.yaml"
