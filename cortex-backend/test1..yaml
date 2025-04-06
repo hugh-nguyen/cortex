@@ -1,0 +1,37 @@
+apps:
+- height: 340
+  id: app1
+  name: app1
+  width: 360
+  x: 40
+  y: 40
+- height: 200
+  id: shared-app
+  name: shared-app
+  width: 360
+  x: 440
+  y: 40
+dependencies:
+- source: mfe-a
+  target: service-b
+- source: service-b
+  target: service-s
+services:
+- app: app1
+  id: mfe-a
+  name: mfe-a
+  ver: 0.0.1
+  x: 140
+  y: 100
+- app: app1
+  id: service-b
+  name: service-b
+  ver: 0.0.1
+  x: 140
+  y: 240
+- app: shared-app
+  id: service-s
+  name: service-s
+  ver: 0.0.1
+  x: 130
+  y: 110

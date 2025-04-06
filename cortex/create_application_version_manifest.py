@@ -123,6 +123,7 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
             routes.append(create_route(prefix, release_name))
         
     
+    dependencies = []
     for dep in package_yaml.get("dependencies", []):
         dep_lookup = list(dep.keys())[0]
         dep_app = dep_lookup.split("/")[0]
@@ -145,6 +146,23 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
         # 4
         headers = {"X-App-Name": app_name}
         routes.append(create_route(prefix, release_name, headers))
+        
+        transformed_dep = {
+            "app": dep_app, 
+            "svc": dep_svc, 
+            "svc_ver": version
+        }
+        dependencies.append(transformed_dep)
+        
+    # dependencies = []
+    # for dep in package_yaml.get("dependences", []):
+    #     app, svc = dep.split("/")[0], dep.split("/")[1]
+    #     transform_dep = {
+    #         "app": app,
+    #         "svc": svc,
+    #         "svc_ver": choose_version(),
+    #     }
+    #     dependencies.append({})
 
     links = []
     getComponents = lambda x: (x.split("/")[0], x.split("/")[1]) if "/" in x else (app_name, x)
@@ -159,7 +177,7 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
     services = sort_services(services)
     routes = sort_routes(routes, False)
 
-    new_manifest = {"services": services, "routes": routes, "links": links}
+    new_manifest = {"services": services, "routes": routes, "dependencies": dependencies, "links": links}
     new_manifest = yaml.dump(new_manifest, sort_keys=False)
 
     manifest_name = f"{app_ver}.yaml"

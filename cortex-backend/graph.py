@@ -133,22 +133,22 @@ def calculate_dependency_tiers(services, dependencies):
     
     return tiers
 
-def add_context(main_app, data):
-    services = yaml.safe_load(data)
-    lookup = {}
-    for s in services:
-        lookup[s["svc"]] = s["ver"]
+# def add_context(main_app, data):
+#     services = yaml.safe_load(data)
+#     lookup = {}
+#     for s in services:
+#         lookup[s["svc"]] = s["ver"]
     
-    for s in services:
-        service = {**s}
-        if "depends_on" in s:
-            for d in s["depends_on"]:
-                if "app" not in d:
-                    d["app"] = main_app
-                if "ver" not in d:
-                    d["ver"] = lookup[d["svc"]]
+#     for s in services:
+#         service = {**s}
+#         if "depends_on" in s:
+#             for d in s["depends_on"]:
+#                 if "app" not in d:
+#                     d["app"] = main_app
+#                 if "ver" not in d:
+#                     d["ver"] = lookup[d["svc"]]
         
-    return services
+#     return services
 
 
 def calculate_graph(main_app, data):
@@ -158,44 +158,46 @@ def calculate_graph(main_app, data):
         {"x": 110, "y": 110},
     ]
     
-    yaml_data = add_context(main_app, data)
-    print(yaml_data)
+    # yaml_data = add_context(main_app, data)
+    # print(yaml_data)
+    yaml_data = yaml.safe_load(data)
     
+    print(data)
     services = []
     seen = set()
-    
-    for s in yaml_data:
+    for s in yaml_data["services"] + yaml_data.get("dependencies", []):
         svc = {
             "id": s["svc"],
             "app": s["app"],
             "name": s["svc"],
-            "ver": s["ver"],
+            "ver": s["svc_ver"],
         }
         key = f"{s['app']}-{s['svc']}"
         if key not in seen:
             seen.add(key)
             services.append(svc)
         
-        for d in s.get("depends_on", []):
-            svc = {
-                "id": d["svc"],
-                "app": d["app"],
-                "name": d["svc"],
-                "ver": d["ver"],
-            }
-            key = f"{d['app']}-{d['svc']}"
-            if key not in seen:
-                seen.add(key)
-                services.append(svc)
+        # for d in s.get("depends_on", []):
+        #     svc = {
+        #         "id": d["svc"],
+        #         "app": d["app"],
+        #         "name": d["svc"],
+        #         "ver": d["ver"],
+        #     }
+        #     key = f"{d['app']}-{d['svc']}"
+        #     if key not in seen:
+        #         seen.add(key)
+        #         services.append(svc)
+        
     
-    dependencies = []
-    for s in yaml_data:
-        for d in s.get("depends_on", []):
-            dep = {
-                "source": s["svc"],
-                "target": d["svc"],
-            }
-            dependencies.append(dep)
+    dependencies = [] # !!! consider renaming to links
+    for link in yaml_data["links"]:
+        dep = {
+            "source": link["source"]["svc"], 
+            "target": link["target"]["svc"]
+        }
+        dependencies.append(dep)
+        
     
     dependency_tiers = calculate_dependency_tiers(services, dependencies)
     
