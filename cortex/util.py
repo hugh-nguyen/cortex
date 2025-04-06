@@ -227,8 +227,9 @@ def sort_routes(routes, sort_signature=True):
                     signature += h["Value"] 
             groups[signature].append(r)
     
-    result = []
-    for k, group in groups.items():
-        result.append(choose_route(group))
+        routes = []
+        for k, group in groups.items():
+            routes.append(choose_route(group))
+    
 
-    return sorted(result, key=env_route_sort_key)
+    return sorted(routes, key=env_route_sort_key)
