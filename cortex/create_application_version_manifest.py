@@ -163,7 +163,7 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
     return {
         "filename": manifest_name,
         "manifest": new_manifest,
-        "version": version,
+        "version": app_ver,
     }
 
 
