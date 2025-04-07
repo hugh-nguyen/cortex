@@ -5,9 +5,15 @@ import graph
 import graph_original
 import dynamo_util
 import envoy_util
+import git_util
 
 from fastapi import FastAPI, Body
 from typing import List, Dict, Any
+
+import requests
+
+import logging
+
 
 app = FastAPI()
 
@@ -83,17 +89,73 @@ async def test_apps():
         ]
     }
 
+@app.get("/deploy_app_version_old")
+async def deploy_app_version_old(command_repo: str):
+    import os
+    import subprocess
+    from datetime import datetime
+    
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("deploy")
+    
+    github_token = os.environ.get("GITHUB_TOKEN")
+    
+    owner, repo_name = git_util.get_owner_and_repo_from_url(command_repo, logger)
+    auth_repo_url = f"https://{github_token}@github.com/{owner}/{repo_name}.git"
+    
+    original_dir = os.getcwd()
+    
+    
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    temp_dir = git_util.generate_temp_path(timestamp)
+    
+    try:
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        git_util.clone(auth_repo_url, temp_dir, logger)
+        
+        os.chdir(temp_dir)
+        
+        subprocess.run(["git", "config", "user.name", "Cortex Deploy Bot"], check=True)
+        subprocess.run(["git", "config", "user.email", "deploy-bot@example.com"], check=True)
+        
+        branch_name = f"deploy-{timestamp}"
+        
+        git_util.checkout_new_branch(branch_name, logger)
+        
+        deploy_dir = os.path.join(temp_dir, "deploy")
+        os.makedirs(deploy_dir, exist_ok=True)
+        
+        file_path = os.path.join(deploy_dir, "version.txt")
+        logger.info(f"Creating file: {file_path}")
+        with open(file_path, "w") as f:
+            f.write(f"Deploy timestamp: {datetime.now().isoformat()}\n")
+            f.write(f"Created by: Cortex Deploy System\n")
+        
+        git_util.add(file_path, logger)
+        
+        commit_msg = f"Deploy new version {timestamp}"
+        git_util.commit(commit_msg, logger)
+        
+        git_util.push(branch_name, logger)
+        
+        os.chdir(original_dir)
+        
+        return git_util.raise_pull_request(owner, repo_name, github_token, branch_name, logger)
+    except Exception as e:
+        logger.error(f"Deployment failed: {str(e)}")
+        return {"status": "error", "message": f"Deployment failed: {str(e)}"}
+    finally:
+        os.chdir(original_dir)
+        
+    
 @app.get("/deploy_app_version")
 async def deploy_app_version(command_repo: str):
     import os
-    import tempfile
-    import subprocess
-    import random
-    import string
-    import time
-    import re
-    from datetime import datetime
     import logging
+    import re
+    import requests
+    from datetime import datetime
     
     # Set up logging
     logging.basicConfig(level=logging.INFO)
@@ -105,158 +167,175 @@ async def deploy_app_version(command_repo: str):
         logger.error("GITHUB_TOKEN environment variable is not set")
         return {"status": "error", "message": "GITHUB_TOKEN environment variable is not set"}
     
-    # Log the first few characters of the token (for debugging)
-    logger.info(f"Using token starting with: {github_token[:4]}...")
-    
-    match = re.search(r'github\.com/([^/]+)/([^/]+)', command_repo)
-    if not match:
-        logger.error(f"Invalid GitHub URL format: {command_repo}")
-        return {"status": "error", "message": "Invalid GitHub URL format"}
-    
-    owner = match.group(1)
-    repo_name = match.group(2)
-    # Remove .git extension if present
-    repo_name = repo_name.split('.git')[0] 
-    
-    # Modified repository URL with token
-    auth_repo_url = f"https://{github_token}@github.com/{owner}/{repo_name}.git"
-    
-    # Store original working directory
-    original_dir = os.getcwd()
-    logger.info(f"Original directory: {original_dir}")
-    
-    # Create a unique folder name for cloning
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    random_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-    unique_folder = f"deploy-temp-{timestamp}-{random_str}"
-    
-    # Use a specific location for the temp directory
-    temp_base = os.path.join(os.path.expanduser("~"), "deploy_temp")
-    os.makedirs(temp_base, exist_ok=True)
-    temp_dir = os.path.join(temp_base, unique_folder)
+    owner, repo_name = git_util.get_owner_and_repo_from_url(command_repo, logger)
+
+    logger.info(f"Triggering GitHub Action in {owner}/{repo_name}")
     
     try:
-        logger.info(f"Creating directory: {temp_dir}")
-        os.makedirs(temp_dir, exist_ok=True)
+        # GitHub API endpoint for triggering a workflow
+        # We'll use the "workflow_dispatch" event to manually trigger the test.yaml workflow
+        api_url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows/create-manifest-and-deploy.yaml/dispatches"
         
-        # Check if the directory was created successfully
-        if not os.path.isdir(temp_dir):
-            logger.error(f"Failed to create directory: {temp_dir}")
-            return {"status": "error", "message": f"Failed to create directory: {temp_dir}"}
-        
-        # Clone the repository
-        logger.info(f"Cloning repository: {owner}/{repo_name} to {temp_dir}")
-        try:
-            clone_process = subprocess.run(
-                ["git", "clone", auth_repo_url, temp_dir],
-                check=True, capture_output=True, text=True,
-                timeout=60  # Add timeout to prevent hanging
-            )
-            logger.info(f"Clone output: {clone_process.stdout}")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Clone failed: {e.stderr}")
-            return {"status": "error", "message": f"Git clone failed: {e.stderr}"}
-        
-        # Change to the repository directory
-        logger.info(f"Changing to directory: {temp_dir}")
-        os.chdir(temp_dir)
-        
-        # Configure Git
-        logger.info("Configuring Git")
-        subprocess.run(["git", "config", "user.name", "Cortex Deploy Bot"], check=True)
-        subprocess.run(["git", "config", "user.email", "deploy-bot@example.com"], check=True)
-        
-        # Create a branch name
-        branch_name = f"deploy-{timestamp}-{random_str}"
-        logger.info(f"Creating branch: {branch_name}")
-        
-        # Create a new branch
-        try:
-            subprocess.run(
-                ["git", "checkout", "-b", branch_name],
-                check=True, capture_output=True, text=True
-            )
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Branch creation failed: {e.stderr}")
-            return {"status": "error", "message": f"Branch creation failed: {e.stderr}"}
-        
-        # Create deploy directory if it doesn't exist
-        deploy_dir = os.path.join(temp_dir, "deploy")
-        os.makedirs(deploy_dir, exist_ok=True)
-        
-        # Create a file with unique content
-        file_path = os.path.join(deploy_dir, "version.txt")
-        logger.info(f"Creating file: {file_path}")
-        with open(file_path, "w") as f:
-            f.write(f"Deploy timestamp: {datetime.now().isoformat()}\n")
-            f.write(f"Random ID: {random_str}\n")
-            f.write(f"Created by: Cortex Deploy System\n")
-        
-        # Add the file to git
-        logger.info("Adding file to git")
-        try:
-            subprocess.run(
-                ["git", "add", file_path],
-                check=True, capture_output=True, text=True
-            )
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Git add failed: {e.stderr}")
-            return {"status": "error", "message": f"Git add failed: {e.stderr}"}
-        
-        # Commit the changes
-        logger.info("Committing changes")
-        commit_msg = f"Deploy new version {timestamp}"
-        try:
-            subprocess.run(
-                ["git", "commit", "-m", commit_msg],
-                check=True, capture_output=True, text=True
-            )
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Git commit failed: {e.stderr}")
-            return {"status": "error", "message": f"Git commit failed: {e.stderr}"}
-        
-        # Push the branch
-        logger.info(f"Pushing branch {branch_name} to origin")
-        try:
-            # Set up upstream and push
-            push_result = subprocess.run(
-                ["git", "push", "-u", "origin", branch_name],
-                capture_output=True, text=True, check=True,
-                timeout=60  # Add timeout to prevent hanging
-            )
-            logger.info(f"Push output: {push_result.stdout}")
-            if push_result.stderr:
-                logger.info(f"Push stderr: {push_result.stderr}")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Git push failed: {e.stderr}")
-            return {"status": "error", "message": f"Git push failed: {e.stderr}"}
-        
-        # Return to original directory
-        os.chdir(original_dir)
-        
-        # Create PR URL
-        # Use the compare URL which will show a button to create a PR
-        pr_url = f"https://github.com/{owner}/{repo_name}/compare/main...{branch_name}?expand=1"
-        logger.info(f"PR URL: {pr_url}")
-        
-        return {
-            "status": "success",
-            "pr_url": pr_url,
-            "message": "Successfully created branch and files",
-            "branch_name": branch_name
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
         }
+        
+        # The workflow_dispatch event requires a ref (branch)
+        # We'll use 'main' as the default branch
+        payload = {
+            "ref": "main"
+        }
+        
+        logger.info(f"Sending request to {api_url}")
+        response = requests.post(api_url, headers=headers, json=payload, verify="ca.crt")
+        
+        if response.status_code == 204:  # GitHub returns 204 No Content for successful workflow triggers
+            # Get the URL to view the workflow run
+            workflows_url = f"https://github.com/{owner}/{repo_name}/actions"
+            logger.info(f"GitHub Action triggered successfully. View at: {workflows_url}")
+            
+            return {
+                "status": "success",
+                "message": "GitHub Action triggered successfully",
+                "workflows_url": workflows_url,
+                "timestamp": datetime.now().isoformat()
+            }
+        else:
+            logger.error(f"Failed to trigger GitHub Action. Status: {response.status_code}, Response: {response.text}")
+            return {
+                "status": "error",
+                "message": f"Failed to trigger GitHub Action: {response.text}",
+                "status_code": response.status_code
+            }
     
     except Exception as e:
-        logger.error(f"Deployment failed: {str(e)}")
-        # Try to return to original directory
-        try:
-            os.chdir(original_dir)
-        except:
-            pass
-        return {"status": "error", "message": f"Deployment failed: {str(e)}"}
-    finally:
-        # Always try to return to original directory
-        try:
-            os.chdir(original_dir)
-        except:
-            pass
+        logger.error(f"Error triggering GitHub Action: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Error triggering GitHub Action: {str(e)}"
+        }
+
+
+@app.get("/get_workflow_runs")
+async def get_workflow_runs(repo_url: str, workflow_name: str = "create-manifest-and-deploy"):
+    import os
+    import logging
+    import re
+    import requests
+    from datetime import datetime, timezone
+    import dateutil.parser
+    
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("workflows")
+    
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if not github_token:
+        logger.error("GITHUB_TOKEN environment variable is not set")
+        return {"status": "error", "message": "GITHUB_TOKEN environment variable is not set"}
+    
+    owner, repo_name = git_util.get_owner_and_repo_from_url(repo_url, logger)
+
+    logger.info(f"Getting workflow runs for {owner}/{repo_name}, filtering for workflow: {workflow_name}")
+    
+    try:
+        workflows_url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows"
+        
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        logger.info(f"Fetching workflows from: {workflows_url}")
+        workflows_response = requests.get(workflows_url, headers=headers, verify="ca.crt")
+        
+        if workflows_response.status_code != 200:
+            logger.error(f"Failed to get workflows. Status: {workflows_response.status_code}")
+            return {
+                "status": "error",
+                "message": f"Failed to get workflows: {workflows_response.text}",
+                "status_code": workflows_response.status_code
+            }
+        
+        workflows_data = workflows_response.json()
+        target_workflow = None
+        
+        for workflow in workflows_data.get("workflows", []):
+            if (workflow_name.lower() in workflow.get("name", "").lower() or 
+                workflow_name.lower() in workflow.get("path", "").lower()):
+                target_workflow = workflow
+                break
+        
+        if not target_workflow:
+            logger.warning(f"No workflow found matching '{workflow_name}'")
+            return {
+                "status": "success",
+                "workflow_runs": [],
+                "total_count": 0,
+                "message": f"No workflow found matching '{workflow_name}'"
+            }
+        
+        # Now get runs for the specific workflow
+        workflow_id = target_workflow["id"]
+        api_url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows/{workflow_id}/runs"
+        
+        logger.info(f"Fetching runs for workflow {workflow_id} from: {api_url}")
+        response = requests.get(api_url, headers=headers, verify="ca.crt")
+        
+        if response.status_code == 200:
+            workflow_data = response.json()
+            
+            # Process workflow runs
+            processed_runs = []
+            for run in workflow_data.get("workflow_runs", []):
+                # Convert the created_at time to a more readable format
+                created_at = dateutil.parser.parse(run["created_at"])
+                updated_at = dateutil.parser.parse(run["updated_at"])
+                
+                # Calculate how long ago the run was created/updated
+                now = datetime.now(timezone.utc)
+                created_ago = now - created_at
+                updated_ago = now - updated_at
+                
+                # Format as minutes or hours ago
+                if created_ago.days > 0:
+                    created_ago_str = f"{created_ago.days} days ago"
+                elif created_ago.seconds // 3600 > 0:
+                    created_ago_str = f"{created_ago.seconds // 3600} hours ago"
+                else:
+                    created_ago_str = f"{max(1, created_ago.seconds // 60)} minutes ago"
+                
+                processed_runs.append({
+                    "id": run["id"],
+                    "name": target_workflow["name"],  # Use the workflow name directly
+                    "run_number": run["run_number"],
+                    "status": run["status"],
+                    "conclusion": run["conclusion"],
+                    "created_at": run["created_at"],
+                    "created_ago": created_ago_str,
+                    "html_url": run["html_url"],
+                    "actor": run["actor"]["login"] if "actor" in run else "Unknown",
+                    "head_branch": run["head_branch"],
+                    "duration": run.get("duration", 0) / 60 if run.get("duration") else None,
+                    "run_attempt": run.get("run_attempt", 1)
+                })
+            
+            return {
+                "status": "success",
+                "workflow_runs": processed_runs,
+                "total_count": workflow_data.get("total_count", 0)
+            }
+        else:
+            logger.error(f"Failed to get workflow runs. Status: {response.status_code}, Response: {response.text}")
+            return {
+                "status": "error",
+                "message": f"Failed to get workflow runs: {response.text}",
+                "status_code": response.status_code
+            }
+    
+    except Exception as e:
+        logger.error(f"Error getting workflow runs: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Error getting workflow runs: {str(e)}"
+        }
