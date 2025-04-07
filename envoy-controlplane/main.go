@@ -267,11 +267,12 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
     
     var data struct {
         Routes  []struct {
-            Prefix       string   `json:"prefix"`
-            Cluster      string   `json:"cluster"`
-            Headers      []Header `json:"headers,omitempty"`       
-            HeadersToAdd []Header `json:"headers_to_add,omitempty"` 
-            Port         *int     `json:"port,omitempty"`
+            Prefix          string           `json:"prefix"`
+            Cluster         string           `json:"cluster,omitempty"`
+            Headers         []Header         `json:"headers,omitempty"`       
+            HeadersToAdd    []Header         `json:"headers_to_add,omitempty"` 
+            Port            *int             `json:"port,omitempty"`
+            WeightedClusters []WeightedCluster `json:"weighted_clusters,omitempty"`
         } `json:"routes"`
     }
     
@@ -281,11 +282,13 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
     }
 
     for _, rt := range data.Routes {
-        port := 80 
-        if rt.Port != nil {
-            port = *rt.Port
+        if rt.Cluster != "" {
+            port := 80 
+            if rt.Port != nil {
+                port = *rt.Port
+            }
+            clusters[rt.Cluster] = makeCluster(rt.Cluster, rt.Cluster, uint32(port))
         }
-        clusters[rt.Cluster] = makeCluster(rt.Cluster, rt.Cluster, uint32(port))
     }
     
     routes["local_routes"] = &route.RouteConfiguration{
@@ -319,15 +322,28 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
             rt.HeadersToAdd = []Header{}
         }
         
-        routes["local_routes"].VirtualHosts[0].Routes = append(
-            routes["local_routes"].VirtualHosts[0].Routes,
-            makeRoute(
-                rt.Prefix,
-                rt.Cluster,
-                rt.Headers,
-                rt.HeadersToAdd,
-            ),
-        )
+        if rt.WeightedClusters != nil && len(rt.WeightedClusters) > 0 {
+            routes["local_routes"].VirtualHosts[0].Routes = append(
+                routes["local_routes"].VirtualHosts[0].Routes,
+                makeWeightedClustersRoute(
+                    rt.Prefix,
+                    rt.Headers,
+                    rt.WeightedClusters,
+                ),
+            )
+        } else if rt.Cluster != "" {
+            routes["local_routes"].VirtualHosts[0].Routes = append(
+                routes["local_routes"].VirtualHosts[0].Routes,
+                makeRoute(
+                    rt.Prefix,
+                    rt.Cluster,
+                    rt.Headers,
+                    rt.HeadersToAdd,
+                ),
+            )
+        } else {
+            log.Printf("Warning: Route with prefix %s has neither cluster nor weighted_clusters specified", rt.Prefix)
+        }
     }
     
     routes["local_routes"].VirtualHosts[0].Routes = append(
@@ -358,9 +374,9 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
         return
     }
     
-    log.Printf("Added route configuration with %d routes", len(routes["local_listener"].VirtualHosts[0].Routes))
+    // log.Printf("Added route configuration with %d routes", len(routes["local_routes"].VirtualHosts[0].Routes))
     w.WriteHeader(http.StatusOK)
-    w.Write([]byte(fmt.Sprintf("Routes updated successfully")))
+    // w.Write([]byte(fmt.Sprintf("Routes updated successfully")))
 }
 
 func handleListResources(w http.ResponseWriter, r *http.Request) {

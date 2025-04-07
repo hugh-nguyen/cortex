@@ -14,7 +14,6 @@ const Breadcrumb = () => {
     const { selectedTeam, selectedApp, selectedAppVersion, subModule } = useGlobal();
 
   const handleApplicationsClick = () => {
-    console.log("impossible")
     router.replace(`/team/${selectedTeam?.team_id}/applications/`);
   };
 

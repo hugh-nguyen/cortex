@@ -72,6 +72,26 @@ def get_teams():
         print(f"Error in get_all_apps: {str(e)}")
         return []
 
+def get_app(app_name=None):
+    try:
+        response = apps_table.scan()
+        items = response.get('Items', [])
+        
+        for item in items:
+            if app_name == item.get("name", ""):
+                return {
+                    "App": item.get('name'),
+                    "Service Count": item.get('service_count'),
+                    "Versions": item.get('versions'),
+                    "Last Updated": item.get('last_updated'),
+                    "Owner": item.get('owner'),
+                    "CommandRepoURL": item.get('command_repo_url')
+                }
+        return None
+    except Exception as e:
+        print(f"Error in get_all_apps: {str(e)}")
+        return []
+
 def get_apps(team_id=None):
     try:
         response = apps_table.scan()
@@ -85,7 +105,8 @@ def get_apps(team_id=None):
                     "Service Count": item.get('service_count'),
                     "Versions": item.get('versions'),
                     "Last Updated": item.get('last_updated'),
-                    "Owner": item.get('owner')
+                    "Owner": item.get('owner'),
+                    "CommandRepoURL": item.get('command_repo_url')
                 })
         
         return formatted_apps

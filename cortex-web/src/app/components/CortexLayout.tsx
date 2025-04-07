@@ -98,12 +98,10 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
   // };
 
   const handleApplicationsClick = () => {
-    console.log("imposible2")
     router.push(`/team/${selectedTeam?.team_id}/applications`);
   }
 
   const handleRoutesClick = () => {
-    console.log("??!!!")
     router.push(`/team/${selectedTeam?.team_id}/xroutes`);
   }
 

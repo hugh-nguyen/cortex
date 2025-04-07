@@ -51,7 +51,8 @@ const AppDashboard: React.FC = () => {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
 
   const handleAppClick = (app: AppData) => {
-    setSelectedApp(app);
+    // setSelectedApp(app);
+    router.push(`${pathname}/${app.App}/version/${app.Versions}`);
   };
   
   // Get app color based on its index

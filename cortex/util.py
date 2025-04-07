@@ -208,7 +208,7 @@ def choose_route(routes):
     most_recent = routes[0]
     for r in routes:
         if r.get("custom") == True:
-            return r
+            return {k: v for k, v in r.items() if k != "custom"}
         if r["cluster"] > most_recent["cluster"]:
             most_recent = r
     return most_recent
@@ -230,6 +230,5 @@ def sort_routes(routes, sort_signature=True):
         routes = []
         for k, group in groups.items():
             routes.append(choose_route(group))
-    
 
     return sorted(routes, key=env_route_sort_key)

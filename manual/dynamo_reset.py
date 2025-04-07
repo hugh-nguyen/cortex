@@ -70,7 +70,7 @@ def upload_team(team_id=None, team_name=None, last_updated=None):
   return response
 
 
-def upload_app(name=None, service_count=None, versions=None, team_id=None, last_updated=None):
+def upload_app(name=None, service_count=None, versions=None, team_id=None, command_url=None, last_updated=None):
     if last_updated is None:
         last_updated = datetime.now().isoformat()
         
@@ -80,7 +80,8 @@ def upload_app(name=None, service_count=None, versions=None, team_id=None, last_
             'service_count': service_count,
             'versions': versions,
             'last_updated': last_updated,
-            'team_id': team_id
+            'team_id': team_id,
+            "command_repo_url": command_url,
         }
     )
     
@@ -138,19 +139,22 @@ upload_app(
     "app1",
     2,
     1,
-    1
+    1,
+    "https://github.com/hugh-nguyen/app1-cortex-command"
 )
 upload_app(
     "app2",
     1,
     1,
-    1
+    1,
+    "https://github.com/hugh-nguyen/app2-cortex-command"
 )
 upload_app(
     "shared-app",
     1,
     1,
-    2
+    2,
+    "https://github.com/hugh-nguyen/shared-app-cortex-command"
 )
 upload_app(
     "test-app",

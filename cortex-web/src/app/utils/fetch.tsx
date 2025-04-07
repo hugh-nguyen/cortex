@@ -22,6 +22,28 @@ export const fetchTeams = async (setTeams: any, setLoading: any, setError: any) 
     }
 };
 
+export const fetchApp = async (appName: string, setSelectedApp: any, setLoading: any, setError: any) => {
+    try {
+        setLoading(true);
+        const response = await fetch(`http://127.0.0.1:8000/get_app?app_name=${appName}`);
+        
+        if (!response.ok) {
+            throw new Error(`API request failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("!", data.app)
+        setSelectedApp(data.app)
+        
+        setError(null);
+    } catch (err) {
+        console.error('Error fetching app:', err);
+        setError('Failed to load app versions. Please check the console for details.');
+    } finally {
+        setLoading(false);
+    }
+}
+
 export const fetchAppVersions = async (appName: string, setAppVersions: any, setLoading: any, setError: any) => {
     try {
         setLoading(true);
@@ -54,7 +76,6 @@ export const fetchRoutes = async (teamId: string, setRoutes: any, setLoading: an
         
         const data = await response.json();
         setRoutes(data.routes)
-        console.log(data.routes)
         
         setError(null);
     } catch (err) {

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { fetchTeams, fetchAppVersions, fetchRoutes } from '@/app/utils/fetch';
+import { fetchTeams, fetchAppVersions, fetchRoutes, fetchApp } from '@/app/utils/fetch';
 import { defaultModule, defaultSubModule } from '@/app/GlobalContext';
 
 
@@ -46,15 +46,14 @@ export function pathNameTeamsEffect(
   setSubModule: any,
   setRoutes: any,
   selectedTeam: any,
+  setSelectedApp: any,
 ) {
   useEffect(() => {
-    console.log("?!")
     if (pathname && teams.length > 0) {
       const parts = pathname.split('/').filter((x: string) => x);
       if (parts.length == 0) {
         setSubModule(defaultSubModule)
         router.replace(`/${defaultModule}/${teams[0].team_id}/${defaultSubModule}/`);
-        console.log("$")
       }
 
       const moduleType = parts.length > 0 ? parts[0] : null;
@@ -67,9 +66,7 @@ export function pathNameTeamsEffect(
 
         if (teamId) {
           const teamMap = Object.fromEntries(teams.map((t: any) => [t.team_id, t]))
-          console.log("%", teamId, selectedTeam)
           if (!selectedTeam || teamId != selectedTeam.team_id) {
-            console.log("^^^^^")
             setSelectedTeam(teamMap[teamId]);
           }
         }
@@ -79,6 +76,8 @@ export function pathNameTeamsEffect(
         if (subModule == "applications") {
           if (appName) {
             fetchAppVersions(appName, setAppVersions, setLoading, setError)
+            console.log("###", appName)
+            fetchApp(appName, setSelectedApp, setLoading, setError)
           }
           if (version) {
             setSelectedAppVersion(version)
@@ -111,7 +110,7 @@ export function selectedTeamEffect(selectedTeam: any, setLoading: any, setError:
         setError(null);
         
         const response = await fetch(`http://127.0.0.1:8000/get_apps?team_id=${selectedTeam.team_id}`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch apps: ${response.status}`);
         }
@@ -123,6 +122,8 @@ export function selectedTeamEffect(selectedTeam: any, setLoading: any, setError:
           a.App.localeCompare(b.App)
         );
         
+        console.log(sortedApps)
+
         setApps(sortedApps);
       } catch (error) {
         const errorMessage = error instanceof Error 
@@ -147,11 +148,11 @@ export function pathNameSelectedAppEffect(
   router: any,
   selectedTeam: any 
 ) {
-  useEffect(() => {
-    if (selectedTeam && selectedApp && selectedApp.App && selectedApp.Versions) {
-      router.push(`${pathname}/${selectedApp.App}/version/${selectedApp.Versions}`);
-    }
-  }, [pathname, selectedApp]);
+  // useEffect(() => {
+  //   if (selectedTeam && selectedApp && selectedApp.App && selectedApp.Versions) {
+  //     router.push(`${pathname}/${selectedApp.App}/version/${selectedApp.Versions}`);
+  //   }
+  // }, [pathname, selectedApp]);
 }
 
 export function pathNameSelectedTeamEffect(

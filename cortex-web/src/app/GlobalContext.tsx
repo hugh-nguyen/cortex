@@ -26,6 +26,7 @@ interface AppData {
   Versions: number;
   'Last Updated': string;
   Owner: string;
+  CommandRepoURL: string;
 }
 
 interface GlobalContextType {
@@ -119,7 +120,7 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   pathNameTeamsEffect(
     pathname, teams, router, setAppVersions, setLoading, 
     setError, setSelectedTeam, setSelectedAppVersion, setSubModule,
-    setRoutes, selectedTeam
+    setRoutes, selectedTeam, setSelectedApp
   )
   selectedTeamEffect(selectedTeam, setLoading, setError, setApps)
   pathNameSelectedAppEffect(pathname, selectedApp, router, selectedTeam)
