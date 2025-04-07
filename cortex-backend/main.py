@@ -83,3 +83,81 @@ async def test_apps():
         ]
     }
 
+@app.get("/deploy_app_version")
+async def deploy_app_version(command_repo: str):
+    import os
+    import tempfile
+    import subprocess
+    import random
+    import string
+    import time
+    import re
+    from datetime import datetime
+    
+    match = re.search(r'github\.com/([^/]+)/([^/]+)', command_repo)
+    if not match:
+        return {"status": "error", "message": "Invalid GitHub URL format"}
+    
+    owner = match.group(1)
+    repo_name = match.group(2)
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            subprocess.run(
+                ["git", "clone", command_repo, temp_dir],
+                check=True, capture_output=True
+            )
+            
+            os.chdir(temp_dir)
+            
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            random_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+            branch_name = f"deploy-{timestamp}-{random_str}"
+            
+            subprocess.run(
+                ["git", "checkout", "-b", branch_name],
+                check=True, capture_output=True
+            )
+            
+            version_file_path = os.path.join(temp_dir, "deploy", "version.txt")
+            os.makedirs(os.path.dirname(version_file_path), exist_ok=True)
+            
+            with open(version_file_path, "w") as f:
+                f.write(f"Deploy timestamp: {datetime.now().isoformat()}\n")
+                f.write(f"Deployed by: Cortex Deploy System\n")
+            
+            subprocess.run(
+                ["git", "add", version_file_path],
+                check=True, capture_output=True
+            )
+            
+            subprocess.run(
+                ["git", "commit", "-m", f"Deploy new version {timestamp}"],
+                check=True, capture_output=True
+            )
+            
+            subprocess.run(
+                ["git", "push", "-u", "origin", branch_name],
+                check=True, capture_output=True
+            )
+            
+            time.sleep(2)  # Simulate API call delay
+            
+            pr_url = f"https://github.com/{owner}/{repo_name}/pull/new/{branch_name}"
+            
+            return {
+                "status": "success",
+                "pr_url": pr_url,
+                "message": "Successfully created deployment PR"
+            }
+            
+        except subprocess.CalledProcessError as e:
+            return {
+                "status": "error",
+                "message": f"Git operation failed: {e.stderr.decode('utf-8') if e.stderr else str(e)}"
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"Deployment failed: {str(e)}"
+            }
