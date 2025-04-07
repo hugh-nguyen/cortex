@@ -122,7 +122,7 @@ const DeploymentAnimation: React.FC<DeploymentAnimationProps> = ({ open, message
             sx={{ 
               color: 'rgba(255,255,255,0.5)', 
               fontSize: 40, 
-              animation: `${cloudDriftKeyframes} 6s infinite`,
+              animation: message.includes("failed") ? 'none' : `${cloudDriftKeyframes} 6s infinite`,
               animationDelay: '0.5s'
             }} 
           />
@@ -130,7 +130,7 @@ const DeploymentAnimation: React.FC<DeploymentAnimationProps> = ({ open, message
             sx={{ 
               color: 'rgba(255,255,255,0.3)', 
               fontSize: 60, 
-              animation: `${cloudDriftKeyframes} 8s infinite`,
+              animation: message.includes("failed") ? 'none' : `${cloudDriftKeyframes} 8s infinite`,
               animationDelay: '1s'
             }} 
           />
@@ -138,7 +138,7 @@ const DeploymentAnimation: React.FC<DeploymentAnimationProps> = ({ open, message
             sx={{ 
               color: 'rgba(255,255,255,0.4)', 
               fontSize: 50, 
-              animation: `${cloudDriftKeyframes} 7s infinite`,
+              animation: message.includes("failed") ? 'none' : `${cloudDriftKeyframes} 7s infinite`,
               animationDelay: '2s'
             }} 
           />
@@ -158,7 +158,7 @@ const DeploymentAnimation: React.FC<DeploymentAnimationProps> = ({ open, message
             sx={{ 
               fontSize: 60, 
               color: '#f50057', 
-              animation: `${rocketFlightKeyframes} 3s infinite`,
+              animation: message.includes("failed") ? 'none' : `${rocketFlightKeyframes} 3s infinite`,
             }} 
           />
           
@@ -176,7 +176,7 @@ const DeploymentAnimation: React.FC<DeploymentAnimationProps> = ({ open, message
                 opacity: 0,
                 '--tx': `${sparkle.tx}px`,
                 '--ty': `${sparkle.ty}px`,
-                animation: `${sparkleKeyframes} ${sparkle.duration}s infinite`,
+                animation: message.includes("failed") ? 'none' : `${sparkleKeyframes} ${sparkle.duration}s infinite`,
                 animationDelay: `${sparkle.delay}s`,
               }} 
             />
@@ -195,13 +195,26 @@ const DeploymentAnimation: React.FC<DeploymentAnimationProps> = ({ open, message
           {message}
         </Typography>
         
-        {/* Loading indicator */}
-        <CircularProgress 
-          sx={{ 
-            color: '#f50057', 
-            marginTop: 3 
-          }} 
-        />
+        {/* Loading indicator or close button */}
+        {message.includes("failed") ? (
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: '#FF9800', 
+              marginTop: 2,
+              textAlign: 'center'
+            }}
+          >
+            Click the "Close" button to dismiss
+          </Typography>
+        ) : (
+          <CircularProgress 
+            sx={{ 
+              color: '#f50057', 
+              marginTop: 3 
+            }} 
+          />
+        )}
       </Box>
     </Modal>
   );

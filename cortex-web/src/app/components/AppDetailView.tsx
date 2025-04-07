@@ -134,14 +134,11 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
       }
     } catch (error) {
       console.error("Deployment error:", error);
-      setDeploymentMessage("Deployment failed!");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setDeploymentMessage(`Deployment failed: ${errorMessage}`);
       
-      // Wait a moment with the error message before closing
-      setTimeout(() => {
-        setDeploymentLoading(false);
-        setSnackbarMessage(`Deployment failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-        setSnackbarOpen(true);
-      }, 2000);
+      setSnackbarMessage(`Deployment failed: ${errorMessage}`);
+      setSnackbarOpen(true);
     }
   };
 
@@ -199,10 +196,16 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
             px: 2,
             fontSize: '12px',
           }}
-          onClick={handleDeployNewVersionClick}
-          disabled={deploymentLoading || !selectedApp?.CommandRepoURL}
+          onClick={deploymentLoading && deploymentMessage.includes("failed") 
+            ? () => setDeploymentLoading(false) // Close animation on click if error occurred
+            : handleDeployNewVersionClick
+          }
+          disabled={deploymentLoading && !deploymentMessage.includes("failed") || !selectedApp?.CommandRepoURL}
         >
-          Deploy New Version
+          {deploymentLoading && deploymentMessage.includes("failed") 
+            ? "Close" 
+            : "Deploy New Version"
+          }
         </Button>
       </Box>
       

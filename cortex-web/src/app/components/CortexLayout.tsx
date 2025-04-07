@@ -522,7 +522,7 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
         sx={{ 
           flexGrow: 1, 
           p: 3,
-          bgcolor: '#f9fafb'
+          bgcolor: '#f2f3f5'
         }}
       >
         <Breadcrumb />
