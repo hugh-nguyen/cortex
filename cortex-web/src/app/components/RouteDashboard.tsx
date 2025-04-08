@@ -94,9 +94,6 @@ const RouteDashboard: React.FC = () => {
       return;
     }
     
-    // In a real app, you would call a delete API endpoint here
-    console.log('Delete route:', route.prefix);
-    // For now, we'll just refresh the routes list
     fetchRoutes();
   };
 

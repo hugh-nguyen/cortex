@@ -84,13 +84,14 @@ interface Run {
 
 interface VersionData {
   app: string;
-  version: number;
-  graph: GraphData;
+  version: number | "deploying";  // Add "deploying" as a possible type
+  graph: GraphData | null;
   run: Run;
+  is_deploying?: boolean;  // Flag to identify deploying versions
 }
 
 interface AppVersions {
-  [key: number]: VersionData;
+  [key: number | string]: VersionData;
 }
 
 interface Route {

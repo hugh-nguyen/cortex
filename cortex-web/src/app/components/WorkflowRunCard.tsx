@@ -25,6 +25,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
+import GitHubIcon from '@mui/icons-material/GitHub';
 
 interface WorkflowRunProps {
   run: {
@@ -191,35 +192,37 @@ const WorkflowRunCard: React.FC<WorkflowRunProps> = ({ run }) => {
           }
         }}
       >
-        <CardContent sx={{ p: 2, display: 'flex', alignItems: 'center', position: 'relative' }}>
-          {/* Rocket animation section */}
-          {isInProgress && (
+        <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {/* Top row with rocket animation and main content */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            {/* Rocket animation section */}
+            {isInProgress && (
             <Box sx={{ 
-              position: 'relative',
-              width: 60, 
-              height: 120, 
-              display: 'flex', 
-              justifyContent: 'center',
-              alignItems: 'center',
-              mr: 2
+                position: 'relative',
+                width: 60, 
+                height: 120, 
+                display: 'flex', 
+                justifyContent: 'center',
+                alignItems: 'center',
+                mr: 2
             }}>
-              <Box
+                <Box
                 ref={rocketRef}
                 sx={{
-                  position: 'relative',
-                  zIndex: 2
+                    position: 'relative',
+                    zIndex: 2
                 }}
-              >
+                >
                 <RocketLaunchIcon 
-                  sx={{ 
+                    sx={{ 
                     fontSize: 40,
                     color: purple[500],
                     transform: 'rotate(-10deg)'
-                  }}
+                    }}
                 />
                 <Box
-                  ref={flameRef}
-                  sx={{
+                    ref={flameRef}
+                    sx={{
                     position: 'absolute',
                     bottom: -15,
                     left: '50%',
@@ -230,85 +233,100 @@ const WorkflowRunCard: React.FC<WorkflowRunProps> = ({ run }) => {
                     background: 'linear-gradient(to bottom, #f83600, #fe8c00)',
                     boxShadow: '0 0 10px 5px rgba(255, 165, 0, 0.5)',
                     zIndex: 1
-                  }}
+                    }}
                 />
-              </Box>
+                </Box>
             </Box>
-          )}
-          
-          {/* Main content section */}
-          <Box sx={{ flexGrow: 1 }}>
+            )}
+            
+            {/* Main content section */}
+            <Box sx={{ flexGrow: 1 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-                {run.name} #{run.run_number}
-              </Typography>
-              <Chip
+                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+                Deployment Workflow
+                </Typography>
+                <Chip
                 icon={getStatusIcon()}
                 label={isInProgress ? 'In Progress' : (isSuccess ? 'Success' : (isFailure ? 'Failed' : run.status))}
                 sx={{
-                  bgcolor: `${getStatusColor()}20`,
-                  color: getStatusColor(),
-                  fontWeight: 'medium',
-                  height: 24
+                    bgcolor: `${getStatusColor()}20`,
+                    color: getStatusColor(),
+                    fontWeight: 'medium',
+                    height: 24
                 }}
                 size="small"
-              />
+                />
             </Box>
             
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                    #{run.run_number}
+                </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5, color: grey[600] }} />
                 <Typography variant="body2" color="text.secondary">
-                  {run.created_ago}
+                    {run.created_ago}
                 </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                </Box>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <PersonIcon sx={{ fontSize: 16, mr: 0.5, color: grey[600] }} />
                 <Typography variant="body2" color="text.secondary">
-                  {run.actor}
+                    {run.actor}
                 </Typography>
-              </Box>
-              
-              {run.duration && (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5, color: grey[600] }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {run.duration.toFixed(1)} min
-                  </Typography>
                 </Box>
-              )}
-              
-              <Chip
+
+                {run.duration && (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5, color: grey[600] }} />
+                    <Typography variant="body2" color="text.secondary">
+                    {run.duration.toFixed(1)} min
+                    </Typography>
+                </Box>
+                )}
+                
+                <Chip
                 label={run.head_branch}
                 size="small"
                 sx={{ 
-                  height: 20,
-                  bgcolor: amber[100],
-                  color: amber[800],
-                  fontSize: '0.7rem'
+                    height: 20,
+                    bgcolor: amber[100],
+                    color: amber[800],
+                    fontSize: '0.7rem'
                 }}
-              />
+                />
             </Box>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
+            </Box>
+        </Box>
+        
+        {/* Bottom row with View Details link moved to the left */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* View Details link now on the left */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <GitHubIcon sx={{ fontSize: 18, mr: 0.5, color: blue[600] }} />
+            <Button
                 size="small"
                 component="a"
                 href={run.html_url}
                 target="_blank"
                 sx={{
-                  textTransform: 'none',
-                  color: blue[600],
-                  '&:hover': {
+                textTransform: 'none',
+                color: blue[600],
+                '&:hover': {
                     bgcolor: blue[50]
-                  }
+                }
                 }}
-              >
+            >
                 View details
-              </Button>
+            </Button>
             </Box>
-          </Box>
+            
+            {/* You can add something on the right side if needed */}
+            <Box></Box>
+        </Box>
         </CardContent>
       </Card>
     </>

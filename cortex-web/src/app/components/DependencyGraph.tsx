@@ -58,7 +58,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(0.7); // Default to 70%
+  const [zoomLevel, setZoomLevel] = useState<number>(0.5); // Default to 70%
   
   // Process data to calculate absolute positions from relative
   const processGraphData = (data: GraphData): GraphData => {
@@ -576,7 +576,7 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ customGraphData }) =>
             elevation={3} 
             sx={{ 
               position: 'absolute', 
-              bottom: 16, 
+              top: 16,             // Changed from bottom to top
               right: 16, 
               p: 1.5, 
               borderRadius: 2,

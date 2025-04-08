@@ -17,20 +17,37 @@ export function appVersionsEffect(
   path: any,
 ) {
   useEffect(() => {
+    if (!appVersions) return;
+    
+    // Check if there's a "deploying" version - give it priority
+    if (appVersions && "deploying" in appVersions) {
+      setSelectedAppVersion(appVersions["deploying"]);
+      return;
+    }
+    
     if (path) {
       const parts = path.split('/').filter((x: string) => x);
-      // const version_number = parts.length > 4 ? Number(parts[5]) : 0;
       console.log(2)
       if (parts.length > 4) {
         const version_number = parts.length > 4 ? Number(parts[5]) : 0;
         setSelectedAppVersion(appVersions ? appVersions[version_number] : null);
       } else {
-        setSelectedAppVersion(appVersions ? appVersions[Object.keys(appVersions).length] : null);
+        // If no version in URL, select the highest version number
+        const numericVersions = Object.keys(appVersions)
+          .filter(key => !isNaN(Number(key)))
+          .map(Number)
+          .sort((a, b) => b - a);
+          
+        if (numericVersions.length > 0) {
+          setSelectedAppVersion(appVersions[numericVersions[0]]);
+        }
       }
     }
-    
-    
   }, [path, appVersions])
+
+  useEffect(() => {
+    console.log("!! APP VERSIONS", appVersions)
+  }, [appVersions])
 }
 
 

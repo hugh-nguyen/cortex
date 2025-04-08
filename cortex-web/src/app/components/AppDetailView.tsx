@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Box, 
   Typography, 
@@ -16,9 +16,9 @@ import {
   Tab,
   Stack,
 } from '@mui/material';
-import { purple, grey } from '@mui/material/colors';
+import { purple, grey, orange } from '@mui/material/colors';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useGlobal } from '@/app/GlobalContext';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -26,6 +26,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import DeploymentAnimation from '@/app/components/DeploymentAnimation';
 import WorkflowRunCard from '@/app/components/WorkflowRunCard';
 import BuildsTab from '@/app/components/BuildsTab';
+import DeployingVersionView from '@/app/components/DeployingVersionView';
 
 const DependencyGraph = dynamic(
   () => import('@/app/components/DependencyGraph'),
@@ -55,13 +56,14 @@ interface Run {
 
 interface VersionData {
   app: string;
-  version: number;
-  graph: GraphData;
+  version: number | "deploying";  // Add "deploying" as a possible type
+  graph: GraphData | null;
   run: Run;
+  is_deploying?: boolean;  // Flag to identify deploying versions
 }
 
 interface AppVersions {
-  [key: number]: VersionData;
+  [key: number | string]: VersionData;
 }
 
 interface WorkflowRun {
@@ -95,7 +97,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     selectedTeam,
     loading, error, appVersions, 
     selectedAppVersion, setSelectedAppVersion, 
-    graphData, setGraphData, selectedApp,
+    graphData, setGraphData, selectedApp, setAppVersions
   } = useGlobal();
   const router = useRouter();
   const [graphKey, setGraphKey] = useState(0);
@@ -109,12 +111,18 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
   const [workflowsLoading, setWorkflowsLoading] = useState(false);
   const [workflowsError, setWorkflowsError] = useState<string | null>(null);
-  
-  const defaultModule = "team"
-  const defaultSubModule = "applications"
+  // const [versionsPollingInterval, setVersionsPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [versionsPollingInterval, setVersionsPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const versionsIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const defaultModule = "team";
+  const defaultSubModule = "applications";
+
+  const pathname = usePathname();
   
   // Polling interval in milliseconds (5 seconds)
   const POLLING_INTERVAL = 5000;
+  let activePollingInterval: NodeJS.Timeout | null = null;
 
   // Handler functions...
   const handleTabChange = (_event: React.SyntheticEvent, newValue: TabValue) => {
@@ -125,23 +133,26 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     }
   };
 
-  const handleVersionClick = (version: number) => {
+  const handleVersionClick = (version: number | "deploying") => {
     if (selectedAppVersion?.version === version) return;
     
-    // const appVersion = appVersions ? appVersions[version] : null;
-    // setSelectedAppVersion(appVersion);
-    
-    // if (appVersions && appVersions[version]) {
-    //   setGraphData(appVersions[version].graph);
+    // Update local state immediately
+    if (appVersions && appVersions[version]) {
+      setSelectedAppVersion(appVersions[version]);
       
-    //   setGraphKey(prevKey => prevKey + 1);
+      // Only set graph data if it exists (won't for "deploying")
+      if (appVersions[version].graph) {
+        setGraphData(appVersions[version].graph);
+        setGraphKey(prevKey => prevKey + 1);
+      }
       
-    //   router.replace(`/${defaultModule}/${selectedTeam?.team_id}/${defaultSubModule}/app1/version/${version}`);
-    // }
-
-    const url = `/${defaultModule}/${selectedTeam?.team_id}/${defaultSubModule}/${selectedApp?.App}/version/${version}`
-    window.history.replaceState(null, '', url);
-
+      // Update URL without triggering Next.js navigation events
+      // Only update URL for numeric versions
+      if (typeof version === 'number') {
+        const url = `/${defaultModule}/${selectedTeam?.team_id}/${defaultSubModule}/${selectedApp?.App}/version/${version}`;
+        window.history.replaceState(null, '', url);
+      }
+    }
   };
 
   const handleBackClick = () => {
@@ -174,14 +185,25 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     }
   }, [deploymentStartTime, workflowUrl]);
   
+  // useEffect(() => {
+  //   return () => {
+  //     if (versionsPollingInterval) {
+  //       clearInterval(versionsPollingInterval);
+  //     }
+  //   };
+  // }, [versionsPollingInterval]);
+  useEffect(() => {
+    console.log('versionsPollingInterval changed to', versionsPollingInterval);
+  }, [versionsPollingInterval]);
+
   const finishDeployment = () => {
     setDeploymentMessage("Deployment successful! Opening GitHub Actions...");
     setTimeout(() => {
       setDeploymentLoading(false);
       if (workflowUrl) {
-        window.open(workflowUrl, '_blank');
+        // window.open(workflowUrl, '_blank');
         // Switch to deployments tab and fetch latest runs
-        setActiveTab('deployments');
+        // setActiveTab('deployments');
         fetchWorkflowRuns();
       }
       setWorkflowUrl(null);
@@ -189,7 +211,6 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     }, 1000);
   };
 
-  // Fetch workflow runs from the backend
   const fetchWorkflowRuns = async () => {
     if (!selectedApp?.CommandRepoURL) {
       setWorkflowsError("No repository URL found for this application");
@@ -228,14 +249,11 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     }
   };
 
-  // Set up polling for workflow runs if any are in progress
   useEffect(() => {
-    // Check if any runs are in progress
     const hasInProgressRuns = workflowRuns.some(
       run => run.status === 'in_progress' || run.status === 'queued' || run.status === 'waiting'
     );
     
-    // Only poll if deployments tab is active and there are in-progress runs
     if (activeTab === 'deployments' && hasInProgressRuns) {
       const intervalId = setInterval(() => {
         fetchWorkflowRuns();
@@ -245,12 +263,97 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     }
   }, [workflowRuns, activeTab]);
 
-  // Fetch workflow runs when the component mounts or when app changes
   useEffect(() => {
     if (activeTab === 'deployments' && selectedApp) {
       fetchWorkflowRuns();
     }
   }, [activeTab, selectedApp]);
+
+  const refreshAppVersions = async () => {
+    if (!selectedApp) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/get_app_versions?app=${selectedApp.App}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch app versions: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.app_versions) {
+        setAppVersions(data.app_versions);
+        
+        if (data.app_versions.deploying) {
+          setSelectedAppVersion(data.app_versions.deploying);
+        } else {
+          console.log(pathname)
+          const parts = pathname.split("/")
+          const versionNumber = Number(parts[parts.length-1])
+          console.log(versionNumber)
+          console.log(versionNumber+1)
+          console.log(parts.slice(0, -1).join("/") + "/" + (versionNumber+1))
+          console.log(versionNumber, Object.keys(data.app_versions).length)
+          if (Object.keys(data.app_versions).length > versionNumber) {
+            window.location.href = parts.slice(0, -1).join("/") + "/" + (versionNumber+1)
+          } else {
+            window.location.reload()
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing app versions:", error);
+    }
+  };
+  
+  const startVersionsPolling = () => {
+    // Clear any existing interval
+    if (versionsPollingInterval) {
+      clearInterval(versionsPollingInterval);
+    }
+    
+    // Set a new polling interval - 5 seconds
+    const interval = setInterval(() => {
+      refreshAppVersions();
+    }, 5000);
+
+    setVersionsPollingInterval(interval);
+  };
+
+  // const startVersionsPolling = () => {
+  //   // Clear any existing interval
+  //   if (versionsPollingInterval) {
+  //     clearInterval(versionsPollingInterval);
+  //     setVersionsPollingInterval(null);
+  //   }
+    
+  //   console.log("Starting version polling");
+    
+  //   // Do initial refresh immediately
+  //   refreshAppVersions();
+    
+  //   // Set a new polling interval - 5 seconds
+  //   const interval = setInterval(async () => {
+  //     console.log("Polling for version updates");
+      
+  //     // Refresh app versions
+  //     await refreshAppVersions();
+      
+  //     // After refreshing, check if we still need to poll
+  //     setTimeout(() => {
+  //       if (appVersions && !appVersions.deploying) {
+  //         console.log("No more deploying version, stopping poll");
+  //         clearInterval(interval);
+  //         setVersionsPollingInterval(null);
+  //       } else {
+  //         console.log("Deploying version still exists, continuing to poll");
+  //       }
+  //     }, 500); // Small delay to ensure state updates
+      
+  //   }, 5000);
+    
+  //   // Save the interval ID
+  //   setVersionsPollingInterval(interval);
+  // };
 
   const handleDeployNewVersionClick = async () => {
     if (!selectedApp?.CommandRepoURL) {
@@ -258,27 +361,27 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
       setSnackbarOpen(true);
       return;
     }
-
+  
     try {
       // Start the animation
       setDeploymentLoading(true);
       setDeploymentStartTime(Date.now());
       setDeploymentMessage("Preparing to deploy new version...");
       
-      // Animation message sequence
+      // Animation message sequence with shorter times since we're staying in the versions tab
       setTimeout(() => {
         if (deploymentLoading) setDeploymentMessage("Connecting to GitHub...");
-      }, 1000);
+      }, 500);
       setTimeout(() => {
         if (deploymentLoading) setDeploymentMessage("Triggering GitHub Action workflow...");
-      }, 2000);
+      }, 1000);
       setTimeout(() => {
         if (deploymentLoading) setDeploymentMessage("Scheduling pipeline execution...");
-      }, 3000);
+      }, 1500);
       
       // Call the backend API to trigger the GitHub Action
       const encodedURL = encodeURIComponent(selectedApp.CommandRepoURL);
-      const response = await fetch(`http://localhost:8000/deploy_app_version?command_repo=${encodedURL}`);
+      const response = await fetch(`http://localhost:8000/deploy_app_version?app_name=${selectedApp.App}&command_repo=${encodedURL}`);
       
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`);
@@ -288,10 +391,22 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
       
       if (data.status === "success") {
         setWorkflowUrl(data.workflows_url);
-        // Animation will continue for at least 4 seconds total due to the useEffect
+        // Animation will continue for a minimum time
         setTimeout(() => {
           if (deploymentLoading) setDeploymentMessage("GitHub Action started successfully!");
-        }, 3500);
+        }, 2000);
+        
+        // Close the animation after a short duration
+        setTimeout(() => {
+          setDeploymentLoading(false);
+          
+          // Don't switch to deployments tab, stay on versions
+          // Instead, refresh the versions list to see the new "deploying" version
+          refreshAppVersions();
+          
+          // Set a polling interval to refresh versions until the real one appears
+          startVersionsPolling();
+        }, 2500);
       } else {
         throw new Error(data.message || "Failed to trigger GitHub Action");
       }
@@ -359,6 +474,52 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
         </Tabs>
       </Box>
       
+      {/* Action buttons in top right */}
+      {activeTab === 'versions' && (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          p: 2, 
+          px: 3,
+          bgcolor: '#F8F8F8',
+          borderBottom: '1px solid #E0E0E0'
+        }}>
+          <Button 
+            variant="contained" 
+            startIcon={<GitHubIcon />}
+            sx={{ 
+              bgcolor: '#000', 
+              color: '#FFF',
+              fontSize: '14px',
+              '&:hover': { bgcolor: '#333' },
+              borderRadius: 1,
+              mr: 1,
+              textTransform: 'uppercase'
+            }}
+            onClick={handleCommandRepoClick}
+            disabled={!selectedApp?.CommandRepoURL}
+          >
+            Command Repo
+          </Button>
+          
+          <Button 
+            variant="contained" 
+            startIcon={<RocketLaunchIcon />}
+            sx={{ 
+              bgcolor: purple[700], 
+              '&:hover': { bgcolor: purple[800] },
+              borderRadius: 1,
+              fontSize: '14px',
+              textTransform: 'uppercase'
+            }}
+            onClick={handleDeployNewVersionClick}
+            disabled={!selectedApp?.CommandRepoURL}
+          >
+            Deploy New Version
+          </Button>
+        </Box>
+      )}
+      
       <Box sx={{ display: 'flex', flexGrow: 1 }}>
         {/* Versions Tab */}
         {activeTab === 'versions' && (
@@ -406,41 +567,51 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                 <List sx={{ pt: 0 }}>
                   {appVersions && 
                     Object.keys(appVersions)
-                      .map(Number)
-                      .sort((a, b) => b - a)
-                      .map((version) => (
-                        <ListItem key={version} disablePadding>
-                          <ListItemButton 
-                            selected={selectedAppVersion?.version === version}
-                            onClick={() => handleVersionClick(version)}
-                            sx={{ 
-                              padding: '4px',
-                              pl: 2,
-                              '&.Mui-selected': {
-                                bgcolor: purple[50],
+                      .sort((a, b) => {
+                        // Always put "deploying" at the top
+                        if (a === "deploying") return -1;
+                        if (b === "deploying") return 1;
+                        // Otherwise sort by version number descending
+                        return Number(b) - Number(a);
+                      })
+                      .map((versionKey) => {
+                        const version = appVersions[versionKey];
+                        const isDeploying = version.is_deploying;
+                        
+                        return (
+                          <ListItem key={versionKey} disablePadding>
+                            <ListItemButton 
+                              selected={selectedAppVersion?.version === version.version}
+                              onClick={() => handleVersionClick(version.version)}
+                              sx={{ 
+                                padding: '4px',
+                                pl: 2,
+                                '&.Mui-selected': {
+                                  bgcolor: purple[50],
+                                  '&:hover': {
+                                    bgcolor: purple[100],
+                                  }
+                                },
                                 '&:hover': {
-                                  bgcolor: purple[100],
-                                }
-                              },
-                              '&:hover': {
-                                bgcolor: purple[50],
-                              },
-                              // bgcolor: selectedAppVersion?.version === version ? purple[500]: purple[900]
-                            }}
-                          >
-                            <ListItemText 
-                              primary={`Version ${version}`}
-                              primaryTypographyProps={{
-                                sx: { 
-                                  color: purple[900],
-                                  fontWeight: selectedAppVersion?.version === version ? 'bold' : 'normal'
-                                  // fontWeight: (() => {console.log("inline", selectedAppVersion); return selectedAppVersion?.version === version ? 'bold' : 'normal'})()
-                                }
+                                  bgcolor: purple[50],
+                                },
                               }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
+                            >
+                              <ListItemText 
+                                primary={isDeploying ? "deploying" : `Version ${version.version}`}
+                                primaryTypographyProps={{
+                                  sx: { 
+                                    color: isDeploying ? orange[800] : purple[900],
+                                    fontWeight: selectedAppVersion?.version === version.version ? 'bold' : 'normal',
+                                    fontStyle: isDeploying ? 'italic' : 'normal',
+                                  }
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        );
+                      })
+                  }
                 </List>
               )}
             </Box>
@@ -453,9 +624,6 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
               m: 0,
               borderRadius: 0
             }}>
-              {/* {selectedAppVersion &&
-                  <WorkflowRunCard key={selectedAppVersion.run.id} run={selectedAppVersion.run} />
-              } */}
               {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                   <CircularProgress />
@@ -464,8 +632,23 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                 <Alert severity="error">
                   {error}
                 </Alert>
+              ) : selectedAppVersion?.is_deploying ? (
+                // Render the DeployingVersionView for the special "deploying" version
+                <DeployingVersionView 
+                  workflowRun={selectedAppVersion.run}
+                  onViewWorkflowClick={() => {
+                    if (selectedAppVersion.run?.html_url) {
+                      window.open(selectedAppVersion.run.html_url, '_blank');
+                    }
+                  }}
+                />
               ) : graphData ? (
-                <DependencyGraph key={graphKey} customGraphData={graphData} />
+                <>
+                  {selectedAppVersion && selectedAppVersion.run && (
+                    <WorkflowRunCard key={selectedAppVersion.run.id} run={selectedAppVersion.run} />
+                  )}
+                  <DependencyGraph key={graphKey} customGraphData={graphData} />
+                </>
               ) : (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                   <Typography>No graph data available</Typography>

@@ -265,3 +265,65 @@ def get_workflow_runs(repo_url, workflow_name):
             "status": "error",
             "message": f"Error getting workflow runs: {str(e)}"
         }
+
+
+def run_workflow(repo_url, workflow_name, ref="main"):
+    import os
+    import logging
+    import re
+    import requests
+    from datetime import datetime
+    
+    # Set up logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("deploy")
+    
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if not github_token:
+        logger.error("GITHUB_TOKEN environment variable is not set")
+        return {"status": "error", "message": "GITHUB_TOKEN environment variable is not set"}
+    
+    owner, repo_name = get_owner_and_repo_from_url(repo_url, logger)
+
+    logger.info(f"Triggering GitHub Action in {owner}/{repo_name}")
+    
+    try:
+        api_url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}.yaml/dispatches"
+        
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        payload = {
+            "ref": ref
+        }
+        
+        logger.info(f"Sending request to {api_url}")
+        response = requests.post(api_url, headers=headers, json=payload, verify="ca.crt")
+        
+        if response.status_code == 204:  # GitHub returns 204 No Content for successful workflow triggers
+            # Get the URL to view the workflow run
+            workflows_url = f"https://github.com/{owner}/{repo_name}/actions"
+            logger.info(f"GitHub Action triggered successfully. View at: {workflows_url}")
+            
+            return {
+                "status": "success",
+                "message": "GitHub Action triggered successfully",
+                "workflows_url": workflows_url,
+                "timestamp": datetime.now().isoformat()
+            }
+        else:
+            logger.error(f"Failed to trigger GitHub Action. Status: {response.status_code}, Response: {response.text}")
+            return {
+                "status": "error",
+                "message": f"Failed to trigger GitHub Action: {response.text}",
+                "status_code": response.status_code
+            }
+    
+    except Exception as e:
+        logger.error(f"Error triggering GitHub Action: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Error triggering GitHub Action: {str(e)}"
+        }
