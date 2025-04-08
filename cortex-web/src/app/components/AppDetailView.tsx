@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { 
   Box, 
@@ -27,15 +25,51 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DeploymentAnimation from '@/app/components/DeploymentAnimation';
 import WorkflowRunCard from '@/app/components/WorkflowRunCard';
+import BuildsTab from '@/app/components/BuildsTab';
 
 const DependencyGraph = dynamic(
   () => import('@/app/components/DependencyGraph'),
   { ssr: false }
 );
 
-// Interface definitions...
+interface GraphData {
+  services: any[];
+  dependencies: any[];
+  apps: any[];
+}
 
-type TabValue = 'versions' | 'deployments';
+interface VersionData {
+  app: string;
+  version: number;
+  graph: GraphData;
+}
+
+interface AppVersions {
+  [key: number]: VersionData;
+}
+
+interface WorkflowRun {
+  id: number;
+  name: string;
+  run_number: number;
+  status: string;
+  conclusion: string | null;
+  created_at: string;
+  created_ago: string;
+  html_url: string;
+  actor: string;
+  head_branch: string;
+  duration?: number | null;
+  run_attempt: number;
+}
+
+interface AppDetailViewProps {
+  appName: string;
+  onBack?: () => void;
+  initialVersion?: number | null;
+}
+
+type TabValue = 'versions' | 'deployments' | 'builds';
 
 const AppDetailView: React.FC<AppDetailViewProps> = ({ 
   appName, 
@@ -147,7 +181,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
     try {
       const encodedURL = encodeURIComponent(selectedApp.CommandRepoURL);
       // Add the workflow_name parameter to filter for the "test" workflow
-      const response = await fetch(`http://localhost:8000/get_workflow_runs?repo_url=${encodedURL}`);
+      const response = await fetch(`http://localhost:8000/get_workflow_runs?app_name=${selectedApp.App}&repo_url=${encodedURL}&mode=deployments`);
       
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`);
@@ -156,6 +190,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
       const data = await response.json();
       
       if (data.status === "success") {
+        console.log("!!", data.workflow_runs)
         setWorkflowRuns(data.workflow_runs);
         
         // If we have an empty list but got a message, show it as an info message
@@ -300,6 +335,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
         >
           <Tab value="versions" label="Versions" />
           <Tab value="deployments" label="Deployments" />
+          <Tab value="builds" label="Builds" />
         </Tabs>
       </Box>
       
@@ -435,7 +471,6 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                   startIcon={<RefreshIcon />}
                   onClick={handleRefreshWorkflows}
                   disabled={workflowsLoading}
-                  size="small"
                   sx={{ 
                     borderColor: grey[400],
                     color: grey[700],
@@ -455,7 +490,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                   sx={{ 
                     bgcolor: '#000', 
                     color: '#FFF',
-                    fontSize: '11px',
+                    fontSize: '14px',
                     '&:hover': { bgcolor: '#333' },
                     borderRadius: 1,
                   }}
@@ -473,7 +508,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                     bgcolor: purple[700], 
                     '&:hover': { bgcolor: purple[800] },
                     borderRadius: 1,
-                    fontSize: '12px',
+                    fontSize: '14px',
                   }}
                   onClick={deploymentLoading && deploymentMessage.includes("failed") 
                     ? () => setDeploymentLoading(false) // Close animation on click if error occurred
@@ -532,6 +567,11 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
               </>
             )}
           </Box>
+        )}
+        
+        {/* Builds Tab */}
+        {activeTab === 'builds' && (
+          <BuildsTab />
         )}
       </Box>
       

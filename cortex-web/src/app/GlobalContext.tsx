@@ -27,6 +27,8 @@ interface AppData {
   'Last Updated': string;
   Owner: string;
   CommandRepoURL: string;
+  services: string[];
+  dependencies: string[];
 }
 
 interface GlobalContextType {

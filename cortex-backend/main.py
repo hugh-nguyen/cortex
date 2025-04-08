@@ -218,124 +218,15 @@ async def deploy_app_version(command_repo: str):
 
 
 @app.get("/get_workflow_runs")
-async def get_workflow_runs(repo_url: str, workflow_name: str = "create-manifest-and-deploy"):
-    import os
-    import logging
-    import re
-    import requests
-    from datetime import datetime, timezone
-    import dateutil.parser
+async def get_workflow_runs(app_name: str, repo_url: str, workflow_name: str = "create-manifest-and-deploy", mode: str = "builds"):
     
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger("workflows")
+    result = git_util.get_workflow_runs(repo_url, workflow_name)
     
-    github_token = os.environ.get("GITHUB_TOKEN")
-    if not github_token:
-        logger.error("GITHUB_TOKEN environment variable is not set")
-        return {"status": "error", "message": "GITHUB_TOKEN environment variable is not set"}
+    if mode == "builds":
+        return result
     
-    owner, repo_name = git_util.get_owner_and_repo_from_url(repo_url, logger)
-
-    logger.info(f"Getting workflow runs for {owner}/{repo_name}, filtering for workflow: {workflow_name}")
+    app_versions = dynamo_util.get_app_versions(app_name)
+    lookup = {av["run_id"]: av["version"] for av in app_versions if "run_id" in av}
     
-    try:
-        workflows_url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows"
-        
-        headers = {
-            "Authorization": f"token {github_token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
-        
-        logger.info(f"Fetching workflows from: {workflows_url}")
-        workflows_response = requests.get(workflows_url, headers=headers, verify="ca.crt")
-        
-        if workflows_response.status_code != 200:
-            logger.error(f"Failed to get workflows. Status: {workflows_response.status_code}")
-            return {
-                "status": "error",
-                "message": f"Failed to get workflows: {workflows_response.text}",
-                "status_code": workflows_response.status_code
-            }
-        
-        workflows_data = workflows_response.json()
-        target_workflow = None
-        
-        for workflow in workflows_data.get("workflows", []):
-            if (workflow_name.lower() in workflow.get("name", "").lower() or 
-                workflow_name.lower() in workflow.get("path", "").lower()):
-                target_workflow = workflow
-                break
-        
-        if not target_workflow:
-            logger.warning(f"No workflow found matching '{workflow_name}'")
-            return {
-                "status": "success",
-                "workflow_runs": [],
-                "total_count": 0,
-                "message": f"No workflow found matching '{workflow_name}'"
-            }
-        
-        # Now get runs for the specific workflow
-        workflow_id = target_workflow["id"]
-        api_url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows/{workflow_id}/runs"
-        
-        logger.info(f"Fetching runs for workflow {workflow_id} from: {api_url}")
-        response = requests.get(api_url, headers=headers, verify="ca.crt")
-        
-        if response.status_code == 200:
-            workflow_data = response.json()
-            
-            # Process workflow runs
-            processed_runs = []
-            for run in workflow_data.get("workflow_runs", []):
-                # Convert the created_at time to a more readable format
-                created_at = dateutil.parser.parse(run["created_at"])
-                updated_at = dateutil.parser.parse(run["updated_at"])
-                
-                # Calculate how long ago the run was created/updated
-                now = datetime.now(timezone.utc)
-                created_ago = now - created_at
-                updated_ago = now - updated_at
-                
-                # Format as minutes or hours ago
-                if created_ago.days > 0:
-                    created_ago_str = f"{created_ago.days} days ago"
-                elif created_ago.seconds // 3600 > 0:
-                    created_ago_str = f"{created_ago.seconds // 3600} hours ago"
-                else:
-                    created_ago_str = f"{max(1, created_ago.seconds // 60)} minutes ago"
-                
-                processed_runs.append({
-                    "id": run["id"],
-                    "name": target_workflow["name"],  # Use the workflow name directly
-                    "run_number": run["run_number"],
-                    "status": run["status"],
-                    "conclusion": run["conclusion"],
-                    "created_at": run["created_at"],
-                    "created_ago": created_ago_str,
-                    "html_url": run["html_url"],
-                    "actor": run["actor"]["login"] if "actor" in run else "Unknown",
-                    "head_branch": run["head_branch"],
-                    "duration": run.get("duration", 0) / 60 if run.get("duration") else None,
-                    "run_attempt": run.get("run_attempt", 1)
-                })
-            
-            return {
-                "status": "success",
-                "workflow_runs": processed_runs,
-                "total_count": workflow_data.get("total_count", 0)
-            }
-        else:
-            logger.error(f"Failed to get workflow runs. Status: {response.status_code}, Response: {response.text}")
-            return {
-                "status": "error",
-                "message": f"Failed to get workflow runs: {response.text}",
-                "status_code": response.status_code
-            }
-    
-    except Exception as e:
-        logger.error(f"Error getting workflow runs: {str(e)}")
-        return {
-            "status": "error",
-            "message": f"Error getting workflow runs: {str(e)}"
-        }
+    result["workflow_runs"] = [{**r, "app_version": lookup.get(r["id"])} for r in result["workflow_runs"]]
+    return result

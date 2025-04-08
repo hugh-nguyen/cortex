@@ -45,7 +45,7 @@ jobs:
           pip install pyyaml requests boto3
 
       - name: Create Application Version Manifest
-        run: python -m cortex.create_application_version_manifest --clone --app_name ${{ inputs.app_name }}
+        run: python -m cortex.create_application_version_manifest --clone --app_name ${{ inputs.app_name }} --run_id ${{ github.run_id }}
         env:
           GH_PERSONAL_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}

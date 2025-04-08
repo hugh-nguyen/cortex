@@ -85,7 +85,9 @@ def get_app(app_name=None):
                     "Versions": item.get('versions'),
                     "Last Updated": item.get('last_updated'),
                     "Owner": item.get('owner'),
-                    "CommandRepoURL": item.get('command_repo_url')
+                    "CommandRepoURL": item.get('command_repo_url'),
+                    "services": item.get('services'),
+                    "dependencies": item.get('dependencies'),
                 }
         return None
     except Exception as e:
@@ -157,7 +159,8 @@ def get_app_versions(app_name):
             result.append({
                 "app_name": app_name,
                 "version": item.get('version'),
-                "yaml": item.get('yaml', '')
+                "yaml": item.get('yaml', ''),
+                "run_id": int(item.get('run_id', '')),
             })
         
         return result
