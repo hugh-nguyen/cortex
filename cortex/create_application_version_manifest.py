@@ -193,7 +193,6 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
     return {
         "filename": manifest_name,
         "manifest": new_manifest,
-        "services": services,
         "version": app_ver,
     }
 
@@ -269,8 +268,8 @@ if __name__ == '__main__':
             args.app_name, len(new_manifest["services"]), 
             new_manifest["version"], team_lookup[args.app_name],
             f"https://github.com/hugh-nguyen/{args.app_name}-cortex-command",
-            [s["svc"] for s in new_manifest["services"]],
-            [f"{d['app']}/{d['svc']}" for d in new_manifest["dependencies"]]
+            [s["svc"] for s in new_manifest["manifest"]["services"]],
+            [f"{d['app']}/{d['svc']}" for d in new_manifest["manifest"]["dependencies"]]
         )
         upload_app_version(
             args.app_name, new_manifest["version"], 
