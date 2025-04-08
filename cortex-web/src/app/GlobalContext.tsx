@@ -44,8 +44,8 @@ interface GlobalContextType {
   setApps: (apps: AppData[]) => void;
   selectedApp: AppData | null;
   setSelectedApp: (app: AppData) => void;
-  selectedAppVersion: number;
-  setSelectedAppVersion: (version: number) => void;
+  selectedAppVersion: VersionData | null;
+  setSelectedAppVersion: (version: VersionData | null) => void;
   appVersions: AppVersions | null;
   setAppVersions: (versions: AppVersions | null) => void;
 
@@ -67,10 +67,26 @@ interface GraphData {
   apps: any[];
 }
 
+interface Run {
+  id: number;
+  name: string;
+  run_number: number;
+  status: string;
+  conclusion: string | null;
+  created_at: string;
+  created_ago: string;
+  html_url: string;
+  actor: string;
+  head_branch: string;
+  duration?: number | null;
+  run_attempt: number;
+}
+
 interface VersionData {
   app: string;
   version: number;
   graph: GraphData;
+  run: Run;
 }
 
 interface AppVersions {
@@ -101,7 +117,7 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [apps, setApps] = useState<AppData[]>([]);
   const [selectedApp, setSelectedApp] = useState<AppData | null>(null);
 
-  const [selectedAppVersion, setSelectedAppVersion] = useState<number>(0);
+  const [selectedAppVersion, setSelectedAppVersion] = useState<VersionData | null>(null);
   const [appVersions, setAppVersions] = useState<AppVersions | null>(null);
 
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -114,15 +130,18 @@ export const GlobalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const pathname = usePathname();
   const router = useRouter();
 
+  const [path, setPath] = useState("")
+
   
   onloadEffect(setTeams, setLoading, setError)
 
-  appVersionsEffect(selectedAppVersion, appVersions, setSelectedAppVersion)
+  appVersionsEffect(selectedAppVersion, appVersions, setSelectedAppVersion, path)
   appVersionsSelectedAppVersionEffect(appVersions, selectedAppVersion, setGraphData)
   pathNameTeamsEffect(
     pathname, teams, router, setAppVersions, setLoading, 
     setError, setSelectedTeam, setSelectedAppVersion, setSubModule,
-    setRoutes, selectedTeam, setSelectedApp
+    setRoutes, selectedTeam, setSelectedApp, appVersions, setPath, path,
+    selectedApp
   )
   selectedTeamEffect(selectedTeam, setLoading, setError, setApps)
   pathNameSelectedAppEffect(pathname, selectedApp, router, selectedTeam)

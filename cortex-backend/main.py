@@ -52,9 +52,20 @@ async def get_apps_versions(app: str = "app1"):
     transform = lambda av: {
       "app": av["app_name"],
       "version": av["version"],
-      "graph": graph.calculate_graph(av["app_name"], av["yaml"])
+      "graph": graph.calculate_graph(av["app_name"], av["yaml"]),
+      "run_id": av["run_id"],
     }
     app_versions = {int(av["version"]): transform(av) for av in app_versions}
+    
+    repo_url = f"https://github.com/hugh-nguyen/{app}-cortex-command"
+    workflow_name = "create-manifest-and-deploy"
+    runs = git_util.get_workflow_runs(repo_url, workflow_name)["workflow_runs"]
+    lookup = {r["id"]: r for r in runs}
+    
+    app_versions = {k: {**av, "run": lookup[av["run_id"]]} for k, av in app_versions.items() if "run_id" in av}
+    # app_versions = {k: av for k, av in app_versions.items() if "run_id" in av}
+    # app_versions = {k: av for k, av in app_versions.items()}
+    
     return {"app_versions": app_versions}
 
 @app.get("/get_routes")

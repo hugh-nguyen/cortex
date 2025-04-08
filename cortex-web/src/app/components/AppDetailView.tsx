@@ -38,10 +38,26 @@ interface GraphData {
   apps: any[];
 }
 
+interface Run {
+  id: number;
+  name: string;
+  run_number: number;
+  status: string;
+  conclusion: string | null;
+  created_at: string;
+  created_ago: string;
+  html_url: string;
+  actor: string;
+  head_branch: string;
+  duration?: number | null;
+  run_attempt: number;
+}
+
 interface VersionData {
   app: string;
   version: number;
   graph: GraphData;
+  run: Run;
 }
 
 interface AppVersions {
@@ -110,17 +126,22 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
   };
 
   const handleVersionClick = (version: number) => {
-    if (selectedAppVersion === version) return;
+    if (selectedAppVersion?.version === version) return;
     
-    setSelectedAppVersion(version);
+    // const appVersion = appVersions ? appVersions[version] : null;
+    // setSelectedAppVersion(appVersion);
     
-    if (appVersions && appVersions[version]) {
-      setGraphData(appVersions[version].graph);
+    // if (appVersions && appVersions[version]) {
+    //   setGraphData(appVersions[version].graph);
       
-      setGraphKey(prevKey => prevKey + 1);
+    //   setGraphKey(prevKey => prevKey + 1);
       
-      router.replace(`/${defaultModule}/${selectedTeam?.team_id}/${defaultSubModule}/app1/version/${version}`);
-    }
+    //   router.replace(`/${defaultModule}/${selectedTeam?.team_id}/${defaultSubModule}/app1/version/${version}`);
+    // }
+
+    const url = `/${defaultModule}/${selectedTeam?.team_id}/${defaultSubModule}/${selectedApp?.App}/version/${version}`
+    window.history.replaceState(null, '', url);
+
   };
 
   const handleBackClick = () => {
@@ -190,7 +211,6 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
       const data = await response.json();
       
       if (data.status === "success") {
-        console.log("!!", data.workflow_runs)
         setWorkflowRuns(data.workflow_runs);
         
         // If we have an empty list but got a message, show it as an info message
@@ -391,7 +411,7 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                       .map((version) => (
                         <ListItem key={version} disablePadding>
                           <ListItemButton 
-                            selected={selectedAppVersion === version}
+                            selected={selectedAppVersion?.version === version}
                             onClick={() => handleVersionClick(version)}
                             sx={{ 
                               padding: '4px',
@@ -404,7 +424,8 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                               },
                               '&:hover': {
                                 bgcolor: purple[50],
-                              }
+                              },
+                              // bgcolor: selectedAppVersion?.version === version ? purple[500]: purple[900]
                             }}
                           >
                             <ListItemText 
@@ -412,7 +433,8 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
                               primaryTypographyProps={{
                                 sx: { 
                                   color: purple[900],
-                                  fontWeight: selectedAppVersion === version ? 'bold' : 'normal'
+                                  fontWeight: selectedAppVersion?.version === version ? 'bold' : 'normal'
+                                  // fontWeight: (() => {console.log("inline", selectedAppVersion); return selectedAppVersion?.version === version ? 'bold' : 'normal'})()
                                 }
                               }}
                             />
@@ -431,6 +453,9 @@ const AppDetailView: React.FC<AppDetailViewProps> = ({
               m: 0,
               borderRadius: 0
             }}>
+              {/* {selectedAppVersion &&
+                  <WorkflowRunCard key={selectedAppVersion.run.id} run={selectedAppVersion.run} />
+              } */}
               {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                   <CircularProgress />

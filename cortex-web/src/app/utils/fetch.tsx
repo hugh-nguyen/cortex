@@ -32,7 +32,6 @@ export const fetchApp = async (appName: string, setSelectedApp: any, setLoading:
         }
         
         const data = await response.json();
-        console.log("!", data.app)
         setSelectedApp(data.app)
         
         setError(null);

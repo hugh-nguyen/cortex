@@ -13,13 +13,24 @@ export function onloadEffect(setTeams: any, setLoading: any, setError: any) {
 export function appVersionsEffect(
   selectedAppVersion: any, 
   appVersions: any, 
-  setSelectedAppVersion: any
+  setSelectedAppVersion: any,
+  path: any,
 ) {
   useEffect(() => {
-    if (!selectedAppVersion) {
-      setSelectedAppVersion(appVersions ? Object.keys(appVersions).length : 0);
+    if (path) {
+      const parts = path.split('/').filter((x: string) => x);
+      // const version_number = parts.length > 4 ? Number(parts[5]) : 0;
+      console.log(2)
+      if (parts.length > 4) {
+        const version_number = parts.length > 4 ? Number(parts[5]) : 0;
+        setSelectedAppVersion(appVersions ? appVersions[version_number] : null);
+      } else {
+        setSelectedAppVersion(appVersions ? appVersions[Object.keys(appVersions).length] : null);
+      }
     }
-  }, [appVersions])
+    
+    
+  }, [path, appVersions])
 }
 
 
@@ -29,8 +40,10 @@ export function appVersionsSelectedAppVersionEffect(
   setGraphData: any
 ) {
   useEffect(() => {
-    setGraphData(appVersions ? appVersions[selectedAppVersion].graph : null);
-  }, [appVersions, selectedAppVersion])
+    if (selectedAppVersion) {
+      setGraphData(appVersions ? appVersions[selectedAppVersion?.version].graph : null);
+    }
+  }, [selectedAppVersion])
 }
 
 
@@ -47,12 +60,21 @@ export function pathNameTeamsEffect(
   setRoutes: any,
   selectedTeam: any,
   setSelectedApp: any,
+  appVersions: any,
+  setPath: any,
+  path: any,
+  selectedApp: any,
 ) {
   useEffect(() => {
-    if (pathname && teams.length > 0) {
+    console.log(1, pathname, path, pathname != path)
+    if (pathname && teams.length > 0 && pathname != path) {
+      console.log(1.1)
       const parts = pathname.split('/').filter((x: string) => x);
+
+      setPath(pathname)
       if (parts.length == 0) {
         setSubModule(defaultSubModule)
+        console.log(3)
         router.replace(`/${defaultModule}/${teams[0].team_id}/${defaultSubModule}/`);
       }
 
@@ -62,8 +84,6 @@ export function pathNameTeamsEffect(
         const teamId = parts.length > 0 ? parts[1] : null;
         const subModule = parts.length > 1 ? parts[2] : null;
         const appName = parts.length > 2 ? parts[3] : null;
-        const version = parts.length > 4 ? Number(parts[5]) : null;
-
         if (teamId) {
           const teamMap = Object.fromEntries(teams.map((t: any) => [t.team_id, t]))
           if (!selectedTeam || teamId != selectedTeam.team_id) {
@@ -75,13 +95,17 @@ export function pathNameTeamsEffect(
 
         if (subModule == "applications") {
           if (appName) {
-            fetchAppVersions(appName, setAppVersions, setLoading, setError)
-            console.log("###", appName)
+            console.log(appVersions, selectedApp?.App, appName)
+            if (!appVersions || (selectedApp?.App !== appName)) {
+              console.log("fetchingApps")
+              fetchAppVersions(appName, setAppVersions, setLoading, setError)
+            }
             fetchApp(appName, setSelectedApp, setLoading, setError)
           }
-          if (version) {
-            setSelectedAppVersion(version)
-          }
+          // if (version_number) {
+          //   // setSelectedAppVersion(version_number)
+          //   setSelectedAppVersion(appVersions ? appVersions[version_number] : null);
+          // }
         }
         
         if (subModule == "xroutes") {
@@ -122,7 +146,6 @@ export function selectedTeamEffect(selectedTeam: any, setLoading: any, setError:
           a.App.localeCompare(b.App)
         );
         
-        console.log(sortedApps)
 
         setApps(sortedApps);
       } catch (error) {

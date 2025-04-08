@@ -56,12 +56,12 @@ const Breadcrumb = () => {
         </Typography>
       }
 
-      {selectedAppVersion !== 0 && subModule =='applications' && (
+      {selectedAppVersion && selectedAppVersion.version !== 0 && subModule =='applications' && (
         <>
           <ChevronRightIcon sx={{ mx: 1, fontSize: '1rem', color: 'text.secondary' }} />
           <Typography color="text.primary" fontWeight="medium" fontSize="0.8rem">Versions</Typography>
           <ChevronRightIcon sx={{ mx: 1, fontSize: '1rem', color: 'text.secondary' }} />
-          <Typography component="span" fontSize="0.8rem">{selectedAppVersion}</Typography>
+          <Typography component="span" fontSize="0.8rem">{selectedAppVersion.version}</Typography>
         </>
       )}
     </Box>
