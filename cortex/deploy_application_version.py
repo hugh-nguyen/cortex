@@ -77,7 +77,9 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
 
     path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/{app_ver}.yaml"
     
-    manifest = yaml.safe_load(open(path, "r").read())
+    raw_yaml = open(path, "r").read()
+    manifest = yaml.safe_load(raw_yaml)
+    
     
     print("======== CONNECT TO KUBERNETES =========")
     subprocess.run([
@@ -141,7 +143,7 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     )
     upload_app_version(
         app_name, app_ver, 
-        manifest["manifest"], len(manifest["services"]), 0,
+        raw_yaml, len(manifest["services"]), 0,
         run_id
     )
 
