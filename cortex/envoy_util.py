@@ -182,7 +182,7 @@ def update_envoy(url="http://hn-cortex.click/api/v1/routes"):
     
     # import json; open("test.json", "w").write(json.dumps(sort_routes(routes)))
     
-    payload = {"routes": []}
+    payload = {"routes": routes}
     response = requests.post(url, json=payload)
     print("!!",response.text)
     

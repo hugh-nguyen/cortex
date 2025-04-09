@@ -126,7 +126,4 @@ if __name__ == '__main__':
         subprocess.run(["rm", "-rf", "temp"], check=True)
     
     import cortex.envoy_util
-    if args.testing:
-        cortex.envoy_util.update_envoy("http://localhost:9000")
-    else:
-        cortex.envoy_util.update_envoy()
+    cortex.envoy_util.update_envoy()
