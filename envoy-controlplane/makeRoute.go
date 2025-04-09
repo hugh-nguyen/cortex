@@ -67,11 +67,16 @@ func makeRoute(prefix, cluster string,
 	// ── 3. response‑headers‑to‑add  (downstream) ──────────────────────────────
 	var respAdd []*core.HeaderValueOption
 	for _, h := range headersToAdd {
-		// Set‑Cookie so browser stores the version
-		cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", h.Name, h.Value)
-		respAdd = append(respAdd,
-			makeHeaderValueOption("Set-Cookie", cookie, false))
-	}
+		// static header (Envoy → upstream)
+		reqAdd = append(respAdd,
+			makeHeaderValueOption(h.Name, h.Value, true))
+			
+	// for _, h := range headersToAdd {
+	// 	// Set‑Cookie so browser stores the version
+	// 	cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", h.Name, h.Value)
+	// 	respAdd = append(respAdd,
+	// 		makeHeaderValueOption("Set-Cookie", cookie, false))
+	// }
 
 	// (optional) expose header to JS – uncomment if you need it
 	// respAdd = append(respAdd,
