@@ -110,7 +110,10 @@ def get_all_files(directory, suffix):
 def transform_targets(targets, lookup):
     result = []
     for target in targets:
-        svc_ver = lookup[(target['app'], target['svc'], int(target['app_ver']))]
+        key = (target['app'], target['svc'], int(target['app_ver']))
+        if key not in lookup:
+            continue
+        svc_ver = lookup[key]
         r = {
             "name": f"{target['app']}-{target['svc']}-{svc_ver.replace('.', '-')}",
             "weight": int(target["weight"]),
