@@ -134,13 +134,13 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
       
     upload_app(
         app_name, len(manifest["services"]), 
-        manifest["version"], team_lookup[app_name],
+        app_ver, team_lookup[app_name],
         f"https://github.com/hugh-nguyen/{app_name}-cortex-command",
         [s["svc"] for s in manifest["services"]],
         [f"{d['app']}/{d['svc']}" for d in manifest["dependencies"]]
     )
     upload_app_version(
-        app_name, manifest["version"], 
+        app_name, app_ver, 
         manifest["manifest"], len(manifest["services"]), 0,
         run_id
     )
