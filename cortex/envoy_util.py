@@ -161,7 +161,7 @@ def transform_routes(routes):
     return sort_routes(result)
 
 
-def update_envoy():
+def update_envoy(url="http://hn-cortex.click/api/v1/routes"):
     download_manifests("temp")
     avm_paths = get_all_files("temp", "yaml")
     routes = []
@@ -182,8 +182,7 @@ def update_envoy():
     
     # import json; open("test.json", "w").write(json.dumps(sort_routes(routes)))
     
-    url = "http://hn-cortex.click/api/v1/routes"
-    payload = {"routes": routes}
+    payload = {"routes": []}
     response = requests.post(url, json=payload)
     print("!!",response.text)
     

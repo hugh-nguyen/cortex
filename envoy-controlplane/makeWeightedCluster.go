@@ -1,80 +1,78 @@
-// helper.go
 package main
 
 import (
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	"fmt"
+
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	// "google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
+// ---------- helper types ----------
 type WeightedCluster struct {
-    Name                 string   `json:"name"`
-    Weight               uint32   `json:"weight"`
-    RequestHeadersToAdd []struct {
-        Key   string `json:"Key"`
-        Value string `json:"Value"`
-    } `json:"request_headers_to_add"`
+	Name   string `json:"name"`
+	Weight uint32 `json:"weight"`
+	RequestHeadersToAdd []struct {
+		Key   string `json:"Key"`
+		Value string `json:"Value"`
+	} `json:"request_headers_to_add"`
 }
 
-func makeWeightedClustersRoute(prefix string, headers []Header, weightedClusters []WeightedCluster) *route.Route {
-    r := &route.Route{
-        Match: &route.RouteMatch{
-            PathSpecifier: &route.RouteMatch_Prefix{
-                Prefix: prefix,
-            },
-        },
-        Action: &route.Route_Route{
-            Route: &route.RouteAction{
-                ClusterSpecifier: &route.RouteAction_WeightedClusters{
-                    WeightedClusters: &route.WeightedCluster{
-                        Clusters:    []*route.WeightedCluster_ClusterWeight{},
-                        // TotalWeight: wrapperspb.UInt32(100),
-                    },
-                },
-                PrefixRewrite: "/",
-                // Timeout: &durationpb.Duration{Seconds: 15},
-            },
-        },
-    }
+// ---------- factory ----------
+func makeWeightedClustersRoute(prefix string,
+	matchHeaders []Header,
+	weightedClusters []WeightedCluster) *route.Route {
 
-    // Add headers matcher if specified
-    for _, header := range headers {
-        r.Match.Headers = append(r.Match.Headers, &route.HeaderMatcher{
-            Name: header.Name,
-            HeaderMatchSpecifier: &route.HeaderMatcher_ExactMatch{
-                ExactMatch: header.Value,
-            },
-        })
-    }
+	// base Route object
+	r := &route.Route{
+		Match: &route.RouteMatch{
+			PathSpecifier: &route.RouteMatch_Prefix{Prefix: prefix},
+		},
+		Action: &route.Route_Route{
+			Route: &route.RouteAction{
+				ClusterSpecifier: &route.RouteAction_WeightedClusters{
+					WeightedClusters: &route.WeightedCluster{},
+				},
+				PrefixRewrite: "/",
+			},
+		},
+	}
 
-    // Add weighted clusters
-    // totalWeight := uint32(0)
-    weightedClusterAction := r.Action.(*route.Route_Route).Route.ClusterSpecifier.(*route.RouteAction_WeightedClusters).WeightedClusters
+	// add matchers (if any)
+	for _, h := range matchHeaders {
+		r.Match.Headers = append(r.Match.Headers,
+			makeHeaderMatcher(h.Name, h.Value))
+	}
 
-    for _, wc := range weightedClusters {
-        clusterWeight := &route.WeightedCluster_ClusterWeight{
-            Name:   wc.Name,
-            Weight: wrapperspb.UInt32(wc.Weight),
-        }
+	// pointer to the WeightedClusters block
+	wcBlock := r.GetRoute().GetWeightedClusters()
 
-        // Add headers to request for this cluster if specified
-        for _, header := range wc.RequestHeadersToAdd {
-            clusterWeight.RequestHeadersToAdd = append(clusterWeight.RequestHeadersToAdd, &core.HeaderValueOption{
-                Header: &core.HeaderValue{
-                    Key:   header.Key,
-                    Value: header.Value,
-                },
-                // Append: wrapperspb.Bool(false),
-            })
-        }
+	// build each cluster weight
+	for _, wc := range weightedClusters {
 
-        weightedClusterAction.Clusters = append(weightedClusterAction.Clusters, clusterWeight)
-        // totalWeight += wc.Weight
-    }
+		cw := &route.WeightedCluster_ClusterWeight{
+			Name:   wc.Name,
+			Weight: wrapperspb.UInt32(wc.Weight),
+		}
 
-    // Set the total weight
-    // weightedClusterAction.TotalWeight = wrapperspb.UInt32(totalWeight)
+		for _, hdr := range wc.RequestHeadersToAdd {
+			// upstream static header
+			cw.RequestHeadersToAdd = append(cw.RequestHeadersToAdd,
+				makeHeaderValueOption(hdr.Key, hdr.Value, true))
 
-    return r
+			// downstream cookie
+			cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax",
+				hdr.Key, hdr.Value)
+			cw.ResponseHeadersToAdd = append(cw.ResponseHeadersToAdd,
+				makeHeaderValueOption("Set-Cookie", cookie, false))
+
+			// upstream cookie‑forwarder
+			cw.RequestHeadersToAdd = append(cw.RequestHeadersToAdd,
+				makeHeaderValueOption(hdr.Key,
+					fmt.Sprintf("%%REQ_COOKIE(%s)%%", hdr.Key), false))
+		}
+
+		wcBlock.Clusters = append(wcBlock.Clusters, cw)
+	}
+
+	return r
 }

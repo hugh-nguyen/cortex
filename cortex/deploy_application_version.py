@@ -111,14 +111,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--app_name')
     parser.add_argument('--app_ver')
-    parser.add_argument('--skip_services', action='store_true')
+    parser.add_argument('--testing', action='store_true', default=False)
     args = parser.parse_args()
     
     DEPLOY_LOG_PATH = "temp/cortex-deploy-log"
     
     app_name, app_ver = args.app_name, args.app_ver
     
-    if not args.skip_services:
+    if not args.testing:
         deploy_services(DEPLOY_LOG_PATH, app_ver)
     # deploy_routes(DEPLOY_LOG_PATH)
     
@@ -126,4 +126,7 @@ if __name__ == '__main__':
         subprocess.run(["rm", "-rf", "temp"], check=True)
     
     import cortex.envoy_util
-    cortex.envoy_util.update_envoy()
+    if args.testing:
+        cortex.envoy_util.update_envoy("http://localhost:9000")
+    else:
+        cortex.envoy_util.update_envoy()
