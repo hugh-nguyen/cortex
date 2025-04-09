@@ -23,7 +23,7 @@ def deploy_services(path_to_deploy_log, app_ver):
     if os.path.exists("temp"):
         subprocess.run(["rm", "-rf", "temp"], check=True)
     print(path_to_deploy_log, DEPLOY_LOG_PATH)
-    clone_repo(path_to_deploy_log, DEPLOY_LOG_PATH)
+    clone_repo(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
     
     if not app_ver:
         path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/"
