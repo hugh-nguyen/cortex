@@ -111,15 +111,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--app_name')
     parser.add_argument('--app_ver')
+    parser.add_argument('--skip_services', action='store_true')
     args = parser.parse_args()
     
     DEPLOY_LOG_PATH = "temp/cortex-deploy-log"
     
-
     app_name, app_ver = args.app_name, args.app_ver
     
-
-    # deploy_services(DEPLOY_LOG_PATH, app_ver)
+    if not args.skip_services:
+        deploy_services(DEPLOY_LOG_PATH, app_ver)
     # deploy_routes(DEPLOY_LOG_PATH)
     
     if os.path.exists("temp"):
