@@ -78,7 +78,7 @@ jobs:
           pip install pyyaml requests boto3
 
       - name: Deploy App Version
-        run: python -m cortex.deploy_application_version --app_name ${{ inputs.app_name }}
+        run: python -m cortex.deploy_application_version --app_name ${{ inputs.app_name }} --run_id ${{ github.run_id }}
         # run: python -m cortex.test
         env:
           GH_PERSONAL_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}

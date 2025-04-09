@@ -7,51 +7,6 @@ from collections import defaultdict
 
 from cortex.util import *
 
-import boto3
-import json
-from datetime import datetime
-
-dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2')
-apps_table = dynamodb.Table('Apps')
-app_versions_table = dynamodb.Table('AppVersions')
-
-def upload_app(name=None, service_count=None, versions=None, team_id=None, command_url=None, services=None, dependencies=None, last_updated=None):
-    if last_updated is None:
-        last_updated = datetime.now().isoformat()
-        
-    response = apps_table.put_item(
-        Item={
-            'name': name,
-            'service_count': service_count,
-            'versions': versions,
-            'last_updated': last_updated,
-            'team_id': team_id,
-            "command_repo_url": command_url,
-            "services": services,
-            "dependencies": dependencies,
-        }
-    )
-    
-    print(f"Uploaded app {name} to DynamoDB")
-    return response
-
-
-def upload_app_version(app_name="", version=None, yaml_data=None, service_count=None, change_count=None, run_id=None):
-    response = app_versions_table.put_item(
-        Item={
-            'app_name': app_name,
-            'version': version,
-            'yaml': yaml_data,
-            'service_count': service_count,
-            'change_count': change_count,
-            'run_id': run_id,
-            'created_at': datetime.now().isoformat()
-        }
-    )
-    
-    print(f"Uploaded version {version} of app {app_name} to DynamoDB")
-    return response
-
 def create_route(
     prefix, 
     release_name,
@@ -265,19 +220,6 @@ if __name__ == '__main__':
         new_path = f"{path}/{new_manifest['filename']}"
         open(new_path, "w").write(new_manifest["manifest"])
         # open(new_manifest["filename"], "w").write(new_manifest["manifest"])
-
-        upload_app(
-            args.app_name, len(new_manifest["services"]), 
-            new_manifest["version"], team_lookup[args.app_name],
-            f"https://github.com/hugh-nguyen/{args.app_name}-cortex-command",
-            [s["svc"] for s in new_manifest["services"]],
-            [f"{d['app']}/{d['svc']}" for d in new_manifest["dependencies"]]
-        )
-        upload_app_version(
-            args.app_name, new_manifest["version"], 
-            new_manifest["manifest"], len(new_manifest["services"]), 0,
-            args.run_id
-        )
         
         push_repo(
             "github.com/hugh-nguyen/cortex-deploy-log.git", 
