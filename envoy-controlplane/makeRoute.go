@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	core  "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
@@ -64,11 +66,18 @@ func makeRoute(prefix, cluster string,
 
 	// ── 3. response‑headers‑to‑add  (downstream) ──────────────────────────────
 	var respAdd []*core.HeaderValueOption
+	// for _, h := range headersToAdd {
+	// 	respAdd = append(respAdd,
+	// 		makeHeaderValueOption(h.Name, h.Value, true))
+	// }
+
 	for _, h := range headersToAdd {
-		// static header (Envoy → upstream)
+		// Set‑Cookie so browser stores the version
+		cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", h.Name, h.Value)
 		respAdd = append(respAdd,
-			makeHeaderValueOption(h.Name, h.Value, true))
+			makeHeaderValueOption("Set-Cookie", cookie, false))
 	}
+
 	// for _, h := range headersToAdd {
 	// 	// Set‑Cookie so browser stores the version
 	// 	cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", h.Name, h.Value)

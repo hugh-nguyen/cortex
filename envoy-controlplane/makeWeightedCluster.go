@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+    
     route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
     "google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -57,8 +59,11 @@ func makeWeightedClustersRoute(prefix string,
             cw.RequestHeadersToAdd = append(cw.RequestHeadersToAdd,
                 makeHeaderValueOption(hdr.Key, hdr.Value, true))
             
+            // cw.ResponseHeadersToAdd = append(cw.ResponseHeadersToAdd,
+            //     makeHeaderValueOption(hdr.Key, hdr.Value, true))
+            cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", hdr.Key, hdr.Value)
             cw.ResponseHeadersToAdd = append(cw.ResponseHeadersToAdd,
-                makeHeaderValueOption(hdr.Key, hdr.Value, true))
+                makeHeaderValueOption("Set-Cookie", cookie, false))
 
             // downstream cookie
             // cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax",
