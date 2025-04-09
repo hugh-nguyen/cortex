@@ -63,7 +63,7 @@ func makeWeightedClustersRoute(prefix string,
             //     makeHeaderValueOption(hdr.Key, hdr.Value, true))
             cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", hdr.Key, hdr.Value)
             cw.ResponseHeadersToAdd = append(cw.ResponseHeadersToAdd,
-                makeHeaderValueOption("Set-Cookie", cookie, false))
+                makeHeaderValueOption("Set-Cookie", cookie, true))
 
             // downstream cookie
             // cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax",

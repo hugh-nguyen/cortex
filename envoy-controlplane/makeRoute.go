@@ -75,7 +75,7 @@ func makeRoute(prefix, cluster string,
 		// Set‑Cookie so browser stores the version
 		cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", h.Name, h.Value)
 		respAdd = append(respAdd,
-			makeHeaderValueOption("Set-Cookie", cookie, false))
+			makeHeaderValueOption("Set-Cookie", cookie, true))
 	}
 
 	// for _, h := range headersToAdd {
