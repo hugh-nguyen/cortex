@@ -140,7 +140,7 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
         [f"{d['app']}/{d['svc']}" for d in manifest["dependencies"]]
     )
     upload_app_version(
-        app_name manifest["version"], 
+        app_name, manifest["version"], 
         manifest["manifest"], len(manifest["services"]), 0,
         run_id
     )
