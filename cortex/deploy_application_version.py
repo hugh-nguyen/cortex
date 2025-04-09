@@ -71,12 +71,14 @@ def deploy_routes(path_to_deploy_log):
 
     path = f"{path_to_deploy_log}/app-version-manifests"
     avm_paths = get_all_files(path, "yaml")
+    print(avm_paths)
     
     routes = []
     sort_key = lambda x: x.split("/")[-1].removesuffix(".yaml")
     for avm_path in sorted(avm_paths, key=sort_key):
         routes += yaml.safe_load(open(avm_path, "r").read()).get("routes", [])
     
+    print(routes)
     url = "http://hn-cortex.click/api/v1/routes"
     payload = {"routes": transform_routes(routes)}
     print(payload)
@@ -95,6 +97,7 @@ if __name__ == '__main__':
     DEPLOY_LOG_PATH = "temp/cortex-deploy-log"
     if os.path.exists("temp"):
         subprocess.run(["rm", "-rf", "temp"], check=True)
+    print(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
     clone_repo(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
 
     app_name, app_ver = args.app_name, args.app_ver

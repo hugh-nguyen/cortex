@@ -123,8 +123,6 @@ async def put_route(payload: Dict[str, Any] = Body(...)):
 
 @app.get("/update_envoy")
 async def update_envoy():
-    url = "http://hn-cortex.click/api/v1/routes"
-    # payload = {"routes": transform_routes(routes)}
     envoy_util.update_envoy()
     return {"result": "SUCCESS"}
 
