@@ -66,9 +66,9 @@ func makeWeightedClustersRoute(prefix string,
 				makeHeaderValueOption("Set-Cookie", cookie, false))
 
 			// upstream cookie‑forwarder
-			cw.RequestHeadersToAdd = append(cw.RequestHeadersToAdd,
-				makeHeaderValueOption(hdr.Key,
-					fmt.Sprintf("%%REQ_COOKIE(%s)%%", hdr.Key), false))
+			// cw.RequestHeadersToAdd = append(cw.RequestHeadersToAdd,
+			// 	makeHeaderValueOption(hdr.Key,
+			// 		fmt.Sprintf("%%REQ_COOKIE(%s)%%", hdr.Key), false))
 		}
 
 		wcBlock.Clusters = append(wcBlock.Clusters, cw)
