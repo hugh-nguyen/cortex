@@ -57,11 +57,11 @@ func makeRoute(prefix, cluster string,
 
 		// dynamic header pulled from cookie (browser → Envoy → upstream)
 		//   %REQ_COOKIE(<cookieName>)% is evaluated per request
-		cookieForward := makeHeaderValueOption(
-			h.Name,
-			fmt.Sprintf("%%REQ_COOKIE(%s)%%", h.Name),
-			false) // overwrite static if cookie exists
-		reqAdd = append(reqAdd, cookieForward)
+		// cookieForward := makeHeaderValueOption(
+		// 	h.Name,
+		// 	fmt.Sprintf("%%REQ_COOKIE(%s)%%", h.Name),
+		// 	false) // overwrite static if cookie exists
+		// reqAdd = append(reqAdd, cookieForward)
 	}
 
 	// ── 3. response‑headers‑to‑add  (downstream) ──────────────────────────────
