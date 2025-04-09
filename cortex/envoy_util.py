@@ -2,7 +2,7 @@ import yaml
 import requests
 import os
 from collections import defaultdict
-import dynamo_util
+import cortex.dynamo_util
 
 def env_route_sort_key(route):
     app_name_sort_key = "zzzzzzzz"
@@ -70,19 +70,26 @@ def transform_headers(headers):
     return [{"Name": str(k), "Value": str(v)} for k, v in headers.items()]
 
 
+def request_get(url):
+    CERT_PATH = os.environ.get("CERT_PATH", None)
+    if CERT_PATH:
+        return requests.get(url, verify=CERT_PATH)
+    return requests.get(url)
+
+
 def download_manifests(output_path, folder_path="app-version-manifests"):
     owner = "hugh-nguyen"
     repo = "cortex-deploy-log"
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{folder_path}"
 
-    response = requests.get(url, verify="ca.crt")
+    response = request_get(url)
     if response.status_code == 200:
         items = response.json()
         os.makedirs(output_path, exist_ok=True)
         for item in items:
             if item["type"] == "file":
                 download_url = item["download_url"]
-                file_response = requests.get(download_url, verify="ca.crt")
+                file_response = request_get(download_url)
                 if file_response.status_code == 200:
                     file_path = os.path.join(output_path, item["name"])
                     with open(file_path, "wb") as f:
@@ -162,6 +169,7 @@ def update_envoy():
     sort_key = lambda x: x.split("/")[-1].removesuffix(".yaml")
     for avm_path in sorted(avm_paths, key=sort_key):
         app_version = yaml.safe_load(open(avm_path, "r").read())
+        print(avm_path)
         routes += app_version.get("routes", [])
         
         app_ver = int(avm_path.split("/")[-1].removesuffix(".yaml"))
@@ -169,7 +177,7 @@ def update_envoy():
             print((service["app"], service["svc"], app_ver))
             lookup[(service["app"], service["svc"], app_ver)] = service["svc_ver"]
     
-    xroutes = dynamo_util.get_all_rows("routes")
+    xroutes = cortex.dynamo_util.get_all_rows("routes")
     routes = transform_routes(routes) + transform_custom_routes(xroutes, lookup)
     
     # import json; open("test.json", "w").write(json.dumps(sort_routes(routes)))

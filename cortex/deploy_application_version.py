@@ -18,7 +18,22 @@ def transform_headers(headers):
     return [{"Name": str(k), "Value": str(v)} for k, v in headers.items()]
 
 
-def deploy_services(nexus_services):
+def deploy_services(path_to_deploy_log, app_ver):
+    
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
+    print(path_to_deploy_log, DEPLOY_LOG_PATH)
+    clone_repo(path_to_deploy_log, DEPLOY_LOG_PATH)
+    
+    if not app_ver:
+        path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/"
+        app_ver = len(os.listdir(path))
+        print(app_ver)
+
+    path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/{app_ver}.yaml"
+    
+    manifest = yaml.safe_load(open(path, "r").read())
+    
     print("======== CONNECT TO KUBERNETES =========")
     subprocess.run([
         "aws",
@@ -48,7 +63,7 @@ def deploy_services(nexus_services):
             continue
         clone_repo(repo["clone_url"], f"temp/{repo['name']}")
 
-    for ns in nexus_services:
+    for ns in manifest["services"]:
         app, svc, ver = ns["app"], ns["svc"], ns["svc_ver"]
         release_name = f"{app}-{svc}-{ver.replace('.', '-')}"
         
@@ -68,6 +83,11 @@ def deploy_services(nexus_services):
 
 
 def deploy_routes(path_to_deploy_log):
+    
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
+    print(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
+    clone_repo(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
 
     path = f"{path_to_deploy_log}/app-version-manifests"
     avm_paths = get_all_files(path, "yaml")
@@ -87,7 +107,6 @@ def deploy_routes(path_to_deploy_log):
 
 
 if __name__ == '__main__':
-    DEPLOY_LOG_PATH = "temp/cortex-deploy-log"
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--app_name')
@@ -95,21 +114,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     DEPLOY_LOG_PATH = "temp/cortex-deploy-log"
-    if os.path.exists("temp"):
-        subprocess.run(["rm", "-rf", "temp"], check=True)
-    print(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
-    clone_repo(DEPLOY_LOG_URL, DEPLOY_LOG_PATH)
+    
 
     app_name, app_ver = args.app_name, args.app_ver
-
-    if not app_ver:
-        path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/"
-        app_ver = len(os.listdir(path))
-        print(app_ver)
-
-    path = f"{DEPLOY_LOG_PATH}/app-version-manifests/{app_name}/{app_ver}.yaml"
     
-    manifest = yaml.safe_load(open(path, "r").read())
 
-    deploy_services(manifest["services"])
-    deploy_routes(DEPLOY_LOG_PATH)
+    # deploy_services(DEPLOY_LOG_PATH, app_ver)
+    # deploy_routes(DEPLOY_LOG_PATH)
+    
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
+    
+    import cortex.envoy_util
+    cortex.envoy_util.update_envoy()
