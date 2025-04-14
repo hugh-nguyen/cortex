@@ -78,10 +78,11 @@ def request_get(url):
 
 
 def download_manifests(output_path, folder_path="app-version-manifests"):
+    
     owner = "hugh-nguyen"
     repo = "cortex-deploy-log"
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{folder_path}"
-
+    print(url)
     response = request_get(url)
     if response.status_code == 200:
         items = response.json()
@@ -165,6 +166,11 @@ def transform_routes(routes):
 
 
 def update_envoy(url="http://hn-cortex.click/api/v1/routes"):
+    
+    import subprocess
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
+        
     download_manifests("temp")
     avm_paths = get_all_files("temp", "yaml")
     routes = []

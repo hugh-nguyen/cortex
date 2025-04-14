@@ -91,7 +91,8 @@ async def get_apps_versions(app: str = "app1"):
     # Check for in-progress workflows that don't correspond to existing versions
     # This will be our "deploying" version
     existing_run_ids = {av.get("run_id") for av in app_versions.values() if "run_id" in av}
-    deploying_runs = [r for r in runs if r["id"] not in existing_run_ids and 
+    deploying_runs = [r for r in runs if 
+                      #r["id"] not in existing_run_ids and 
                      (r["status"] == "in_progress" or r["status"] == "queued" or r["status"] == "waiting")]
     
     # If we have any deploying runs, add a special "deploying" version
@@ -139,128 +140,6 @@ async def test_apps():
             {"App": "shared-app", "Service Count": 1, "Versions": 6, "Last Updated": "1 day ago", "Owner": "Hugh"},
         ]
     }
-
-@app.get("/deploy_app_version_old")
-async def deploy_app_version_old(command_repo: str):
-    import os
-    import subprocess
-    from datetime import datetime
-    
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger("deploy")
-    
-    github_token = os.environ.get("GITHUB_TOKEN")
-    
-    owner, repo_name = git_util.get_owner_and_repo_from_url(command_repo, logger)
-    auth_repo_url = f"https://{github_token}@github.com/{owner}/{repo_name}.git"
-    
-    original_dir = os.getcwd()
-    
-    
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    temp_dir = git_util.generate_temp_path(timestamp)
-    
-    try:
-        os.makedirs(temp_dir, exist_ok=True)
-        
-        git_util.clone(auth_repo_url, temp_dir, logger)
-        
-        os.chdir(temp_dir)
-        
-        subprocess.run(["git", "config", "user.name", "Cortex Deploy Bot"], check=True)
-        subprocess.run(["git", "config", "user.email", "deploy-bot@example.com"], check=True)
-        
-        branch_name = f"deploy-{timestamp}"
-        
-        git_util.checkout_new_branch(branch_name, logger)
-        
-        deploy_dir = os.path.join(temp_dir, "deploy")
-        os.makedirs(deploy_dir, exist_ok=True)
-        
-        file_path = os.path.join(deploy_dir, "version.txt")
-        logger.info(f"Creating file: {file_path}")
-        with open(file_path, "w") as f:
-            f.write(f"Deploy timestamp: {datetime.now().isoformat()}\n")
-            f.write(f"Created by: Cortex Deploy System\n")
-        
-        git_util.add(file_path, logger)
-        
-        commit_msg = f"Deploy new version {timestamp}"
-        git_util.commit(commit_msg, logger)
-        
-        git_util.push(branch_name, logger)
-        
-        os.chdir(original_dir)
-        
-        return git_util.raise_pull_request(owner, repo_name, github_token, branch_name, logger)
-    except Exception as e:
-        logger.error(f"Deployment failed: {str(e)}")
-        return {"status": "error", "message": f"Deployment failed: {str(e)}"}
-    finally:
-        os.chdir(original_dir)
-        
-    
-@app.get("/deploy_app_version_old2")
-async def deploy_app_version_old2(command_repo: str):
-    import os
-    import logging
-    import re
-    import requests
-    from datetime import datetime
-    
-    # Set up logging
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger("deploy")
-    
-    github_token = os.environ.get("GITHUB_TOKEN")
-    if not github_token:
-        logger.error("GITHUB_TOKEN environment variable is not set")
-        return {"status": "error", "message": "GITHUB_TOKEN environment variable is not set"}
-    
-    owner, repo_name = git_util.get_owner_and_repo_from_url(command_repo, logger)
-
-    logger.info(f"Triggering GitHub Action in {owner}/{repo_name}")
-    
-    try:
-        api_url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows/create-manifest-and-deploy.yaml/dispatches"
-        
-        headers = {
-            "Authorization": f"token {github_token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
-        
-        payload = {
-            "ref": "main"
-        }
-        
-        logger.info(f"Sending request to {api_url}")
-        response = requests.post(api_url, headers=headers, json=payload, verify="ca.crt")
-        
-        if response.status_code == 204:  # GitHub returns 204 No Content for successful workflow triggers
-            # Get the URL to view the workflow run
-            workflows_url = f"https://github.com/{owner}/{repo_name}/actions"
-            logger.info(f"GitHub Action triggered successfully. View at: {workflows_url}")
-            
-            return {
-                "status": "success",
-                "message": "GitHub Action triggered successfully",
-                "workflows_url": workflows_url,
-                "timestamp": datetime.now().isoformat()
-            }
-        else:
-            logger.error(f"Failed to trigger GitHub Action. Status: {response.status_code}, Response: {response.text}")
-            return {
-                "status": "error",
-                "message": f"Failed to trigger GitHub Action: {response.text}",
-                "status_code": response.status_code
-            }
-    
-    except Exception as e:
-        logger.error(f"Error triggering GitHub Action: {str(e)}")
-        return {
-            "status": "error",
-            "message": f"Error triggering GitHub Action: {str(e)}"
-        }
         
 @app.get("/deploy_app_version")
 async def deploy_app_version(app_name: str, command_repo: str):

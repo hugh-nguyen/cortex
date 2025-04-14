@@ -13,7 +13,8 @@ import {
   IconButton,
   Grid,
   InputBase,
-  Paper
+  Paper,
+  CircularProgress
 } from '@mui/material';
 import { purple, blue, amber, grey } from '@mui/material/colors';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -180,26 +181,40 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
       // Prepare payload to match the fastapi endpoint's expectations
       const payload = {
         prefix: prefix,
-        team_id: selectedTeam.team_id, // Don't convert this to number if it's already a number
+        team_id: selectedTeam.team_id,
         targets: targets.map(t => ({
           app: t.app,
           svc: t.svc,
-          app_ver: t.app_ver, // Use as is if it's already a number
-          weight: t.weight    // Use as is if it's already a number
+          app_ver: t.app_ver,
+          weight: t.weight
         }))
       };
       
       // Send to API - Make sure we're sending the payload directly in the request body
-      const response = await fetch('http://localhost:8000/put_route', {
+      const putRouteResponse = await fetch('http://localhost:8000/put_route', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
+
+      if (!putRouteResponse.ok) {
+        throw new Error('Failed to save route');
+      }
+      
+      // After putting the route, call update_envoy
+      const updateEnvoyResponse = await fetch('http://localhost:8000/update_envoy');
+      
+      if (!updateEnvoyResponse.ok) {
+        throw new Error('Failed to update Envoy configuration');
+      }
+      
+      // Everything succeeded, close the modal
+      onClose();
     } catch (error) {
       console.error('Error saving route:', error);
-      alert('Failed to save route');
+      alert('Error: ' + (error instanceof Error ? error.message : 'Failed to save route'));
     } finally {
       setIsSubmitting(false);
     }
@@ -414,6 +429,7 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
           onClick={handleCancel}
           variant="contained"
           color="inherit"
+          disabled={isSubmitting}
           sx={{ 
             mr: 1,
             bgcolor: grey[300],
@@ -428,6 +444,7 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
           onClick={handleReset}
           variant="contained"
           color="inherit"
+          disabled={isSubmitting}
           sx={{ 
             mr: 1,
             bgcolor: grey[300],
@@ -448,8 +465,9 @@ const RouteEditModal: React.FC<RouteEditModalProps> = ({ open, onClose, route })
               bgcolor: purple[800]
             }
           }}
+          startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          Apply
+          {isSubmitting ? 'Applying...' : 'Apply'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -158,12 +158,18 @@ def transform_routes(routes):
 
 
 def update_envoy():
+    
+    import subprocess
+    if os.path.exists("temp"):
+        subprocess.run(["rm", "-rf", "temp"], check=True)
+    
     download_manifests("temp")
     avm_paths = get_all_files("temp", "yaml")
     routes = []
     lookup = {}
     sort_key = lambda x: x.split("/")[-1].removesuffix(".yaml")
     for avm_path in sorted(avm_paths, key=sort_key):
+        print(avm_path)
         app_version = yaml.safe_load(open(avm_path, "r").read())
         routes += app_version.get("routes", [])
         

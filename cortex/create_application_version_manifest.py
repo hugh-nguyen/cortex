@@ -49,20 +49,20 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
     path = f"temp/{app_name}-cortex-command/package.yaml"
 
     package_yaml = yaml.safe_load(open(path, "r").read())
-    for component in package_yaml["components"]:
-        package_service = list(component.keys())[0]
-        package_semver  = list(component.values())[0]
+    for service in package_yaml["services"]:
+        package_service = list(service.keys())[0]
+        package_semver  = list(service.values())[0]
 
         lookup = f'{app_name}/{package_service}'
 
         tags = service_repo_metadata_lookup[lookup]["tags"]
 
-        service = {
+        new_service = {
             "app": app_name,
             "svc": service_repo_metadata_lookup[lookup]["svc"],
             "svc_ver": choose_version(package_service, tags, package_semver),
         }
-        services.append(service)
+        services.append(new_service)
 
 
     for service in services:
@@ -167,7 +167,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--clone', action='store_true')
     parser.add_argument('--app_name')
-    parser.add_argument('--run_id')
     args = parser.parse_args()
 
     orgs = ["hugh-nguyen"]
