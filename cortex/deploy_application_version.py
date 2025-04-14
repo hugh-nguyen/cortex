@@ -108,6 +108,25 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
                 deploy_serverless(service)
             if platform == "mulesoft":
                 deploy_mulesoft(service)
+                
+    team_lookup = {
+        "app1": 1,
+        "app2": 1,
+        "shared-app": 2,
+    }
+      
+    upload_app(
+        app_name, len(manifest["services"]), 
+        app_ver, team_lookup[app_name],
+        f"https://github.com/hugh-nguyen/{app_name}-cortex-command",
+        [s["svc"] for s in manifest["services"]],
+        [f"{d['app']}/{d['svc']}" for d in manifest["dependencies"]]
+    )
+    upload_app_version(
+        app_name, app_ver, 
+        raw_yaml, len(manifest["services"]), 0,
+        run_id
+    )
             
             
     # for repo in get_repositories("hugh-nguyen"):
@@ -157,24 +176,7 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     
     
     
-    # team_lookup = {
-    #     "app1": 1,
-    #     "app2": 1,
-    #     "shared-app": 2,
-    # }
-      
-    # upload_app(
-    #     app_name, len(manifest["services"]), 
-    #     app_ver, team_lookup[app_name],
-    #     f"https://github.com/hugh-nguyen/{app_name}-cortex-command",
-    #     [s["svc"] for s in manifest["services"]],
-    #     [f"{d['app']}/{d['svc']}" for d in manifest["dependencies"]]
-    # )
-    # upload_app_version(
-    #     app_name, app_ver, 
-    #     raw_yaml, len(manifest["services"]), 0,
-    #     run_id
-    # )
+    
 
 
 def deploy_routes(path_to_deploy_log):
