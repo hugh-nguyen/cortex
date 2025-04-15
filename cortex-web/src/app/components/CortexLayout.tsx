@@ -29,6 +29,7 @@ import { useGlobal } from '@/app/GlobalContext';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import AltRouteIcon from '@mui/icons-material/AltRoute';
 import { useRouter, usePathname } from 'next/navigation';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 
 // Custom icons that match the screenshot
 const ApplicationsIcon = () => (
@@ -103,6 +104,10 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
 
   const handleRoutesClick = () => {
     router.push(`/team/${selectedTeam?.team_id}/xroutes`);
+  }
+
+  const handleVizualiseClick = () => {
+    router.push(`/team/${selectedTeam?.team_id}/vizualise`);
   }
 
   const openTeam = Boolean(anchorElTeam);
@@ -251,6 +256,28 @@ const CortexLayout: React.FC<CortexLayoutProps> = ({ children }) => {
               <RoutesIcon />
             </ListItemIcon>
             <ListItemText primary="Routes" />
+          </ListItem>
+
+          <ListItem
+            component="a"
+            href="#"
+            sx={{ 
+              py: 1.5,
+              pl: 2,
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              },
+              padding: '6px 9px'
+            }}
+            onClick={handleVizualiseClick}
+          >
+            <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
+              <AnalyticsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Vizualise" />
           </ListItem>
 
           <ListItem

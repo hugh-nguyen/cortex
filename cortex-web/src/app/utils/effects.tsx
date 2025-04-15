@@ -134,6 +134,10 @@ export function pathNameTeamsEffect(
           //   setSelectedAppVersion(version)
           // }
         }
+
+        if (subModule == "vizualise") {
+          
+        }
       }
 
     }

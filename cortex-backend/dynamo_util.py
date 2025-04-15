@@ -80,6 +80,7 @@ def get_app(app_name=None):
         for item in items:
             if app_name == item.get("name", ""):
                 return {
+                    **item,
                     "App": item.get('name'),
                     "Service Count": item.get('service_count'),
                     "Versions": item.get('versions'),
@@ -103,6 +104,7 @@ def get_apps(team_id=None):
         for item in items:
             if team_id and int(item.get("team_id", "0")) == int(team_id):
                 formatted_apps.append({
+                    **item,
                     "App": item.get('name'),
                     "Service Count": item.get('service_count'),
                     "Versions": item.get('versions'),
@@ -166,6 +168,21 @@ def get_app_versions(app_name):
         return result
     except Exception as e:
         print(f"Error in get_app_versions: {str(e)}")
+        return {}
+
+def get_app_versions2(app_name):
+    try:
+        response = app_versions_table.query(
+            KeyConditionExpression=Key('app_name').eq(app_name)
+        )
+        
+        result = []
+        for item in response.get('Items', []):
+            result.append(item)
+        
+        return result
+    except Exception as e:
+        print(f"Error in get_app_versions2: {str(e)}")
         return {}
 
 def get_app_version(app_name, version):
