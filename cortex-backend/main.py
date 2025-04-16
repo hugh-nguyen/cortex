@@ -137,10 +137,32 @@ async def get_app_dashboard_data(team_id: int):
     app_versions = []
     for app in apps:
         app_versions += dynamo_util.get_app_versions2(app["name"])
+        
+    dependency_graph = {}
+    for av in app_versions:
+        
+        lookup = {f"{s['app']}/{s['svc']}": s['svc_ver'] for s in av["services"] + av["dependencies"]}
+        
+        for link in av["links"]:
+            base_key = f"{link['source']['app']}/{link['source']['svc']}"
+            source_key = f"{base_key}@{lookup[base_key]}"
+            
+            base_key = f"{link['target']['app']}/{link['target']['svc']}"
+            target_key = f"{base_key}@{lookup[base_key]}"
+            
+            if source_key not in dependency_graph:
+                dependency_graph[source_key] = []
+            
+            graph_link = {
+                "target": target_key,
+                "appVersion": av["version"]
+            }
+            dependency_graph[source_key].append(graph_link)
     
     return {
         "apps": apps,
         "app_versions": app_versions,
+        "dependency_graph": dependency_graph,
     }
     
     

@@ -138,7 +138,7 @@ upload_app_version(
                 "svc": "service-b",
             },
             "target": {
-                "app": "test-shared-app1",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }
@@ -187,7 +187,7 @@ upload_app_version(
                 "svc": "service-b",
             },
             "target": {
-                "app": "test-shared-app1",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }
@@ -236,7 +236,7 @@ upload_app_version(
                 "svc": "service-b",
             },
             "target": {
-                "app": "test-shared-app1",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }
@@ -285,7 +285,7 @@ upload_app_version(
                 "svc": "service-b",
             },
             "target": {
-                "app": "test-shared-app1",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }
@@ -334,7 +334,7 @@ upload_app_version(
                 "svc": "service-b",
             },
             "target": {
-                "app": "test-shared-app1",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }
@@ -383,7 +383,7 @@ upload_app_version(
                 "svc": "service-y",
             },
             "target": {
-                "app": "test-shared-app2",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }
@@ -432,7 +432,7 @@ upload_app_version(
                 "svc": "service-y",
             },
             "target": {
-                "app": "test-shared-app2",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }
@@ -481,7 +481,7 @@ upload_app_version(
                 "svc": "service-y",
             },
             "target": {
-                "app": "test-shared-app2",
+                "app": "test-shared-app",
                 "svc": "service-s",
             },
         }

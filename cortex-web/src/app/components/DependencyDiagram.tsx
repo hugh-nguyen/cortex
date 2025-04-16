@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress, Typography, Paper } from '@mui/material';
+import { M_PLUS_1 } from 'next/font/google';
 
 interface DependencyDiagramProps {
   teamId: number | null;
@@ -29,6 +30,7 @@ interface AppVersion {
 
 interface Data {
   app_versions: AppVersion[];
+  dependency_graph: Record<string, DependencyEdge[]>
 }
 
 interface Service {
@@ -53,18 +55,26 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response: string = '{"apps":[{"last_updated":"2025-04-15T14:41:48.751933","team_id":4,"service_count":2,"command_repo_url":"","name":"test-app2","versions":3,"App":"test-app2","Service Count":2,"Versions":3,"Last Updated":"2025-04-15T14:41:48.751933","Owner":null,"CommandRepoURL":""},{"last_updated":"2025-04-15T14:41:48.848028","team_id":4,"service_count":1,"command_repo_url":"","name":"test-shared-app","versions":5,"App":"test-shared-app","Service Count":1,"Versions":5,"Last Updated":"2025-04-15T14:41:48.848028","Owner":null,"CommandRepoURL":""},{"last_updated":"2025-04-15T14:41:48.695934","team_id":4,"service_count":2,"command_repo_url":"","name":"test-app1","versions":5,"App":"test-app1","Service Count":2,"Versions":5,"Last Updated":"2025-04-15T14:41:48.695934","Owner":null,"CommandRepoURL":""}],"app_versions":[{"links":[{"source":{"app":"test-app2","svc":"mfe-x"},"target":{"app":"test-app2","svc":"service-y"}},{"source":{"app":"test-app2","svc":"service-y"},"target":{"app":"test-shared-app2","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.2","svc":"service-s"}],"version":1,"created_at":"2025-04-15T14:41:49.297772","service_count":2,"services":[{"app":"test-app2","svc_ver":"0.0.1","svc":"mfe-x"},{"app":"test-app2","svc_ver":"0.0.1","svc":"service-y"}],"app_name":"test-app2","change_count":0,"yaml":""},{"links":[{"source":{"app":"test-app2","svc":"mfe-x"},"target":{"app":"test-app2","svc":"service-y"}},{"source":{"app":"test-app2","svc":"service-y"},"target":{"app":"test-shared-app2","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.2","svc":"service-s"}],"version":2,"created_at":"2025-04-15T14:41:49.357253","service_count":2,"services":[{"app":"test-app2","svc_ver":"0.0.1","svc":"mfe-x"},{"app":"test-app2","svc_ver":"0.0.2","svc":"service-y"}],"app_name":"test-app2","change_count":0,"yaml":""},{"links":[{"source":{"app":"test-app2","svc":"mfe-x"},"target":{"app":"test-app2","svc":"service-y"}},{"source":{"app":"test-app2","svc":"service-y"},"target":{"app":"test-shared-app2","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.5","svc":"service-s"}],"version":3,"created_at":"2025-04-15T14:41:49.416175","service_count":2,"services":[{"app":"test-app2","svc_ver":"0.0.2","svc":"mfe-x"},{"app":"test-app2","svc_ver":"0.0.3","svc":"service-y"}],"app_name":"test-app2","change_count":0,"yaml":""},{"links":[{"source":{"app":"test-app1","svc":"mfe-a"},"target":{"app":"test-app1","svc":"service-b"}},{"source":{"app":"test-app1","svc":"service-b"},"target":{"app":"test-shared-app1","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.1","svc":"service-s"}],"version":1,"created_at":"2025-04-15T14:41:48.901856","service_count":2,"services":[{"app":"test-app1","svc_ver":"0.0.1","svc":"mfe-a"},{"app":"test-app1","svc_ver":"0.0.1","svc":"service-b"}],"app_name":"test-app1","change_count":0,"yaml":""},{"links":[{"source":{"app":"test-app1","svc":"mfe-a"},"target":{"app":"test-app1","svc":"service-b"}},{"source":{"app":"test-app1","svc":"service-b"},"target":{"app":"test-shared-app1","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.2","svc":"service-s"}],"version":2,"created_at":"2025-04-15T14:41:48.967527","service_count":2,"services":[{"app":"test-app1","svc_ver":"0.0.2","svc":"mfe-a"},{"app":"test-app1","svc_ver":"0.0.1","svc":"service-b"}],"app_name":"test-app1","change_count":0,"yaml":""},{"links":[{"source":{"app":"test-app1","svc":"mfe-a"},"target":{"app":"test-app1","svc":"service-b"}},{"source":{"app":"test-app1","svc":"service-b"},"target":{"app":"test-shared-app1","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.3","svc":"service-s"}],"version":3,"created_at":"2025-04-15T14:41:49.075545","service_count":2,"services":[{"app":"test-app1","svc_ver":"0.0.3","svc":"mfe-a"},{"app":"test-app1","svc_ver":"0.0.2","svc":"service-b"}],"app_name":"test-app1","change_count":0,"yaml":""},{"links":[{"source":{"app":"test-app1","svc":"mfe-a"},"target":{"app":"test-app1","svc":"service-b"}},{"source":{"app":"test-app1","svc":"service-b"},"target":{"app":"test-shared-app1","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.3","svc":"service-s"}],"version":4,"created_at":"2025-04-15T14:41:49.130603","service_count":2,"services":[{"app":"test-app1","svc_ver":"0.0.4","svc":"mfe-a"},{"app":"test-app1","svc_ver":"0.0.3","svc":"service-b"}],"app_name":"test-app1","change_count":0,"yaml":""},{"links":[{"source":{"app":"test-app1","svc":"mfe-a"},"target":{"app":"test-app1","svc":"service-b"}},{"source":{"app":"test-app1","svc":"service-b"},"target":{"app":"test-shared-app1","svc":"service-s"}}],"dependencies":[{"app":"test-shared-app","svc_ver":"0.0.4","svc":"service-s"}],"version":5,"created_at":"2025-04-15T14:41:49.185618","service_count":2,"services":[{"app":"test-app1","svc_ver":"0.0.4","svc":"mfe-a"},{"app":"test-app1","svc_ver":"0.0.3","svc":"service-b"}],"app_name":"test-app1","change_count":0,"yaml":""}]}';
-        const parsedData: Data = JSON.parse(response);
+        const res = await fetch(
+          `http://localhost:8000/get_app_dashboard_data?team_id=${teamId ?? 4}`
+        );
+  
+        if (!res.ok) {
+          throw new Error(`Server responded ${res.status}`);
+        }
+  
+        const parsedData: Data = await res.json();
+  
         setData(parsedData);
         setLoading(false);
       } catch (err: any) {
-        setError('Error loading data: ' + (err.message || 'Unknown error'));
+        setError(`Error loading data: ${err.message ?? 'Unknown error'}`);
         setLoading(false);
       }
     };
-
+  
     fetchData();
-  }, []);
+  }, [teamId]);
 
   const handleZoomIn = () => {
     setZoom(Math.min(zoom + 10, 100));
@@ -125,11 +135,11 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
   // Define fixed layout for the services - arranged alphabetically
   const services: Service[] = [
-    { id: 'test-app1/mfe-a', x: 200, y: 120, color: '#4299e1' }, // blue
-    { id: 'test-app1/service-b', x: 200, y: 260, color: '#ed8936' }, // orange
-    { id: 'test-app2/mfe-x', x: 650, y: 120, color: '#ecc94b' }, // yellow
-    { id: 'test-app2/service-y', x: 650, y: 260, color: '#48bb78' }, // green
-    { id: 'test-shared-app/service-s', x: 425, y: 400, color: '#805ad5' } // purple
+    { id: 'test-app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
+    { id: 'test-app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
+    { id: 'test-app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
+    { id: 'test-app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
+    { id: 'test-shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
   ];
 
   // Calculate name widths
@@ -148,113 +158,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
   });
 
   // Build a graph of dependencies
-  const dependencyGraph: Record<string, DependencyEdge[]> = {};
-
-  data.app_versions.forEach((appVersion) => {
-    // Map app version services by id for quick lookup
-    const appServicesMap: Record<string, string> = {};
-    appVersion.services.forEach((svc) => {
-      const key = `${svc.app}/${svc.svc}`;
-      appServicesMap[key] = svc.svc_ver;
-    });
-
-    // Map app version dependencies
-    const appDepsMap: Record<string, string> = {};
-    appVersion.dependencies.forEach((dep) => {
-      const key = `${dep.app}/${dep.svc}`;
-      appDepsMap[key] = dep.svc_ver;
-    });
-
-    // Add links between services within this app version
-    appVersion.links.forEach((link) => {
-      const sourceKey = `${link.source.app}/${link.source.svc}`;
-      const targetKey = `${link.target.app}/${link.target.svc}`;
-
-      const sourceVer = appServicesMap[sourceKey];
-      let targetVer = appServicesMap[targetKey];
-
-      // If target is not in services, check dependencies
-      if (!targetVer) {
-        targetVer = appDepsMap[targetKey];
-      }
-
-      if (sourceVer && targetVer) {
-        const fullSourceKey = `${sourceKey}@${sourceVer}`;
-        const fullTargetKey = `${targetKey}@${targetVer}`;
-
-        if (!dependencyGraph[fullSourceKey]) {
-          dependencyGraph[fullSourceKey] = [];
-        }
-
-        // Check if this link already exists
-        const linkExists = dependencyGraph[fullSourceKey].some(
-          (edge) => edge.target === fullTargetKey && edge.appVersion === appVersion.version
-        );
-
-        if (!linkExists) {
-          dependencyGraph[fullSourceKey].push({
-            target: fullTargetKey,
-            appVersion: appVersion.version
-          });
-        }
-      }
-    });
-  });
-
-  // Add direct connections for service-b to service-s and service-y to service-s
-  data.app_versions.forEach((appVersion) => {
-    if (appVersion.app_name === 'test-app1') {
-      const serviceB = appVersion.services.find((s) => s.svc === 'service-b');
-      const serviceSDep = appVersion.dependencies.find((d) => d.app === 'test-shared-app' && d.svc === 'service-s');
-
-      if (serviceB && serviceSDep) {
-        const sourceKey = `test-app1/service-b@${serviceB.svc_ver}`;
-        const targetKey = `test-shared-app/service-s@${serviceSDep.svc_ver}`;
-
-        if (!dependencyGraph[sourceKey]) {
-          dependencyGraph[sourceKey] = [];
-        }
-
-        // Avoid duplicates
-        const existingLink = dependencyGraph[sourceKey].find(
-          (item) => item.target === targetKey && item.appVersion === appVersion.version
-        );
-
-        if (!existingLink) {
-          dependencyGraph[sourceKey].push({
-            target: targetKey,
-            appVersion: appVersion.version
-          });
-        }
-      }
-    }
-
-    if (appVersion.app_name === 'test-app2') {
-      const serviceY = appVersion.services.find((s) => s.svc === 'service-y');
-      const serviceSDep = appVersion.dependencies.find((d) => d.app === 'test-shared-app' && d.svc === 'service-s');
-
-      if (serviceY && serviceSDep) {
-        const sourceKey = `test-app2/service-y@${serviceY.svc_ver}`;
-        const targetKey = `test-shared-app/service-s@${serviceSDep.svc_ver}`;
-
-        if (!dependencyGraph[sourceKey]) {
-          dependencyGraph[sourceKey] = [];
-        }
-
-        // Avoid duplicates
-        const existingLink = dependencyGraph[sourceKey].find(
-          (item) => item.target === targetKey && item.appVersion === appVersion.version
-        );
-
-        if (!existingLink) {
-          dependencyGraph[sourceKey].push({
-            target: targetKey,
-            appVersion: appVersion.version
-          });
-        }
-      }
-    }
-  });
+  const dependencyGraph: Record<string, DependencyEdge[]> = data.dependency_graph;
 
   // Function to find all paths from a source node
   const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> } => {
@@ -336,13 +240,13 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-4 bg-white shadow rounded-lg p-2">
+      <div className="inline-flex items-center mb-4 bg-white shadow rounded-lg p-2 space-x-2">
         <div className="text-sm text-gray-700">Zoom: {zoom}%</div>
         <div className="flex items-center space-x-2">
           <button onClick={handleZoomOut} className="text-gray-500 hover:text-gray-800 p-1">
             −
           </button>
-          <div className="w-40 h-2 bg-gray-200 rounded-full relative">
+          <div className="w-20 h-2 bg-gray-200 rounded-full relative">
             <div
               className="absolute h-2 bg-purple-600 rounded-full"
               style={{ width: `${zoom}%` }}
@@ -361,12 +265,13 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
         </div>
       </div>
 
-      <div className="overflow-auto" style={{ maxHeight: '600px' }}>
+      <div className="overflow-auto flex justify-center bg-white" style={{ maxHeight: '1200px', maxWidth: '2400px' }}>
         <svg
-          width={1000 * scale}
-          height={500 * scale}
-          viewBox="0 0 1000 500"
+          width="100%"
+          height={1000 * scale}
+          viewBox="0 0 800 1000"
           className="border border-gray-200"
+          style={{ backgroundColor: '#ffffff', maxWidth: '100%' }}
         >
           {services.map((service) => {
             const boxWidth = calculateBoxWidth(service.id);

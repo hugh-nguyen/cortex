@@ -94,20 +94,20 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     
     print(os.listdir("temp/iac/"))
     
-    for platform in os.listdir("temp/iac/"):
-        print(platform)
-        for service_name in os.listdir(f"temp/iac/{platform}"):
-            print("\t", service_name)
-            if service_name not in service_lookup:
-                continue
+    # for platform in os.listdir("temp/iac/"):
+    #     print(platform)
+    #     for service_name in os.listdir(f"temp/iac/{platform}"):
+    #         print("\t", service_name)
+    #         if service_name not in service_lookup:
+    #             continue
             
-            service = service_lookup[service_name]
-            if platform == "kubernetes":
-                deploy_kubernetes(service)
-            if platform == "serverless":
-                deploy_serverless(service)
-            if platform == "mulesoft":
-                deploy_mulesoft(service)
+    #         service = service_lookup[service_name]
+    #         if platform == "kubernetes":
+    #             deploy_kubernetes(service)
+    #         if platform == "serverless":
+    #             deploy_serverless(service)
+    #         if platform == "mulesoft":
+    #             deploy_mulesoft(service)
                 
     team_lookup = {
         "app1": 1,
@@ -129,56 +129,6 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     )
             
             
-    # for repo in get_repositories("hugh-nguyen"):
-    #     if not repo["name"].endswith("-cortex-command"):
-    #         continue
-    #     clone_repo(repo["clone_url"], f"temp/{repo['name']}")
-    
-    # print("======== CONNECT TO KUBERNETES =========")
-    # subprocess.run([
-    #     "aws",
-    #     "eks",
-    #     "update-kubeconfig",
-    #     "--region",
-    #     "ap-southeast-2",
-    #     "--name",
-    #     "cluster",
-    # ], check=True)
-
-    # print("======== DEPLOY NEXUS SERVICES =========")
-    # try:
-    #     helm_list_output = subprocess.check_output(["helm", "list", "-q"], text=True)
-    #     deployed_releases = helm_list_output.strip().split('\n') if helm_list_output.strip() else []
-    #     print(f"Found {len(deployed_releases)} existing Helm releases")
-    # except subprocess.CalledProcessError:
-    #     print("Warning: Failed to get list of deployed releases")
-    #     deployed_releases = []
-    
-    # for ns in manifest["services"]:
-    #     app, svc, ver = ns["app"], ns["svc"], ns["svc_ver"]
-    #     release_name = f"{app}-{svc}-{ver.replace('.', '-')}"
-        
-    #     if release_name in deployed_releases:
-    #         print(f"\n====Skipping {release_name} (already deployed)====")
-    #         continue
-
-    #     print(f"\n====Deploying {release_name}====")
-    #     subprocess.run([
-    #         "helm",
-    #         "install",
-    #         release_name,
-    #         f"./temp/{app}-cortex-command/iac/kubernetes/{svc}-chart",
-    #         "--set",
-    #         f"version={ver}",
-    #     ], check=True)
-    
-    
-    
-    
-    
-    
-
-
 def deploy_routes(path_to_deploy_log):
     
     if os.path.exists("temp"):
@@ -218,7 +168,6 @@ if __name__ == '__main__':
     
     if not args.testing:
         deploy_services(DEPLOY_LOG_PATH, app_name, app_ver, args.run_id)
-    # deploy_routes(DEPLOY_LOG_PATH)
     
-    import cortex.envoy_util
-    cortex.envoy_util.update_envoy()
+    # import cortex.envoy_util
+    # cortex.envoy_util.update_envoy()

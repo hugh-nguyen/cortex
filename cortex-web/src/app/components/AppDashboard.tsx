@@ -87,7 +87,7 @@ const AppDashboard: React.FC = () => {
   };
   
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
+    <Container maxWidth={false} disableGutters sx={{ mt: 4, mb: 8 }}>
       <DependencyDiagram 
         teamId={selectedTeam?.team_id || null} 
         onError={(errorMsg) => console.error('Dependency diagram error:', errorMsg)}
