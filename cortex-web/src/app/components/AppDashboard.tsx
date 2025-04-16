@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Box, 
   Card, 
@@ -94,6 +94,7 @@ const AppDashboard: React.FC = () => {
   const [deploymentLoading, setDeploymentLoading] = useState(false);
   const [deploymentMessage, setDeploymentMessage] = useState("Preparing to deploy new version...");
   const [deploymentStartTime, setDeploymentStartTime] = useState<number | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const appNames = Array.from(new Set(apps.map(a => a.App.split('/')[0]))).sort();
 
@@ -121,6 +122,38 @@ const AppDashboard: React.FC = () => {
     setSnackbarOpen(false);
   };
 
+  const poll = async () => {
+    if (!selectedApp) return;
+  
+    try {
+      const res = await fetch(
+        `http://localhost:8000/get_incomplete_runs?app=${selectedApp.App}`
+      );
+      const data = await res.json();
+  
+      if (data.incomplete_runs.length === 0) {
+        console.log('done');
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      }
+  
+      console.log('###', data.incomplete_runs);
+    } catch (err) {
+      console.error('Error polling:', err);
+    }
+  };
+  
+
+  const startPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+  
+    pollingRef.current = setInterval(poll, 5000);
+  };
+
   const handleDeployNewVersionClick = async () => {
     if (!selectedApp?.CommandRepoURL) {
       setSnackbarMessage("No repository URL found for this application");
@@ -142,6 +175,31 @@ const AppDashboard: React.FC = () => {
       setTimeout(() => {
         if (deploymentLoading) setDeploymentMessage("Scheduling pipeline execution...");
       }, 1500);
+
+      // get_incomplete_runs
+
+      const encodedURL = encodeURIComponent(selectedApp.CommandRepoURL);
+      const response = await fetch(`http://localhost:8000/deploy_app_version?app_name=${selectedApp.App}&command_repo=${encodedURL}`);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        setTimeout(() => {
+          if (deploymentLoading) setDeploymentMessage("GitHub Action started successfully!");
+        }, 2000);
+        
+        setTimeout(() => {
+          setDeploymentLoading(false);
+          poll();
+          startPolling();
+        }, 2500);
+      } else {
+        throw new Error(data.message || "Failed to trigger GitHub Action");
+      }
 
     } catch (error) {
       console.error("Deployment error:", error);
@@ -210,7 +268,10 @@ const AppDashboard: React.FC = () => {
           </Select>
         </div>
       </div>
+      <div>
       
+        {/* <WorkflowRunCard key={selectedAppVersion.run.id} run={selectedAppVersion.run} /> */}
+      </div>
       <DependencyDiagram 
         teamId={selectedTeam?.team_id || null}
         onError={(errorMsg) => console.error('Dependency diagram error:', errorMsg)}

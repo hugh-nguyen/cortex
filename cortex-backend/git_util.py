@@ -9,9 +9,9 @@ from datetime import datetime
 import logging
 import requests
 
-def get_owner_and_repo_from_url(url, logger):
+def get_owner_and_repo_from_url(url, logger=None):
     match = re.search(r'github\.com/([^/]+)/([^/]+)', url)
-    if not match:
+    if not match and logger:
         logger.error(f"Invalid GitHub URL format: {url}")
         return {"status": "error", "message": "Invalid GitHub URL format"}
     
@@ -327,3 +327,20 @@ def run_workflow(repo_url, workflow_name, ref="main"):
             "status": "error",
             "message": f"Error triggering GitHub Action: {str(e)}"
         }
+
+INCOMPLETE_STATUSES = {"queued", "in_progress", "waiting", "requested"}
+def get_incomplete_workflow_runs(repo_url, workflow_name):
+    
+    owner, repo_name = get_owner_and_repo_from_url(repo_url)
+    
+    github_token = os.environ.get("GITHUB_TOKEN")
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Accept": "application/vnd.github+json"
+    }
+    url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows/{workflow_id}/runs?per_page=100"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+
+    runs = response.json().get("workflow_runs", [])
+    return [run for run in runs if run["status"] in INCOMPLETE_STATUSES]

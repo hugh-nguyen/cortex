@@ -164,5 +164,19 @@ async def get_app_dashboard_data(team_id: int):
         "app_versions": app_versions,
         "dependency_graph": dependency_graph,
     }
+
+@app.get("/get_incomplete_runs")
+async def get_incomplete_runs(app: str):
     
+    repo_url = f"https://github.com/hugh-nguyen/{app}-cortex-command"
+    workflow_name = "create-manifest-and-deploy"
+    runs = git_util.get_workflow_runs(repo_url, workflow_name)["workflow_runs"]
+    lookup = {r["id"]: r for r in runs}
+    
+    condition = lambda r: (r["status"] == "in_progress" or r["status"] == "queued" or r["status"] == "waiting")
+    incomplete_runs = [r for r in runs if condition(r)]
+    
+    return {
+        "incomplete_runs": incomplete_runs
+    }
     
