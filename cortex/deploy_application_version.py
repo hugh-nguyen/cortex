@@ -34,7 +34,7 @@ def upload_app(name=None, service_count=None, versions=None, team_id=None, comma
     return response
 
 
-def upload_app_version(app_name="", version=None, yaml_data=None, service_count=None, change_count=None, run_id=None):
+def upload_app_version(app_name="", version=None, yaml_data=None, service_count=None, change_count=None, run_id=None, services=None, dependencies=None, links=None):
     response = app_versions_table.put_item(
         Item={
             'app_name': app_name,
@@ -43,6 +43,9 @@ def upload_app_version(app_name="", version=None, yaml_data=None, service_count=
             'service_count': service_count,
             'change_count': change_count,
             'run_id': run_id,
+            "services": services,
+            "dependencies": dependencies,
+            "links": links,
             'created_at': datetime.now().isoformat()
         }
     )
@@ -125,7 +128,7 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     upload_app_version(
         app_name, app_ver, 
         raw_yaml, len(manifest["services"]), 0,
-        run_id
+        run_id, manifest["services"], manifest["dependencies"], manifest["links"]
     )
             
             
