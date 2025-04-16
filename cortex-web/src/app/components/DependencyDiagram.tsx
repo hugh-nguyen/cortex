@@ -4,9 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { M_PLUS_1 } from 'next/font/google';
 
+interface AppData {
+  App: string;
+  'Service Count': number;
+  Versions: number;
+  'Last Updated': string;
+  Owner: string;
+  CommandRepoURL: string;
+  services: string[];
+  dependencies: string[];
+}
 interface DependencyDiagramProps {
   teamId: number | null;
   onError?: (error: string) => void;
+  zoom: number;
+  selectedApp: string | undefined;
+  setSelectedApp: CallableFunction;
+  apps: AppData[];
 }
 
 interface AppVersion {
@@ -45,11 +59,10 @@ interface DependencyEdge {
   appVersion: number;
 }
 
-const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }) => {
+const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, zoom, selectedApp, setSelectedApp, apps }) => {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState<number>(40);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,18 +89,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
     fetchData();
   }, [teamId, onError]);
-
-  const handleZoomIn = () => {
-    setZoom(Math.min(zoom + 10, 100));
-  };
-
-  const handleZoomOut = () => {
-    setZoom(Math.max(zoom - 10, 20));
-  };
-
-  const handleReset = () => {
-    setZoom(40);
-  };
 
   if (loading) {
     return (
@@ -253,33 +254,10 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4" style={{ margin: "0px", padding: "0px"}}>
       {GlobalKeyframes}
 
-      <div className="inline-flex items-center mb-4 bg-white shadow rounded-lg p-2 space-x-2">
-        <div className="text-sm text-gray-700">Zoom: {zoom}%</div>
-        <div className="flex items-center space-x-2">
-          <button onClick={handleZoomOut} className="text-gray-500 hover:text-gray-800 p-1">
-            −
-          </button>
-          <div className="w-20 h-2 bg-gray-200 rounded-full relative">
-            <div
-              className="absolute h-2 bg-purple-600 rounded-full"
-              style={{ width: `${zoom}%` }}
-            ></div>
-            <div
-              className="absolute w-4 h-4 bg-purple-600 rounded-full -mt-1"
-              style={{ left: `calc(${zoom}% - 8px)` }}
-            ></div>
-          </div>
-          <button onClick={handleZoomIn} className="text-gray-500 hover:text-gray-800 p-1">
-            +
-          </button>
-          <button onClick={handleReset} className="ml-2 text-gray-500 hover:text-gray-800">
-            ↺
-          </button>
-        </div>
-      </div>
+      
 
       <div className="overflow-auto flex justify-center bg-white" style={{ maxHeight: '1200px', maxWidth: '2400px' }}>
         <svg
@@ -290,11 +268,13 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
           style={{ backgroundColor: '#ffffff', maxWidth: '100%' }}
         >
           {services.map((service, svcIdx) => {
+            const appPrefix = service.id.split('/')[0];
+            const appSelected = selectedApp === appPrefix;
             const boxWidth = calculateBoxWidth(service.id);
             const hexStartX = service.x - boxWidth / 2 + nameWidths[service.id] + 20;
 
             return (
-              <g key={service.id} style={fade(svcIdx * 0.04)}>
+              <g key={service.id} style={{ cursor: 'pointer', ...fade(svcIdx * 0.04) }} onClick={() => setSelectedApp(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}>
                 <rect
                   x={service.x - boxWidth / 2}
                   y={service.y - 40}
@@ -302,7 +282,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                   height={80}
                   stroke="gray"
                   strokeDasharray="5,5"
-                  fill="#f5f5f5"
+                  fill={appSelected ? '#F3E8FF' : '#f5f5f5'}
                   rx={10}
                   ry={10}
                 />
