@@ -70,7 +70,7 @@ def upload_team(team_id=None, team_name=None, last_updated=None):
   return response
 
 
-def upload_app(name=None, service_count=None, versions=None, team_id=None, command_url=None, last_updated=None):
+def upload_app(name=None, service_count=None, versions=None, team_id=None, command_url=None, services=None, last_updated=None):
     if last_updated is None:
         last_updated = datetime.now().isoformat()
         
@@ -82,6 +82,7 @@ def upload_app(name=None, service_count=None, versions=None, team_id=None, comma
             'last_updated': last_updated,
             'team_id': team_id,
             "command_repo_url": command_url,
+            "services": services,
         }
     )
     
@@ -152,9 +153,10 @@ upload_app(
 upload_app(
     "shared-app",
     1,
-    1,
     2,
-    "https://github.com/hugh-nguyen/shared-app-cortex-command"
+    2,
+    "https://github.com/hugh-nguyen/shared-app-cortex-command",
+    ["service-s"]
 )
 upload_app(
     "test-app",
@@ -300,6 +302,10 @@ upload_app_version(
     0
 )
 
+
+#####################
+##### Routes #####
+###################
 upload_routes(
     "/app1/main/",
     1,
@@ -308,13 +314,7 @@ upload_routes(
         "app": "app1",
         "svc": "mfe-a",
         "app_ver": 1,
-        "weight": 60
-      },
-      {
-        "app": "app1",
-        "svc": "mfe-a",
-        "app_ver": 2,
-        "weight": 40
+        "weight": 100
       }
     ]
 )
@@ -331,3 +331,75 @@ upload_routes(
       }
     ]
 )
+
+#####################
+##### App Versions #####
+###################
+
+item = {
+    "app_name":      "shared-app",                                 # String
+    "version":       1,                                            # Number
+    "change_count":  0,                                            # Number
+    "created_at":    "2025-04-16T23:00:23.456150",                 # String (ISO8601)
+    "dependencies":  [],                                           # List
+    "links":         [],                                           # List
+    "run_id":        "14504202826",                                # String
+    "services": [
+        {
+            "app":     "shared-app",
+            "svc":     "service-s",
+            "svc_ver": "0.0.1"
+        }
+    ],
+    "service_count": 1,                                            # Number
+    "yaml":          (
+        "services:\n"
+        "- app: shared-app\n"
+        "  svc: service-s\n"
+        "  svc_ver: 0.0.1\n"
+        "routes:\n"
+        "- prefix: /shared-app/service-s/\n"
+        "  headers:\n"
+        "    X-App-Version: 1\n"
+        "  cluster: shared-app-service-s-0-0-1\n"
+        "- prefix: /shared-app/service-s/\n"
+        "  cluster: shared-app-service-s-0-0-1\n"
+        "dependencies: []\n"
+        "links: []\n"
+    )
+}
+app_versions_table.put_item(Item=item)
+
+item = {
+    "app_name":      "shared-app",
+    "version":       2,
+    "change_count":  0,
+    "created_at":    "2025-04-16T23:02:51.649809",
+    "dependencies":  [],
+    "links":         [],
+    "run_id":        "14504241090",
+    "services": [
+        {
+            "app":     "shared-app",
+            "svc":     "service-s",
+            "svc_ver": "0.0.2"
+        }
+    ],
+    "service_count": 1,
+    "yaml": (
+        "services:\n"
+        "- app: shared-app\n"
+        "  svc: service-s\n"
+        "  svc_ver: 0.0.2\n"
+        "routes:\n"
+        "- prefix: /shared-app/service-s/\n"
+        "  headers:\n"
+        "    X-App-Version: 2\n"
+        "  cluster: shared-app-service-s-0-0-2\n"
+        "- prefix: /shared-app/service-s/\n"
+        "  cluster: shared-app-service-s-0-0-2\n"
+        "dependencies: []\n"
+        "links: []\n"
+    )
+}
+app_versions_table.put_item(Item=item)

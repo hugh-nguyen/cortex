@@ -187,6 +187,6 @@ resource "helm_release" "envoy" {
 
   # ensure cluster exists before chart install
   depends_on = [
-    aws_eks_cluster.cluster
+    aws_eks_cluster.main
   ]
 }
