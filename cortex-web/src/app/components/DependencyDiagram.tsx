@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, CircularProgress, Typography, Paper } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { M_PLUS_1 } from 'next/font/google';
 
 interface DependencyDiagramProps {
@@ -30,7 +30,7 @@ interface AppVersion {
 
 interface Data {
   app_versions: AppVersion[];
-  dependency_graph: Record<string, DependencyEdge[]>
+  dependency_graph: Record<string, DependencyEdge[]>;
 }
 
 interface Service {
@@ -58,23 +58,24 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
         const res = await fetch(
           `http://localhost:8000/get_app_dashboard_data?team_id=${teamId ?? 4}`
         );
-  
+
         if (!res.ok) {
           throw new Error(`Server responded ${res.status}`);
         }
-  
+
         const parsedData: Data = await res.json();
-  
+
         setData(parsedData);
-        setLoading(false);
       } catch (err: any) {
         setError(`Error loading data: ${err.message ?? 'Unknown error'}`);
+        onError?.(err.message);
+      } finally {
         setLoading(false);
       }
     };
-  
+
     fetchData();
-  }, [teamId]);
+  }, [teamId, onError]);
 
   const handleZoomIn = () => {
     setZoom(Math.min(zoom + 10, 100));
@@ -88,12 +89,18 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
     setZoom(40);
   };
 
-  if (loading) return <div className="flex justify-center items-center h-64">Loading data...</div>;
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
   if (error) return <div className="text-red-500">{error}</div>;
   if (!data) return <div className="text-gray-500">No data available</div>;
 
   // Extract all unique services and their versions
-  // We'll build an object that accumulates sets first, then converts to sorted arrays.
   const serviceVersions: Record<string, Set<string> | string[]> = {};
 
   // Process services in app_versions
@@ -133,13 +140,19 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
     });
   });
 
-  // Define fixed layout for the services - arranged alphabetically
+  // const services: Service[] = [
+  //   { id: 'test-app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
+  //   { id: 'test-app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
+  //   { id: 'test-app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
+  //   { id: 'test-app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
+  //   { id: 'test-shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
+  // ];
   const services: Service[] = [
-    { id: 'test-app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
-    { id: 'test-app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
-    { id: 'test-app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
-    { id: 'test-app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
-    { id: 'test-shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
+    { id: 'app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
+    { id: 'app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
+    { id: 'app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
+    { id: 'app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
+    { id: 'shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
   ];
 
   // Calculate name widths
@@ -229,6 +242,24 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
   const scale = zoom / 40; // Base scale is 40%
 
+  /* ─── fade‑in helper + global keyframes (NEW) ─────────────────── */
+  const fade = (delay: number): React.CSSProperties => ({
+    opacity: 0,
+    animation: `fadeInUp 0.6s ease forwards ${delay}s`,
+  });
+
+  /* eslint-disable react/no-unknown-property */
+  const GlobalKeyframes = (
+    <style jsx global>{`
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    `}</style>
+  );
+  /* eslint-enable react/no-unknown-property */
+  /* ---------------------------------------------------------------- */
+
   // Calculate width for each service box based on the number of hexagons
   const calculateBoxWidth = (serviceId: string): number => {
     const versions = serviceVersions[serviceId] as string[] | undefined;
@@ -240,6 +271,8 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
   return (
     <div className="p-4">
+      {GlobalKeyframes}
+
       <div className="inline-flex items-center mb-4 bg-white shadow rounded-lg p-2 space-x-2">
         <div className="text-sm text-gray-700">Zoom: {zoom}%</div>
         <div className="flex items-center space-x-2">
@@ -273,12 +306,12 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
           className="border border-gray-200"
           style={{ backgroundColor: '#ffffff', maxWidth: '100%' }}
         >
-          {services.map((service) => {
+          {services.map((service, svcIdx) => {
             const boxWidth = calculateBoxWidth(service.id);
             const hexStartX = service.x - boxWidth / 2 + nameWidths[service.id] + 20;
 
             return (
-              <g key={service.id}>
+              <g key={service.id} style={fade(svcIdx * 0.04)}>
                 {/* Service box */}
                 <rect
                   x={service.x - boxWidth / 2}
@@ -319,7 +352,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                       key={`${service.id}-${version}`}
                       onMouseEnter={() => setHoveredNode(nodeKey)}
                       onMouseLeave={() => setHoveredNode(null)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', ...fade(index * 0.06) }}
                     >
                       <polygon
                         points={points.join(' ')}
@@ -346,7 +379,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
           {/* Draw links between services */}
           {(() => {
-            // First, organize connections by source-target pairs to handle multiple app versions
             const connectionGroups: Record<
               string,
               { source: string; target: string; appVersion: number }[]
@@ -354,7 +386,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
             Object.entries(dependencyGraph).forEach(([source, targets]) => {
               targets.forEach((target) => {
-                // Create a key that identifies a specific connection
                 const connectionKey = `${source}|${target.target}`;
                 if (!connectionGroups[connectionKey]) {
                   connectionGroups[connectionKey] = [];
@@ -367,15 +398,10 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
               });
             });
 
-            // Render each connection group
             return Object.entries(connectionGroups).map(([connectionKey, connections], idx) => {
-              // Sort connections by app version
               connections.sort((a, b) => a.appVersion - b.appVersion);
 
-              // Get first connection to extract positioning data
               const firstConn = connections[0];
-
-              // Parse source and target
               const [sourceApp, sourceSvc, sourceVersion] = firstConn.source.split(/\/|@/);
               const [targetApp, targetSvc, targetVersion] = firstConn.target.split(/\/|@/);
 
@@ -407,25 +433,20 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
               const sourceCx = sourceHexStartX + sourceIndex * (hexSize * 2 + 10);
               const targetCx = targetHexStartX + targetIndex * (hexSize * 2 + 10);
 
-              // Connect to bottom of source hexagon
               const sourceX = sourceCx;
               const sourceY = sourceService.y + hexSize;
 
-              // Connect to top of target hexagon
               const targetX = targetCx;
               const targetY = targetService.y - hexSize;
 
-              // Middle point for the connection
               const midX = (sourceX + targetX) / 2;
               const midY = (sourceY + targetY) / 2;
 
-              // Check if any connection in this group is highlighted
               const isAnyHighlighted = connections.some((conn) => {
                 const pathId = `${conn.source}|${conn.target}|${conn.appVersion}`;
                 return highlightedPaths.has(pathId);
               });
 
-              // Draw the line
               const line = (
                 <line
                   key={`line-${idx}`}
@@ -439,12 +460,9 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                 />
               );
 
-              // Draw the version circles
               let versionCircles: any;
               if (connections.length <= 3) {
-                // Show app versions with diagonal offset
                 versionCircles = connections.map((conn, connIdx) => {
-                  // Add both horizontal and vertical offset for diagonal staggering
                   const offsetX = (connIdx - (connections.length - 1) / 2) * 12;
                   const offsetY = (connIdx - (connections.length - 1) / 2) * 8;
 
@@ -473,7 +491,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                   );
                 });
               } else {
-                // Show first, ellipsis, last
                 const firstConn = connections[0];
                 const lastConn = connections[connections.length - 1];
 
@@ -544,7 +561,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
               }
 
               return (
-                <g key={`connection-${idx}`}>
+                <g key={`connection-${idx}`} style={fade(idx * 0.03)}>
                   {line}
                   {versionCircles}
                 </g>
