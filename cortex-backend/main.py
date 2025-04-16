@@ -137,11 +137,15 @@ async def get_app_dashboard_data(team_id: int):
     app_versions = []
     for app in apps:
         app_versions += dynamo_util.get_app_versions2(app["name"])
-        
+    
+    
+    
     dependency_graph = {}
+    services = set()
     for av in app_versions:
         
         lookup = {f"{s['app']}/{s['svc']}": s['svc_ver'] for s in av["services"] + av["dependencies"]}
+        services = services.union(set(lookup.keys()))
         
         for link in av["links"]:
             base_key = f"{link['source']['app']}/{link['source']['svc']}"
@@ -163,6 +167,7 @@ async def get_app_dashboard_data(team_id: int):
         "apps": apps,
         "app_versions": app_versions,
         "dependency_graph": dependency_graph,
+        "services": services,
     }
 
 @app.get("/get_incomplete_runs")

@@ -45,6 +45,7 @@ interface AppVersion {
 interface Data {
   app_versions: AppVersion[];
   dependency_graph: Record<string, DependencyEdge[]>;
+  services: any[];
 }
 
 interface Service {
@@ -62,8 +63,24 @@ interface DependencyEdge {
 const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, zoom, selectedApp, setSelectedApp, apps }) => {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [services, setServices] = useState<Service[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  // const services: Service[] = [
+  //   { id: 'test-app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
+  //   { id: 'test-app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
+  //   { id: 'test-app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
+  //   { id: 'test-app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
+  //   { id: 'test-shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
+  // ];
+  const servicesM: Service[] = [
+    { id: 'app1/mfe-a', x: 250, y: 120, color: '#4299e1' },
+    { id: 'app1/service-b', x: 250, y: 260, color: '#ed8936' },
+    { id: 'app2/mfe-x', x: 700, y: 120, color: '#ecc94b' },
+    { id: 'app2/service-y', x: 700, y: 260, color: '#48bb78' },
+    { id: 'shared-app/service-s', x: 475, y: 400, color: '#805ad5' }
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,6 +96,8 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
         const parsedData: Data = await res.json();
 
         setData(parsedData);
+        console.log("PPP", parsedData);
+        setServices(servicesM.filter(m => parsedData.services.includes(m.id)))
       } catch (err: any) {
         setError(`Error loading data: ${err.message ?? 'Unknown error'}`);
         onError?.(err.message);
@@ -137,20 +156,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
     });
   });
 
-  // const services: Service[] = [
-  //   { id: 'test-app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
-  //   { id: 'test-app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
-  //   { id: 'test-app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
-  //   { id: 'test-app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
-  //   { id: 'test-shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
-  // ];
-  const services: Service[] = [
-    { id: 'app1/mfe-a', x: 250, y: 120, color: '#4299e1' },
-    { id: 'app1/service-b', x: 250, y: 260, color: '#ed8936' },
-    { id: 'app2/mfe-x', x: 700, y: 120, color: '#ecc94b' },
-    { id: 'app2/service-y', x: 700, y: 260, color: '#48bb78' },
-    { id: 'shared-app/service-s', x: 475, y: 400, color: '#805ad5' }
-  ];
+  
 
   const nameWidths: Record<string, number> = {};
   services.forEach((service) => {
@@ -166,58 +172,106 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
 
   const dependencyGraph: Record<string, DependencyEdge[]> = data.dependency_graph;
 
-  const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> } => {
-    const visitedForward = new Set<string>();
-    const visitedBackward = new Set<string>();
-    const paths = new Set<string>();
-    const nodes = new Set<string>();
-
-    const dfsForward = (currentNode: string) => {
-      if (visitedForward.has(currentNode)) return;
-      visitedForward.add(currentNode);
-      nodes.add(currentNode);
-      if (dependencyGraph[currentNode]) {
-        dependencyGraph[currentNode].forEach((edge) => {
-          const edgeId = `${currentNode}|${edge.target}|${edge.appVersion}`;
-          paths.add(edgeId);
-          nodes.add(edge.target);
-          dfsForward(edge.target);
-        });
+// Complete replacement for findAllPaths with fixed bidirectional traversal
+const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> } => {
+  const paths = new Set<string>();
+  const nodes = new Set<string>();
+  
+  // We need to build a reverse graph to efficiently find parents
+  const reverseGraph: Record<string, {source: string; appVersion: number}[]> = {};
+  
+  // Build the reverse graph for efficient parent lookup
+  Object.entries(dependencyGraph).forEach(([source, targets]) => {
+    targets.forEach(edge => {
+      if (!reverseGraph[edge.target]) {
+        reverseGraph[edge.target] = [];
       }
-    };
-
-    const findIncomingEdges = (targetNode: string): { source: string; appVersion: number }[] => {
-      const incoming: { source: string; appVersion: number }[] = [];
-      Object.entries(dependencyGraph).forEach(([src, targets]) => {
-        targets.forEach((edge) => {
-          if (edge.target === targetNode) {
-            incoming.push({
-              source: src,
-              appVersion: edge.appVersion
-            });
-          }
-        });
+      reverseGraph[edge.target].push({
+        source: source,
+        appVersion: edge.appVersion
       });
-      return incoming;
-    };
-
-    const dfsBackward = (currentNode: string) => {
-      if (visitedBackward.has(currentNode)) return;
-      visitedBackward.add(currentNode);
-      nodes.add(currentNode);
-      const incoming = findIncomingEdges(currentNode);
-      incoming.forEach((edge) => {
-        const edgeId = `${edge.source}|${currentNode}|${edge.appVersion}`;
-        paths.add(edgeId);
-        nodes.add(edge.source);
-        dfsBackward(edge.source);
+    });
+  });
+  
+  // Track visited nodes to avoid cycles
+  const visited = new Set<string>();
+  
+  // Forward traversal - find all downstream dependencies
+  function traverseForward(node: string, appVersion: number) {
+    const visitKey = `${node}|${appVersion}|forward`;
+    if (visited.has(visitKey)) return;
+    visited.add(visitKey);
+    
+    nodes.add(node);
+    
+    // Follow edges with matching app version
+    if (dependencyGraph[node]) {
+      dependencyGraph[node].forEach(edge => {
+        if (edge.appVersion === appVersion) {
+          const pathId = `${node}|${edge.target}|${appVersion}`;
+          paths.add(pathId);
+          nodes.add(edge.target);
+          traverseForward(edge.target, appVersion);
+        }
       });
-    };
+    }
+  }
+  
+  // Backward traversal - find all upstream dependencies
+  function traverseBackward(node: string, appVersion: number) {
+    const visitKey = `${node}|${appVersion}|backward`;
+    if (visited.has(visitKey)) return;
+    visited.add(visitKey);
+    
+    nodes.add(node);
+    
+    // Follow incoming edges with matching app version
+    if (reverseGraph[node]) {
+      reverseGraph[node].forEach(edge => {
+        if (edge.appVersion === appVersion) {
+          const pathId = `${edge.source}|${node}|${appVersion}`;
+          paths.add(pathId);
+          nodes.add(edge.source);
+          traverseBackward(edge.source, appVersion);
+        }
+      });
+    }
+  }
 
-    dfsForward(source);
-    dfsBackward(source);
-    return { paths, nodes };
-  };
+  // Find all relevant app versions for this node
+  const relevantAppVersions = new Set<number>();
+  
+  // Check outgoing connections from this node
+  if (dependencyGraph[source]) {
+    dependencyGraph[source].forEach(edge => {
+      relevantAppVersions.add(edge.appVersion);
+    });
+  }
+  
+  // Check incoming connections to this node
+  if (reverseGraph[source]) {
+    reverseGraph[source].forEach(edge => {
+      relevantAppVersions.add(edge.appVersion);
+    });
+  }
+  
+  // If we couldn't find any app versions, use all versions in the graph
+  if (relevantAppVersions.size === 0) {
+    Object.values(dependencyGraph).forEach(edges => {
+      edges.forEach(edge => {
+        relevantAppVersions.add(edge.appVersion);
+      });
+    });
+  }
+  
+  // Traverse in both directions for each relevant app version
+  relevantAppVersions.forEach(appVersion => {
+    traverseForward(source, appVersion);
+    traverseBackward(source, appVersion);
+  });
+  
+  return { paths, nodes };
+};
 
   const highlightedPaths = new Set<string>();
   const highlightedNodes = new Set<string>();

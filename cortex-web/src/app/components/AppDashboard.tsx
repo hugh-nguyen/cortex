@@ -19,6 +19,7 @@ import {
   Select, MenuItem
 } from '@mui/material';
 import { purple, blue, green } from '@mui/material/colors';
+import Fade from '@mui/material/Fade';
 import { useRouter, usePathname } from 'next/navigation';
 import { useGlobal } from '@/app/GlobalContext';
 import DevicesIcon from '@mui/icons-material/Devices';
@@ -29,8 +30,23 @@ import DependencyDiagram from './DependencyDiagram';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 
 import DeploymentAnimation from '@/app/components/DeploymentAnimation';
+import WorkflowRunCard from '@/app/components/WorkflowRunCard';
+import { TransitionGroup } from 'react-transition-group';
 
-
+interface Run {
+  id: number;
+  name: string;
+  run_number: number;
+  status: string;
+  conclusion: string | null;
+  created_at: string;
+  created_ago: string;
+  html_url: string;
+  actor: string;
+  head_branch: string;
+  duration?: number | null;
+  run_attempt: number;
+}
 interface AppData {
   App: string;
   'Service Count': number;
@@ -87,6 +103,7 @@ const AppDashboard: React.FC = () => {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
   const [zoom, setZoom] = useState<number>(40);
+  const [incompleteRuns, setIncompleteRuns] = useState<Run[]>([]);
   // const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -140,6 +157,8 @@ const AppDashboard: React.FC = () => {
       }
   
       console.log('###', data.incomplete_runs);
+
+      setIncompleteRuns(data.incomplete_runs)
     } catch (err) {
       console.error('Error polling:', err);
     }
@@ -175,8 +194,6 @@ const AppDashboard: React.FC = () => {
       setTimeout(() => {
         if (deploymentLoading) setDeploymentMessage("Scheduling pipeline execution...");
       }, 1500);
-
-      // get_incomplete_runs
 
       const encodedURL = encodeURIComponent(selectedApp.CommandRepoURL);
       const response = await fetch(`http://localhost:8000/deploy_app_version?app_name=${selectedApp.App}&command_repo=${encodedURL}`);
@@ -268,10 +285,15 @@ const AppDashboard: React.FC = () => {
           </Select>
         </div>
       </div>
-      <div>
-      
-        {/* <WorkflowRunCard key={selectedAppVersion.run.id} run={selectedAppVersion.run} /> */}
-      </div>
+      <TransitionGroup>
+        {incompleteRuns.map((r) => (
+          <Fade key={r.id} timeout={1500} unmountOnExit>
+            <div>
+              <WorkflowRunCard run={r} />
+            </div>
+          </Fade>
+        ))}
+      </TransitionGroup>
       <DependencyDiagram 
         teamId={selectedTeam?.team_id || null}
         onError={(errorMsg) => console.error('Dependency diagram error:', errorMsg)}
