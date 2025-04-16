@@ -100,10 +100,8 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
   if (error) return <div className="text-red-500">{error}</div>;
   if (!data) return <div className="text-gray-500">No data available</div>;
 
-  // Extract all unique services and their versions
   const serviceVersions: Record<string, Set<string> | string[]> = {};
 
-  // Process services in app_versions
   data.app_versions.forEach((appVersion) => {
     appVersion.services.forEach((svc) => {
       const key = `${svc.app}/${svc.svc}`;
@@ -114,7 +112,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
     });
   });
 
-  // Process dependencies (for shared services)
   data.app_versions.forEach((appVersion) => {
     appVersion.dependencies.forEach((dep) => {
       const key = `${dep.app}/${dep.svc}`;
@@ -125,7 +122,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
     });
   });
 
-  // Convert sets to sorted arrays
   Object.keys(serviceVersions).forEach((service) => {
     serviceVersions[service] = Array.from(serviceVersions[service] as Set<string>).sort((a, b) => {
       const verA = a.split('.').map(Number);
@@ -148,39 +144,33 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
   //   { id: 'test-shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
   // ];
   const services: Service[] = [
-    { id: 'app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
-    { id: 'app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
-    { id: 'app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
-    { id: 'app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
-    { id: 'shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
+    { id: 'app1/mfe-a', x: 250, y: 120, color: '#4299e1' },
+    { id: 'app1/service-b', x: 250, y: 260, color: '#ed8936' },
+    { id: 'app2/mfe-x', x: 700, y: 120, color: '#ecc94b' },
+    { id: 'app2/service-y', x: 700, y: 260, color: '#48bb78' },
+    { id: 'shared-app/service-s', x: 475, y: 400, color: '#805ad5' }
   ];
 
-  // Calculate name widths
   const nameWidths: Record<string, number> = {};
   services.forEach((service) => {
     nameWidths[service.id] = service.id.length * 8 + 20;
   });
 
-  // Define hexagon dimensions
   const hexSize = 30;
 
-  // Create a map for quick service lookups
   const serviceMap: Record<string, Service> = {};
   services.forEach((svc) => {
     serviceMap[svc.id] = svc;
   });
 
-  // Build a graph of dependencies
   const dependencyGraph: Record<string, DependencyEdge[]> = data.dependency_graph;
 
-  // Function to find all paths from a source node
   const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> } => {
     const visitedForward = new Set<string>();
     const visitedBackward = new Set<string>();
     const paths = new Set<string>();
     const nodes = new Set<string>();
 
-    // Forward traversal - finding all descendants
     const dfsForward = (currentNode: string) => {
       if (visitedForward.has(currentNode)) return;
       visitedForward.add(currentNode);
@@ -195,7 +185,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
       }
     };
 
-    // Helper: Find incoming edges for a given node
     const findIncomingEdges = (targetNode: string): { source: string; appVersion: number }[] => {
       const incoming: { source: string; appVersion: number }[] = [];
       Object.entries(dependencyGraph).forEach(([src, targets]) => {
@@ -211,7 +200,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
       return incoming;
     };
 
-    // Backward traversal - finding all ancestors
     const dfsBackward = (currentNode: string) => {
       if (visitedBackward.has(currentNode)) return;
       visitedBackward.add(currentNode);
@@ -230,7 +218,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
     return { paths, nodes };
   };
 
-  // Calculate highlight paths
   const highlightedPaths = new Set<string>();
   const highlightedNodes = new Set<string>();
 
@@ -240,15 +227,15 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
     nodes.forEach((node) => highlightedNodes.add(node));
   }
 
-  const scale = zoom / 40; // Base scale is 40%
+  const scale = zoom / 40;
 
-  /* ─── fade‑in helper + global keyframes (NEW) ─────────────────── */
-  const fade = (delay: number): React.CSSProperties => ({
+  const CONNECTION_PHASE_OFFSET = 0.5;
+
+  const fade = (delay: number, offset: number = 0): React.CSSProperties => ({
     opacity: 0,
-    animation: `fadeInUp 0.6s ease forwards ${delay}s`,
+    animation: `fadeInUp 0.5s ease forwards ${delay + offset}s`,
   });
 
-  /* eslint-disable react/no-unknown-property */
   const GlobalKeyframes = (
     <style jsx global>{`
       @keyframes fadeInUp {
@@ -257,15 +244,11 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
       }
     `}</style>
   );
-  /* eslint-enable react/no-unknown-property */
-  /* ---------------------------------------------------------------- */
 
-  // Calculate width for each service box based on the number of hexagons
   const calculateBoxWidth = (serviceId: string): number => {
     const versions = serviceVersions[serviceId] as string[] | undefined;
     const versionsCount = versions ? versions.length : 0;
     const nameWidth = nameWidths[serviceId];
-    // Base width (for the name) + width for hexagons
     return Math.max(300, nameWidth + 40 + versionsCount * (hexSize * 2 + 10));
   };
 
@@ -312,7 +295,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
 
             return (
               <g key={service.id} style={fade(svcIdx * 0.04)}>
-                {/* Service box */}
                 <rect
                   x={service.x - boxWidth / 2}
                   y={service.y - 40}
@@ -325,12 +307,10 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                   ry={10}
                 />
 
-                {/* Service name */}
                 <text x={service.x - boxWidth / 2 + 10} y={service.y + 5} className="text-sm font-medium">
                   {service.id}
                 </text>
 
-                {/* Version hexagons */}
                 {(serviceVersions[service.id] as string[] | undefined)?.map((version: string, index: number) => {
                   const cx = hexStartX + index * (hexSize * 2 + 10);
                   const cy = service.y;
@@ -338,10 +318,9 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                   const nodeKey = `${service.id}@${version}`;
                   const isHighlighted = highlightedNodes.has(nodeKey);
 
-                  // Calculate the six points of the hexagon
                   const points: string[] = [];
                   for (let i = 0; i < 6; i++) {
-                    const angle = (Math.PI / 3) * i - Math.PI / 6; // Starting at top point (30 degrees)
+                    const angle = (Math.PI / 3) * i - Math.PI / 6;
                     const x = cx + hexSize * Math.cos(angle);
                     const y = cy + hexSize * Math.sin(angle);
                     points.push(`${x},${y}`);
@@ -367,6 +346,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                         textAnchor="middle"
                         fill="white"
                         className="text-xs font-bold"
+                        style={{ fontSize: 14, fontWeight: 700 }}
                       >
                         {version}
                       </text>
@@ -377,7 +357,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
             );
           })}
 
-          {/* Draw links between services */}
           {(() => {
             const connectionGroups: Record<
               string,
@@ -484,6 +463,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
                         textAnchor="middle"
                         fill="white"
                         className="text-xs font-medium"
+                        style={{ fontSize: 14, fontWeight: 700 }}
                       >
                         {conn.appVersion}
                       </text>
@@ -561,7 +541,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError }
               }
 
               return (
-                <g key={`connection-${idx}`} style={fade(idx * 0.03)}>
+                <g key={`connection-${idx}`} style={fade(idx * 0.03, CONNECTION_PHASE_OFFSET)}>
                   {line}
                   {versionCircles}
                 </g>
