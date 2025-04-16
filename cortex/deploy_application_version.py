@@ -97,20 +97,20 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     
     print(os.listdir("temp/iac/"))
     
-    # for platform in os.listdir("temp/iac/"):
-    #     print(platform)
-    #     for service_name in os.listdir(f"temp/iac/{platform}"):
-    #         print("\t", service_name)
-    #         if service_name not in service_lookup:
-    #             continue
+    for platform in os.listdir("temp/iac/"):
+        print(platform)
+        for service_name in os.listdir(f"temp/iac/{platform}"):
+            print("\t", service_name)
+            if service_name not in service_lookup:
+                continue
             
-    #         service = service_lookup[service_name]
-    #         if platform == "kubernetes":
-    #             deploy_kubernetes(service)
-    #         if platform == "serverless":
-    #             deploy_serverless(service)
-    #         if platform == "mulesoft":
-    #             deploy_mulesoft(service)
+            service = service_lookup[service_name]
+            if platform == "kubernetes":
+                deploy_kubernetes(service)
+            if platform == "serverless":
+                deploy_serverless(service)
+            if platform == "mulesoft":
+                deploy_mulesoft(service)
                 
     team_lookup = {
         "app1": 1,
@@ -172,5 +172,5 @@ if __name__ == '__main__':
     if not args.testing:
         deploy_services(DEPLOY_LOG_PATH, app_name, app_ver, args.run_id)
     
-    # import cortex.envoy_util
-    # cortex.envoy_util.update_envoy()
+    import cortex.envoy_util
+    cortex.envoy_util.update_envoy()

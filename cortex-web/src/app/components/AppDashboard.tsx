@@ -102,7 +102,7 @@ const AppDashboard: React.FC = () => {
   
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
-  const [zoom, setZoom] = useState<number>(40);
+  const [zoom, setZoom] = useState<number>(50);
   const [incompleteRuns, setIncompleteRuns] = useState<Run[]>([]);
   // const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
@@ -300,6 +300,7 @@ const AppDashboard: React.FC = () => {
         zoom={zoom}
         selectedApp={selectedApp?.App}
         setSelectedApp={setSelectedApp}
+        handleAppClick={handleAppClick}
         apps={apps}
       />
 

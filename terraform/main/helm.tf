@@ -168,3 +168,25 @@ resource "helm_release" "aws_lb_controller" {
     value = "true"
   }
 }
+
+resource "helm_release" "envoy" {
+  name       = "envoy"
+  chart      = "${path.module}/charts/envoy-gateway"
+  namespace  = "default"
+
+  # if your chart has a values.yaml you want to pick up:
+  values = [
+    file("${path.module}/charts/envoy-gateway/values.yaml")
+  ]
+
+  # any overrides via set blocks, e.g. replicas:
+  set {
+    name  = "replicaCount"
+    value = 2
+  }
+
+  # ensure cluster exists before chart install
+  depends_on = [
+    aws_eks_cluster.cluster
+  ]
+}

@@ -20,6 +20,7 @@ interface DependencyDiagramProps {
   zoom: number;
   selectedApp: string | undefined;
   setSelectedApp: CallableFunction;
+  handleAppClick: CallableFunction;
   apps: AppData[];
 }
 
@@ -60,7 +61,7 @@ interface DependencyEdge {
   appVersion: number;
 }
 
-const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, zoom, selectedApp, setSelectedApp, apps }) => {
+const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, zoom, selectedApp, setSelectedApp, handleAppClick, apps }) => {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [services, setServices] = useState<Service[]>([]);
@@ -328,7 +329,12 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
             const hexStartX = service.x - boxWidth / 2 + nameWidths[service.id] + 20;
 
             return (
-              <g key={service.id} style={{ cursor: 'pointer', ...fade(svcIdx * 0.04) }} onClick={() => setSelectedApp(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}>
+              <g 
+                key={service.id} 
+                style={{ cursor: 'pointer', ...fade(svcIdx * 0.04) }} 
+                // onClick={() => setSelectedApp(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}
+                onClick={() => handleAppClick(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}
+              >
                 <rect
                   x={service.x - boxWidth / 2}
                   y={service.y - 40}
