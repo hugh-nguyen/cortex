@@ -9,37 +9,30 @@ resource "kubernetes_service_account" "ecr_access_sa" {
   depends_on = [aws_eks_cluster.main]
 }
 
-# get your account ID for the ARN
 data "aws_caller_identity" "current" {}
 
 resource "kubectl_manifest" "aws_auth_patch" {
-  manifest = {
-    apiVersion = "v1"
-    kind       = "ConfigMap"
-    metadata = {
-      name      = "aws-auth"
-      namespace = "kube-system"
-    }
-    data = {
-      # merge in all of your existing entries plus your user
-      mapRoles = <<YAML
-- rolearn: ${aws_iam_role.node.arn}
-  username: system:node:{{EC2PrivateDNSName}}
-  groups:
-    - system:bootstrappers
-    - system:nodes
-# add any other mapped roles here…
+  yaml_body = <<-YAML
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapRoles: |
+    - rolearn: ${aws_iam_role.node.arn}
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+    # …any other existing role mappings…
+  mapUsers: |
+    - userarn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/admin
+      username: admin
+      groups:
+        - system:masters
+    # …any other users you want to map…
 YAML
-
-      mapUsers = <<YAML
-- userarn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/admin
-  username: admin
-  groups:
-    - system:masters
-# add any additional users here…
-YAML
-    }
-  }
 
   depends_on = [
     aws_eks_cluster.main
