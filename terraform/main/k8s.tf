@@ -32,8 +32,8 @@ resource "kubectl_manifest" "aws_auth_patch" {
 YAML
 
       mapUsers = <<YAML
-- userarn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/hughmapleharbour
-  username: hughmapleharbour
+- userarn: arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/admin
+  username: admin
   groups:
     - system:masters
 # add any additional users here…
