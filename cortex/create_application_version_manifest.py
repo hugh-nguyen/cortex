@@ -94,7 +94,8 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
         version = choose_version(dep_svc, tags, dep_semver)
         
         # temporary logic for demos only
-        if app_ver == 1 and dep_app == "app1" and dep_svc == "service-s":
+        print(app_ver, dep_app, dep_svc)
+        if app_ver == 1 and dep_app == "shared-app" and dep_svc == "service-s":
             version= "0.0.1"
         ###
 
