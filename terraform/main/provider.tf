@@ -3,7 +3,6 @@ terraform {
     aws = { source = "hashicorp/aws", version = "~> 5.0" }
     kubernetes = { source = "hashicorp/kubernetes", version = "~> 2.0" }
     helm = { source = "hashicorp/helm", version = "~> 2.0" }
-    kubectl   = { source = "gavinbunney/kubectl", version = "~> 1.14" }
   }
   backend "s3" {
     bucket         = "mapleharbour-tf-state"
@@ -44,11 +43,4 @@ provider "helm" {
       args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.main.name]
     }
   }
-}
-
-provider "kubectl" {
-  load_config_file       = false
-  host                   = aws_eks_cluster.main.endpoint
-  token                  = data.aws_eks_cluster_auth.main.token
-  cluster_ca_certificate = base64decode(aws_eks_cluster.main.certificate_authority[0].data)
 }
