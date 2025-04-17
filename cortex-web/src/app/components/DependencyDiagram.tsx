@@ -67,20 +67,15 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
   const [services, setServices] = useState<Service[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
-  // const services: Service[] = [
-  //   { id: 'test-app1/mfe-a', x: 250, y: 120, color: '#4299e1' }, // blue
-  //   { id: 'test-app1/service-b', x: 250, y: 260, color: '#ed8936' }, // orange
-  //   { id: 'test-app2/mfe-x', x: 700, y: 120, color: '#ecc94b' }, // yellow
-  //   { id: 'test-app2/service-y', x: 700, y: 260, color: '#48bb78' }, // green
-  //   { id: 'test-shared-app/service-s', x: 475, y: 400, color: '#805ad5' } // purple
-  // ];
+  // Mock services for testing
   const servicesM: Service[] = [
-    { id: 'app1/mfe-a', x: 250, y: 120, color: '#4299e1' },
-    { id: 'app1/service-b', x: 250, y: 260, color: '#ed8936' },
-    { id: 'app2/mfe-x', x: 700, y: 120, color: '#ecc94b' },
-    { id: 'app2/service-y', x: 700, y: 260, color: '#48bb78' },
-    { id: 'shared-app/service-s', x: 475, y: 400, color: '#805ad5' }
+    { id: 'app1/mfe-a', x: -150, y: 120, color: '#4299e1' },
+    { id: 'app1/service-b', x: -150, y: 260, color: '#ed8936' },
+    { id: 'app2/mfe-x', x: 300, y: 120, color: '#ecc94b' },
+    { id: 'app2/service-y', x: 300, y: 260, color: '#48bb78' },
+    { id: 'shared-app/service-s', x: 55, y: 400, color: '#805ad5' }
   ];
 
   useEffect(() => {
@@ -157,8 +152,6 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
     });
   });
 
-  
-
   const nameWidths: Record<string, number> = {};
   services.forEach((service) => {
     nameWidths[service.id] = service.id.length * 8 + 20;
@@ -173,111 +166,119 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
 
   const dependencyGraph: Record<string, DependencyEdge[]> = data.dependency_graph;
 
-// Complete replacement for findAllPaths with fixed bidirectional traversal
-const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> } => {
-  const paths = new Set<string>();
-  const nodes = new Set<string>();
-  
-  // We need to build a reverse graph to efficiently find parents
-  const reverseGraph: Record<string, {source: string; appVersion: number}[]> = {};
-  
-  // Build the reverse graph for efficient parent lookup
-  Object.entries(dependencyGraph).forEach(([source, targets]) => {
-    targets.forEach(edge => {
-      if (!reverseGraph[edge.target]) {
-        reverseGraph[edge.target] = [];
+  // Complete replacement for findAllPaths with fixed bidirectional traversal
+  const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> } => {
+    const paths = new Set<string>();
+    const nodes = new Set<string>();
+    
+    // We need to build a reverse graph to efficiently find parents
+    const reverseGraph: Record<string, {source: string; appVersion: number}[]> = {};
+    
+    // Build the reverse graph for efficient parent lookup
+    Object.entries(dependencyGraph).forEach(([source, targets]) => {
+      targets.forEach(edge => {
+        if (!reverseGraph[edge.target]) {
+          reverseGraph[edge.target] = [];
+        }
+        reverseGraph[edge.target].push({
+          source: source,
+          appVersion: edge.appVersion
+        });
+      });
+    });
+    
+    // Track visited nodes to avoid cycles
+    const visited = new Set<string>();
+    
+    // Forward traversal - find all downstream dependencies
+    function traverseForward(node: string, appVersion: number) {
+      const visitKey = `${node}|${appVersion}|forward`;
+      if (visited.has(visitKey)) return;
+      visited.add(visitKey);
+      
+      nodes.add(node);
+      
+      // Follow edges with matching app version
+      if (dependencyGraph[node]) {
+        dependencyGraph[node].forEach(edge => {
+          if (edge.appVersion === appVersion) {
+            const pathId = `${node}|${edge.target}|${appVersion}`;
+            paths.add(pathId);
+            nodes.add(edge.target);
+            traverseForward(edge.target, appVersion);
+          }
+        });
       }
-      reverseGraph[edge.target].push({
-        source: source,
-        appVersion: edge.appVersion
-      });
-    });
-  });
-  
-  // Track visited nodes to avoid cycles
-  const visited = new Set<string>();
-  
-  // Forward traversal - find all downstream dependencies
-  function traverseForward(node: string, appVersion: number) {
-    const visitKey = `${node}|${appVersion}|forward`;
-    if (visited.has(visitKey)) return;
-    visited.add(visitKey);
-    
-    nodes.add(node);
-    
-    // Follow edges with matching app version
-    if (dependencyGraph[node]) {
-      dependencyGraph[node].forEach(edge => {
-        if (edge.appVersion === appVersion) {
-          const pathId = `${node}|${edge.target}|${appVersion}`;
-          paths.add(pathId);
-          nodes.add(edge.target);
-          traverseForward(edge.target, appVersion);
-        }
-      });
     }
-  }
-  
-  // Backward traversal - find all upstream dependencies
-  function traverseBackward(node: string, appVersion: number) {
-    const visitKey = `${node}|${appVersion}|backward`;
-    if (visited.has(visitKey)) return;
-    visited.add(visitKey);
     
-    nodes.add(node);
-    
-    // Follow incoming edges with matching app version
-    if (reverseGraph[node]) {
-      reverseGraph[node].forEach(edge => {
-        if (edge.appVersion === appVersion) {
-          const pathId = `${edge.source}|${node}|${appVersion}`;
-          paths.add(pathId);
-          nodes.add(edge.source);
-          traverseBackward(edge.source, appVersion);
-        }
-      });
+    // Backward traversal - find all upstream dependencies
+    function traverseBackward(node: string, appVersion: number) {
+      const visitKey = `${node}|${appVersion}|backward`;
+      if (visited.has(visitKey)) return;
+      visited.add(visitKey);
+      
+      nodes.add(node);
+      
+      // Follow incoming edges with matching app version
+      if (reverseGraph[node]) {
+        reverseGraph[node].forEach(edge => {
+          if (edge.appVersion === appVersion) {
+            const pathId = `${edge.source}|${node}|${appVersion}`;
+            paths.add(pathId);
+            nodes.add(edge.source);
+            traverseBackward(edge.source, appVersion);
+          }
+        });
+      }
     }
-  }
 
-  // Find all relevant app versions for this node
-  const relevantAppVersions = new Set<number>();
-  
-  // Check outgoing connections from this node
-  if (dependencyGraph[source]) {
-    dependencyGraph[source].forEach(edge => {
-      relevantAppVersions.add(edge.appVersion);
-    });
-  }
-  
-  // Check incoming connections to this node
-  if (reverseGraph[source]) {
-    reverseGraph[source].forEach(edge => {
-      relevantAppVersions.add(edge.appVersion);
-    });
-  }
-  
-  // If we couldn't find any app versions, use all versions in the graph
-  if (relevantAppVersions.size === 0) {
-    Object.values(dependencyGraph).forEach(edges => {
-      edges.forEach(edge => {
+    // Find all relevant app versions for this node
+    const relevantAppVersions = new Set<number>();
+    
+    // Check outgoing connections from this node
+    if (dependencyGraph[source]) {
+      dependencyGraph[source].forEach(edge => {
         relevantAppVersions.add(edge.appVersion);
       });
+    }
+    
+    // Check incoming connections to this node
+    if (reverseGraph[source]) {
+      reverseGraph[source].forEach(edge => {
+        relevantAppVersions.add(edge.appVersion);
+      });
+    }
+    
+    // If we couldn't find any app versions, use all versions in the graph
+    if (relevantAppVersions.size === 0) {
+      Object.values(dependencyGraph).forEach(edges => {
+        edges.forEach(edge => {
+          relevantAppVersions.add(edge.appVersion);
+        });
+      });
+    }
+    
+    // Traverse in both directions for each relevant app version
+    relevantAppVersions.forEach(appVersion => {
+      traverseForward(source, appVersion);
+      traverseBackward(source, appVersion);
     });
-  }
-  
-  // Traverse in both directions for each relevant app version
-  relevantAppVersions.forEach(appVersion => {
-    traverseForward(source, appVersion);
-    traverseBackward(source, appVersion);
-  });
-  
-  return { paths, nodes };
-};
+    
+    return { paths, nodes };
+  };
 
+  // Calculate highlighted paths and nodes
   const highlightedPaths = new Set<string>();
   const highlightedNodes = new Set<string>();
 
-  if (hoveredNode) {
+  // First check for a selected node (clicked)
+  if (selectedNode) {
+    const { paths, nodes } = findAllPaths(selectedNode);
+    paths.forEach((path) => highlightedPaths.add(path));
+    nodes.forEach((node) => highlightedNodes.add(node));
+  }
+  // If no selection, use hover highlight
+  else if (hoveredNode) {
     const { paths, nodes } = findAllPaths(hoveredNode);
     paths.forEach((path) => highlightedPaths.add(path));
     nodes.forEach((node) => highlightedNodes.add(node));
@@ -292,15 +293,6 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
     animation: `fadeInUp 0.5s ease forwards ${delay + offset}s`,
   });
 
-  const GlobalKeyframes = (
-    <style jsx global>{`
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-    `}</style>
-  );
-
   const calculateBoxWidth = (serviceId: string): number => {
     const versions = serviceVersions[serviceId] as string[] | undefined;
     const versionsCount = versions ? versions.length : 0;
@@ -308,9 +300,25 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
     return Math.max(300, nameWidth + 40 + versionsCount * (hexSize * 2 + 10));
   };
 
+  // Handle hexagon click to select a node
+  const handleNodeClick = (nodeKey: string) => {
+    if (selectedNode === nodeKey) {
+      // If clicking on already selected node, deselect it
+      setSelectedNode(null);
+    } else {
+      // Otherwise, select the clicked node
+      setSelectedNode(nodeKey);
+    }
+  };
+
   return (
     <div className="p-4" style={{ margin: "0px", padding: "0px"}}>
-      {GlobalKeyframes}
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
   
       <div className="overflow-auto flex justify-center bg-white" style={{ maxHeight: '1200px', maxWidth: '2400px' }}>
         <svg
@@ -347,9 +355,11 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                 <text 
                   x={service.x - boxWidth / 2 + 10} y={service.y + 5}
                   fill="#009ae8"
-                  // style={{textDecoration: "underline"}}
                   style={{cursor: "pointer"}}
-                  onClick={() => handleAppClick(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAppClick(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix]);
+                  }}
                 >
                   {service.id}
                 </text>
@@ -360,6 +370,13 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
   
                   const nodeKey = `${service.id}@${version}`;
                   const isHighlighted = highlightedNodes.has(nodeKey);
+                  const isSelected = selectedNode === nodeKey;
+                  
+                  // Use blue for the selected node and any node in its highlight path
+                  const useBlueHighlight = selectedNode && isHighlighted;
+                  
+                  // Use green for hover highlights when no node is selected
+                  const useGreenHighlight = !selectedNode && isHighlighted;
   
                   const points: string[] = [];
                   for (let i = 0; i < 6; i++) {
@@ -372,16 +389,21 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                   return (
                     <g
                       key={`${service.id}-${version}`}
-                      onMouseEnter={() => setHoveredNode(nodeKey)}
-                      onMouseLeave={() => setHoveredNode(null)}
+                      onMouseEnter={() => !selectedNode && setHoveredNode(nodeKey)}
+                      onMouseLeave={() => !selectedNode && setHoveredNode(null)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering the parent onClick
+                        handleNodeClick(nodeKey);
+                      }}
                       style={{ cursor: 'pointer', ...fade(index * 0.06) }}
                     >
                       <polygon
                         points={points.join(' ')}
                         fill={service.color}
-                        stroke={isHighlighted ? "#10b981" : "none"}
-                        strokeWidth={isHighlighted ? 3 : 0}
-                        opacity={hoveredNode && !isHighlighted ? 0.5 : 1}
+                        stroke={useBlueHighlight || isSelected ? "#2adbfa" : useGreenHighlight ? "#2ade4b" : "none"}
+                        strokeWidth={useBlueHighlight || isSelected || useGreenHighlight ? 3 : 0}
+                        opacity={(selectedNode && !isSelected && !isHighlighted) || 
+                                 (hoveredNode && !selectedNode && !isHighlighted) ? 0.5 : 1}
                       />
                       <text
                         x={cx}
@@ -464,10 +486,18 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
               const midX = (sourceX + targetX) / 2;
               const midY = (sourceY + targetY) / 2;
   
+              // Determine if any connections in this group are highlighted
               const isAnyHighlighted = connections.some((conn) => {
                 const pathId = `${conn.source}|${conn.target}|${conn.appVersion}`;
                 return highlightedPaths.has(pathId);
               });
+              
+              // Check if this is part of a selection
+              const isAnySelected = selectedNode && isAnyHighlighted;
+              
+              // Use blue for selected paths, green for hover paths
+              const highlightColor = isAnySelected ? "#2adbfa" : "#2ade4b";
+              const isActive = isAnySelected || (!selectedNode && isAnyHighlighted);
   
               const line = (
                 <line
@@ -476,9 +506,12 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                   y1={sourceY}
                   x2={targetX}
                   y2={targetY}
-                  stroke={isAnyHighlighted ? "#10b981" : "gray"}
-                  strokeWidth={isAnyHighlighted ? 3 : 1}
-                  opacity={hoveredNode && !isAnyHighlighted ? 0.3 : 1}
+                  stroke={isActive ? highlightColor : "gray"}
+                  strokeWidth={isActive ? 3 : 1}
+                  opacity={
+                    (selectedNode && !isAnySelected) || 
+                    (hoveredNode && !selectedNode && !isAnyHighlighted) ? 0.3 : 1
+                  }
                 />
               );
   
@@ -490,15 +523,22 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
   
                   const pathId = `${conn.source}|${conn.target}|${conn.appVersion}`;
                   const isThisHighlighted = highlightedPaths.has(pathId);
+                  const isThisSelected = selectedNode && isThisHighlighted;
+                  const isThisActive = isThisSelected || (!selectedNode && isThisHighlighted);
+                  
+                  const circleHighlightColor = isThisSelected ? "#2adbfa" : "#2ade4b";
   
                   return (
                     <g key={`version-${idx}-${conn.appVersion}`}>
                       <circle
                         cx={midX + offsetX}
                         cy={midY + offsetY}
-                        r={isThisHighlighted ? 16 : 12}
-                        fill={isThisHighlighted ? "#10b981" : "#718096"}
-                        opacity={hoveredNode && !isThisHighlighted ? 0.3 : 1}
+                        r={isThisActive ? 16 : 12}
+                        fill={isThisActive ? circleHighlightColor : "#718096"}
+                        opacity={
+                          (selectedNode && !isThisSelected) || 
+                          (hoveredNode && !selectedNode && !isThisHighlighted) ? 0.3 : 1
+                        }
                       />
                       <text
                         x={midX + offsetX}
@@ -522,16 +562,29 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
   
                 const isFirstHighlighted = highlightedPaths.has(firstPathId);
                 const isLastHighlighted = highlightedPaths.has(lastPathId);
-  
+                
+                const isFirstSelected = selectedNode && isFirstHighlighted;
+                const isLastSelected = selectedNode && isLastHighlighted;
+                
+                const isFirstActive = isFirstSelected || (!selectedNode && isFirstHighlighted);
+                const isLastActive = isLastSelected || (!selectedNode && isLastHighlighted);
+                
+                const firstHighlightColor = isFirstSelected ? "#2adbfa" : "#2ade4b";
+                const lastHighlightColor = isLastSelected ? "#2adbfa" : "#2ade4b";
+                const middleHighlightColor = isAnySelected ? "#2adbfa" : "#2ade4b";
+
                 versionCircles = (
                   <>
                     <g key={`version-${idx}-first`}>
                       <circle
                         cx={midX - 12}
                         cy={midY - 8}
-                        r={isFirstHighlighted ? 16 : 12}
-                        fill={isFirstHighlighted ? "#10b981" : "#718096"}
-                        opacity={hoveredNode && !isFirstHighlighted ? 0.3 : 1}
+                        r={isFirstActive ? 16 : 12}
+                        fill={isFirstActive ? firstHighlightColor : "#718096"}
+                        opacity={
+                          (selectedNode && !isFirstSelected) || 
+                          (hoveredNode && !selectedNode && !isFirstHighlighted) ? 0.3 : 1
+                        }
                       />
                       <text
                         x={midX - 12}
@@ -548,8 +601,11 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                         cx={midX}
                         cy={midY}
                         r={12}
-                        fill={isAnyHighlighted ? "#10b981" : "#718096"}
-                        opacity={hoveredNode && !isAnyHighlighted ? 0.3 : 1}
+                        fill={isActive ? middleHighlightColor : "#718096"}
+                        opacity={
+                          (selectedNode && !isAnySelected) || 
+                          (hoveredNode && !selectedNode && !isAnyHighlighted) ? 0.3 : 1
+                        }
                       />
                       <text
                         x={midX}
@@ -565,9 +621,12 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                       <circle
                         cx={midX + 12}
                         cy={midY + 8}
-                        r={isLastHighlighted ? 16 : 12}
-                        fill={isLastHighlighted ? "#10b981" : "#718096"}
-                        opacity={hoveredNode && !isLastHighlighted ? 0.3 : 1}
+                        r={isLastActive ? 16 : 12}
+                        fill={isLastActive ? lastHighlightColor : "#718096"}
+                        opacity={
+                          (selectedNode && !isLastSelected) || 
+                          (hoveredNode && !selectedNode && !isLastHighlighted) ? 0.3 : 1
+                        }
                       />
                       <text
                         x={midX + 12}
