@@ -185,3 +185,9 @@ async def get_incomplete_runs(app: str):
         "incomplete_runs": incomplete_runs
     }
     
+
+@app.get("/get_service")
+async def get_service_endpoint(full_name: str):
+    return {
+        "service": dynamo_util.get_service(full_name)
+    }

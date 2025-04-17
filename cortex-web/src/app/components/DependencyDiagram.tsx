@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { M_PLUS_1 } from 'next/font/google';
 
+const SUBDOMAIN = "e31e0db899-1642361493";
+
 interface AppData {
   App: string;
   'Service Count': number;
@@ -61,6 +63,22 @@ interface DependencyEdge {
   appVersion: number;
 }
 
+interface ServiceInfo {
+  service: {
+    ver: string;
+    links: {
+      display_order: number;
+      logo: string;
+      label: string;
+      url: string;
+    }[];
+    app: string;
+    name: string;
+    svc: string;
+    status: string;
+  };
+}
+
 const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, zoom, selectedApp, setSelectedApp, handleAppClick, apps }) => {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -68,6 +86,8 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
   const [error, setError] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [serviceInfo, setServiceInfo] = useState<ServiceInfo | null>(null);
+  const [serviceInfoLoading, setServiceInfoLoading] = useState<boolean>(false);
 
   // Mock services for testing
   const servicesM: Service[] = [
@@ -104,6 +124,36 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
 
     fetchData();
   }, [teamId, onError]);
+
+  // Fetch service info when a node is selected
+  useEffect(() => {
+    const fetchServiceInfo = async () => {
+      if (!selectedNode) {
+        setServiceInfo(null);
+        return;
+      }
+
+      setServiceInfoLoading(true);
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:8000/get_service?full_name=${encodeURIComponent(selectedNode)}`
+        );
+
+        if (!res.ok) {
+          throw new Error(`Server responded ${res.status}`);
+        }
+
+        const info: ServiceInfo = await res.json();
+        setServiceInfo(info);
+      } catch (err: any) {
+        console.error(`Error loading service info: ${err.message ?? 'Unknown error'}`);
+      } finally {
+        setServiceInfoLoading(false);
+      }
+    };
+
+    fetchServiceInfo();
+  }, [selectedNode]);
 
   if (loading) {
     return (
@@ -311,14 +361,81 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
     }
   };
 
+  // Render the service info panel
+  const renderServiceInfoPanel = () => {
+    if (!serviceInfo) return null;
+    
+    const { service } = serviceInfo;
+    
+    // Determine status color
+    let statusColor = 'yellow';
+    if (service.status === 'Good') {
+      statusColor = 'green';
+    } else if (service.status === 'Bad') {
+      statusColor = 'red';
+    }
+    
+    return (
+      <div className="absolute top-4 right-4 bg-white shadow-lg rounded-lg p-4 w-80 z-10">
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex-1 text-purple-700 font-medium">{`${service.app}/${service.svc}`}</div>
+          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-md text-sm font-medium ml-2">
+            {service.ver}
+          </div>
+        </div>
+        
+        <div className="space-y-1">
+          {service.links
+            .sort((a, b) => a.display_order - b.display_order)
+            .map((link, index) => (
+              <a 
+                key={index} 
+                href={link.url.replace("$$subdomain", SUBDOMAIN)} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center hover:bg-gray-100 p-2 rounded transition-colors text-sm"
+              >
+                <img 
+                  src={`/${link.logo}`} 
+                  alt={link.label} 
+                  className="w-6 h-6 mr-3" 
+                />
+                <span className="text-black underline">{link.label}</span>
+              </a>
+            ))
+          }
+        </div>
+        
+        <div className="flex justify-end mt-3 items-center">
+          <span className="text-sm mr-2">Status:</span>
+          <div className="flex items-center">
+            <span className="mr-1">{service.status}</span>
+            <div 
+              className="w-4 h-4 rounded-full" 
+              style={{ backgroundColor: statusColor }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="p-4" style={{ margin: "0px", padding: "0px"}}>
+    <div className="p-4 relative" style={{ margin: "0px", padding: "0px"}}>
       <style jsx global>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+      
+      {serviceInfoLoading ? (
+        <div className="absolute top-4 right-4 bg-white shadow-lg rounded-lg p-4 w-64 z-10 flex justify-center">
+          <CircularProgress size={30} />
+        </div>
+      ) : (
+        renderServiceInfoPanel()
+      )}
   
       <div className="overflow-auto flex justify-center bg-white" style={{ maxHeight: '1200px', maxWidth: '2400px' }}>
         <svg

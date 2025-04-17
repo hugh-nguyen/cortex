@@ -2,6 +2,8 @@ import boto3
 import json
 from datetime import datetime
 
+subdomain = "e31e0db899-1642361493"
+
 def delete_all_table_items(table_name, region_name='us-east-1'):
     """Delete all items from a specific DynamoDB table"""
     dynamodb = boto3.resource('dynamodb', region_name=region_name)
@@ -406,3 +408,99 @@ item = {
     )
 }
 app_versions_table.put_item(Item=item)
+
+services_table = dynamodb.Table('Services')
+
+item = {
+  "name": "shared-app/service-s@0.0.1",
+  "app": "shared-app",
+  "svc": "service-s",
+  "ver": "0.0.1",
+  "links": [
+    {
+      "display_order": 0,
+      "label": "View in EKS",
+      "url": "https://ap-southeast-2.console.aws.amazon.com/eks/clusters/cluster/deployments/shared-app-service-s-0-0-1?namespace=default&region=ap-southeast-2",
+      "logo": "eks.png",
+    },
+    {
+      "display_order": 1,
+      "label": "Deployment Link",
+      "url": f"http://k8s-eksingressgroup-{subdomain}.ap-southeast-2.elb.amazonaws.com/shared-app/service-s/",
+      "logo": "deployment.png",
+    },
+    {
+      "display_order": 2,
+      "label": "Deploy Workflow",
+      "url": "https://github.com/hugh-nguyen/shared-app-cortex-command/actions/runs/14504202826",
+      "logo": "gh-workflow.png",
+    },
+    {
+      "display_order": 3,
+      "label": "Build Artifact",
+      "url": f"https://ap-southeast-2.console.aws.amazon.com/ecr/repositories/private/495599745704/shared-app-service-s?region=ap-southeast-2",
+      "logo": "ecr.png",
+    },
+    {
+      "display_order": 4,
+      "label": "Build Workflow",
+      "url": "https://github.com/hugh-nguyen/shared-app-service-s/actions/runs/14504176262",
+      "logo": "gh-workflow.png",
+    },
+    {
+      "display_order": 5,
+      "label": "Source Code",
+      "url": "https://github.com/hugh-nguyen/shared-app-service-s/releases/tag/0.0.1",
+      "logo": "github.png",
+    },
+  ],
+  "status": "Good"
+}
+services_table.put_item(Item=item)
+
+item = {
+  "name": "shared-app/service-s@0.0.2",
+  "app": "shared-app",
+  "svc": "service-s",
+  "ver": "0.0.2",
+  "links": [
+    {
+      "display_order": 0,
+      "label": "View in EKS",
+      "url": "https://ap-southeast-2.console.aws.amazon.com/eks/clusters/cluster/deployments/shared-app-service-s-0-0-2?namespace=default&region=ap-southeast-2",
+      "logo": "eks.png",
+    },
+    {
+      "display_order": 1,
+      "label": "Deployment Link",
+      "url": f"http://k8s-eksingressgroup-{subdomain}.ap-southeast-2.elb.amazonaws.com/shared-app/service-s/",
+      "logo": "deployment.png",
+    },
+    {
+      "display_order": 2,
+      "label": "Deploy Workflow",
+      "url": "https://github.com/hugh-nguyen/shared-app-cortex-command/actions/runs/14504287106",
+      "logo": "gh-workflow.png",
+    },
+    {
+      "display_order": 3,
+      "label": "Build Artifact",
+      "url": f"https://ap-southeast-2.console.aws.amazon.com/ecr/repositories/private/495599745704/shared-app-service-s?region=ap-southeast-2",
+      "logo": "ecr.png",
+    },
+    {
+      "display_order": 4,
+      "label": "Build Workflow",
+      "url": "https://github.com/hugh-nguyen/shared-app-service-s/actions/runs/14504227515",
+      "logo": "gh-workflow.png",
+    },
+    {
+      "display_order": 5,
+      "label": "Source Code",
+      "url": "https://github.com/hugh-nguyen/shared-app-service-s/releases/tag/0.0.2",
+      "logo": "github.png",
+    },
+  ],
+  "status": "Good"
+}
+services_table.put_item(Item=item)

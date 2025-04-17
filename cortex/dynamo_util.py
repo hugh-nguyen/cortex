@@ -40,6 +40,7 @@ apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
 teams_table = dynamodb.Table('Teams')
 routes_table = dynamodb.Table('Routes')
+services_table = dynamodb.Table('Services')
 
 def get_all_rows(table_name, region_name='ap-southeast-2'):
     dynamodb = boto3.resource('dynamodb', region_name=region_name)
@@ -93,6 +94,20 @@ def get_app(app_name=None):
     except Exception as e:
         print(f"Error in get_all_apps: {str(e)}")
         return []
+    
+    
+def get_service(full_name=None):
+    try:
+        response = services_table.get_item(
+            Key={
+                'name': full_name
+            }
+        )
+        return response.get('Item')
+    except Exception as e:
+        print(f"Error in get_service: {str(e)}")
+        return None
+
 
 def get_apps(team_id=None):
     try:

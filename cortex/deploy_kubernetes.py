@@ -31,3 +31,54 @@ def deploy_kubernetes(service):
             error_message = e.stderr
             print(f"ERROR: Helm deployment failed:\n{error_message}")
             raise Exception(f"Helm deployment failed: {error_message}") from e
+    
+    import boto3
+    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2')
+    services_table = dynamodb.Table('Services')
+    links = [
+        {
+            "display_order": 0,
+            "label": "View in EKS",
+            "url": f"https://ap-southeast-2.console.aws.amazon.com/eks/clusters/cluster/deployments/{release_name}?namespace=default&region=ap-southeast-2",
+            "logo": "eks.png",
+        },
+        {
+            "display_order": 1,
+            "label": "Deployment Link",
+            "url": f"http://k8s-eksingressgroup-$$subdomain.ap-southeast-2.elb.amazonaws.com/{app}/{svc}/",
+            "logo": "deployment.png",
+        },
+        {
+            "display_order": 2,
+            "label": "Deploy Workflow",
+            "url": f"https://github.com/hugh-nguyen/{app}-cortex-command/actions/runs/14504202826",
+            "logo": "gh-workflow.png",
+        },
+        {
+            "display_order": 3,
+            "label": "Build Artifact",
+            "url": f"https://ap-southeast-2.console.aws.amazon.com/ecr/repositories/private/495599745704/{app}-{svc}?region=ap-southeast-2",
+            "logo": "ecr.png",
+        },
+        {
+            "display_order": 4,
+            "label": "Build Workflow",
+            "url": f"https://github.com/hugh-nguyen/{app}-{svc}/actions/runs/14504176262",
+            "logo": "gh-workflow.png",
+        },
+        {
+            "display_order": 5,
+            "label": "Source Code",
+            "url": f"https://github.com/hugh-nguyen/{app}-{svc}/releases/tag/0.0.1",
+            "logo": "github.png",
+        },
+    ]
+    item = {
+        "name": f"{app}/{svc}@{ver}",
+        "app": app,
+        "svc": svc,
+        "ver": ver,
+        "links": links,
+        "status": "Good"
+    }
+    services_table.put_item(Item=item)

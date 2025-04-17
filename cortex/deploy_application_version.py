@@ -97,6 +97,8 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     
     print(os.listdir("temp/iac/"))
     
+    deployed_services = []
+    
     for platform in os.listdir("temp/iac/"):
         print(platform)
         for service_name in os.listdir(f"temp/iac/{platform}"):
@@ -111,6 +113,7 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
                 deploy_serverless(service)
             if platform == "mulesoft":
                 deploy_mulesoft(service)
+
                 
     team_lookup = {
         "app1": 1,
@@ -130,7 +133,9 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
         raw_yaml, len(manifest["services"]), 0,
         run_id, manifest["services"], manifest["dependencies"], manifest["links"]
     )
-            
+    
+    
+    
             
 def deploy_routes(path_to_deploy_log):
     

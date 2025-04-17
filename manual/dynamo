@@ -40,3 +40,12 @@ aws dynamodb create-table \
         ReadCapacityUnits=1,WriteCapacityUnits=1
 
 aws dynamodb update-table --table-name Routes --cli-input-json file://gsi.json
+
+aws dynamodb create-table \
+    --table-name Services \
+    --attribute-definitions \
+        AttributeName=name,AttributeType=S \
+    --key-schema \
+        AttributeName=name,KeyType=HASH \
+    --provisioned-throughput \
+        ReadCapacityUnits=1,WriteCapacityUnits=1
