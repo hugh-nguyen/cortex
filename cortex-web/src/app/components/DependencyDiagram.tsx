@@ -311,9 +311,7 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
   return (
     <div className="p-4" style={{ margin: "0px", padding: "0px"}}>
       {GlobalKeyframes}
-
-      
-
+  
       <div className="overflow-auto flex justify-center bg-white" style={{ maxHeight: '1200px', maxWidth: '2400px' }}>
         <svg
           width="100%"
@@ -326,14 +324,13 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
             const appPrefix = service.id.split('/')[0];
             const appSelected = selectedApp === appPrefix;
             const boxWidth = calculateBoxWidth(service.id);
-            const hexStartX = service.x - boxWidth / 2 + nameWidths[service.id] + 20;
-
+            const hexStartX = service.x - boxWidth / 2 + nameWidths[service.id] + 32;
+  
             return (
               <g 
                 key={service.id} 
-                style={{ cursor: 'pointer', ...fade(svcIdx * 0.04) }} 
-                // onClick={() => setSelectedApp(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}
-                onClick={() => handleAppClick(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}
+                style={{ ...fade(svcIdx * 0.04) }}
+                onClick={() => setSelectedApp(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}
               >
                 <rect
                   x={service.x - boxWidth / 2}
@@ -346,18 +343,24 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                   rx={10}
                   ry={10}
                 />
-
-                <text x={service.x - boxWidth / 2 + 10} y={service.y + 5} className="text-sm font-medium">
+  
+                <text 
+                  x={service.x - boxWidth / 2 + 10} y={service.y + 5}
+                  fill="#009ae8"
+                  // style={{textDecoration: "underline"}}
+                  style={{cursor: "pointer"}}
+                  onClick={() => handleAppClick(Object.fromEntries(apps.map(app => [app.App, app]))[appPrefix])}
+                >
                   {service.id}
                 </text>
-
+  
                 {(serviceVersions[service.id] as string[] | undefined)?.map((version: string, index: number) => {
                   const cx = hexStartX + index * (hexSize * 2 + 10);
                   const cy = service.y;
-
+  
                   const nodeKey = `${service.id}@${version}`;
                   const isHighlighted = highlightedNodes.has(nodeKey);
-
+  
                   const points: string[] = [];
                   for (let i = 0; i < 6; i++) {
                     const angle = (Math.PI / 3) * i - Math.PI / 6;
@@ -365,7 +368,7 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                     const y = cy + hexSize * Math.sin(angle);
                     points.push(`${x},${y}`);
                   }
-
+  
                   return (
                     <g
                       key={`${service.id}-${version}`}
@@ -396,13 +399,13 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
               </g>
             );
           })}
-
+  
           {(() => {
             const connectionGroups: Record<
               string,
               { source: string; target: string; appVersion: number }[]
             > = {};
-
+  
             Object.entries(dependencyGraph).forEach(([source, targets]) => {
               targets.forEach((target) => {
                 const connectionKey = `${source}|${target.target}`;
@@ -416,17 +419,17 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                 });
               });
             });
-
+  
             return Object.entries(connectionGroups).map(([connectionKey, connections], idx) => {
               connections.sort((a, b) => a.appVersion - b.appVersion);
-
+  
               const firstConn = connections[0];
               const [sourceApp, sourceSvc, sourceVersion] = firstConn.source.split(/\/|@/);
               const [targetApp, targetSvc, targetVersion] = firstConn.target.split(/\/|@/);
-
+  
               const sourceId = `${sourceApp}/${sourceSvc}`;
               const targetId = `${targetApp}/${targetSvc}`;
-
+  
               const sourceIndex =
                 serviceVersions[sourceId] && (serviceVersions[sourceId] as string[]).indexOf(sourceVersion) !== -1
                   ? (serviceVersions[sourceId] as string[]).indexOf(sourceVersion)
@@ -435,37 +438,37 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                 serviceVersions[targetId] && (serviceVersions[targetId] as string[]).indexOf(targetVersion) !== -1
                   ? (serviceVersions[targetId] as string[]).indexOf(targetVersion)
                   : -1;
-
+  
               if (sourceIndex === -1 || targetIndex === -1) return null;
-
+  
               const sourceService = serviceMap[sourceId];
               const targetService = serviceMap[targetId];
-
+  
               if (!sourceService || !targetService) return null;
-
+  
               const sourceBoxWidth = calculateBoxWidth(sourceId);
               const targetBoxWidth = calculateBoxWidth(targetId);
-
-              const sourceHexStartX = sourceService.x - sourceBoxWidth / 2 + nameWidths[sourceId] + 20;
-              const targetHexStartX = targetService.x - targetBoxWidth / 2 + nameWidths[targetId] + 20;
-
+  
+              const sourceHexStartX = sourceService.x - sourceBoxWidth / 2 + nameWidths[sourceId] + 32;
+              const targetHexStartX = targetService.x - targetBoxWidth / 2 + nameWidths[targetId] + 32;
+  
               const sourceCx = sourceHexStartX + sourceIndex * (hexSize * 2 + 10);
               const targetCx = targetHexStartX + targetIndex * (hexSize * 2 + 10);
-
+  
               const sourceX = sourceCx;
               const sourceY = sourceService.y + hexSize;
-
+  
               const targetX = targetCx;
               const targetY = targetService.y - hexSize;
-
+  
               const midX = (sourceX + targetX) / 2;
               const midY = (sourceY + targetY) / 2;
-
+  
               const isAnyHighlighted = connections.some((conn) => {
                 const pathId = `${conn.source}|${conn.target}|${conn.appVersion}`;
                 return highlightedPaths.has(pathId);
               });
-
+  
               const line = (
                 <line
                   key={`line-${idx}`}
@@ -478,16 +481,16 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                   opacity={hoveredNode && !isAnyHighlighted ? 0.3 : 1}
                 />
               );
-
+  
               let versionCircles: any;
               if (connections.length <= 3) {
                 versionCircles = connections.map((conn, connIdx) => {
                   const offsetX = (connIdx - (connections.length - 1) / 2) * 12;
                   const offsetY = (connIdx - (connections.length - 1) / 2) * 8;
-
+  
                   const pathId = `${conn.source}|${conn.target}|${conn.appVersion}`;
                   const isThisHighlighted = highlightedPaths.has(pathId);
-
+  
                   return (
                     <g key={`version-${idx}-${conn.appVersion}`}>
                       <circle
@@ -513,13 +516,13 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
               } else {
                 const firstConn = connections[0];
                 const lastConn = connections[connections.length - 1];
-
+  
                 const firstPathId = `${firstConn.source}|${firstConn.target}|${firstConn.appVersion}`;
                 const lastPathId = `${lastConn.source}|${lastConn.target}|${lastConn.appVersion}`;
-
+  
                 const isFirstHighlighted = highlightedPaths.has(firstPathId);
                 const isLastHighlighted = highlightedPaths.has(lastPathId);
-
+  
                 versionCircles = (
                   <>
                     <g key={`version-${idx}-first`}>
@@ -579,7 +582,7 @@ const findAllPaths = (source: string): { paths: Set<string>; nodes: Set<string> 
                   </>
                 );
               }
-
+  
               return (
                 <g key={`connection-${idx}`} style={fade(idx * 0.03, CONNECTION_PHASE_OFFSET)}>
                   {line}
