@@ -48,6 +48,9 @@ if __name__ == "__main__":
     print("\nDeleting items from Teams table...")
     delete_all_table_items('Teams', region)
     
+    print("\nDeleting items from Routes table...")
+    delete_all_table_items('Routes', region)
+    
     print("\nDeletion complete!")
 
 dynamodb = boto3.resource('dynamodb')
@@ -306,31 +309,31 @@ upload_app_version(
 #####################
 ##### Routes #####
 ###################
-upload_routes(
-    "/app1/main/",
-    1,
-    [
-      {
-        "app": "app1",
-        "svc": "mfe-a",
-        "app_ver": 1,
-        "weight": 100
-      }
-    ]
-)
+# upload_routes(
+#     "/app1/main/",
+#     1,
+#     [
+#       {
+#         "app": "app1",
+#         "svc": "mfe-a",
+#         "app_ver": 1,
+#         "weight": 100
+#       }
+#     ]
+# )
 
-upload_routes(
-    "/app1/mfe-a/",
-    1,
-    [
-      {
-        "app": "app1",
-        "svc": "mfe-a",
-        "app_ver": 1,
-        "weight": 100
-      }
-    ]
-)
+# upload_routes(
+#     "/app1/mfe-a/",
+#     1,
+#     [
+#       {
+#         "app": "app1",
+#         "svc": "mfe-a",
+#         "app_ver": 1,
+#         "weight": 100
+#       }
+#     ]
+# )
 
 #####################
 ##### App Versions #####
