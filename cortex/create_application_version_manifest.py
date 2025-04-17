@@ -92,6 +92,11 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
 
         tags = service_repo_metadata_lookup[dep_lookup]["tags"]
         version = choose_version(dep_svc, tags, dep_semver)
+        
+        # temporary logic for demos only
+        if app_ver == 1 and dep_app == "app1" and dep_svc == "service-s":
+            version= "0.0.1"
+        ###
 
         prefix = f"/{dep_app}/{dep_svc}/"
         release_name = f"{dep_app}-{dep_svc}-{version.replace('.', '-')}"
@@ -112,9 +117,6 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
             "svc": dep_svc, 
             "svc_ver": version
         }
-        # temporary logic for demos only
-        if app_ver == 1 and dep_app == "app1" and dep_svc == "service-s":
-            transformed_dep["svc_ver"] = "0.0.1"
         dependencies.append(transformed_dep)
         
     # dependencies = []
