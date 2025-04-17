@@ -62,6 +62,7 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
             "svc": service_repo_metadata_lookup[lookup]["svc"],
             "svc_ver": choose_version(package_service, tags, package_semver),
         }
+        
         services.append(new_service)
 
 
@@ -111,6 +112,9 @@ def create_application_version_manifest(app_name, service_repo_metadata_lookup, 
             "svc": dep_svc, 
             "svc_ver": version
         }
+        # temporary logic for demos only
+        if app_ver == 1 and dep_app == "app1" and dep_svc == "service-s":
+            transformed_dep["svc_ver"] = "0.0.1"
         dependencies.append(transformed_dep)
         
     # dependencies = []
