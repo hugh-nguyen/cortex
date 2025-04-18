@@ -31,4 +31,12 @@ def deploy_serverless(service):
     os.chdir(cdk_dir)
     npm_install()
     subprocess.run(["npx", "cdk", "bootstrap", "aws://495599745704/ap-southeast-2"], check=True)
-    subprocess.run(["npx", "cdk", "deploy", "--require-approval", "never", "--all"], check=True)
+    subprocess.run(
+        [
+            "npx", "cdk", "deploy",
+            "--require-approval", "never",
+            "-c", f"version={service['svc_ver']}",
+            "--all",
+        ],
+        check=True,
+    )
