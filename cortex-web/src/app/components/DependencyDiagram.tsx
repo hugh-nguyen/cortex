@@ -390,7 +390,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
             .map((link, index) => (
               <a 
                 key={index} 
-                href={link.url.replace("$$subdomain", SUBDOMAIN)} 
+                href={(() => link.url.replace("$$subdomain", SUBDOMAIN))()} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center hover:bg-gray-100 p-2 rounded transition-colors text-sm"

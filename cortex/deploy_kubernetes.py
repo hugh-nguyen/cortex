@@ -1,7 +1,7 @@
 from cortex.util import *
 
 
-def deploy_kubernetes(service):
+def deploy_kubernetes(service, run_id):
     subprocess.run(["aws","eks","update-kubeconfig", "--region","ap-southeast-2","--name","cluster",], check=True)
     try:
         helm_list_output = subprocess.check_output(["helm", "list", "-q"], text=True)
@@ -51,7 +51,7 @@ def deploy_kubernetes(service):
         {
             "display_order": 2,
             "label": "Deploy Workflow",
-            "url": f"https://github.com/hugh-nguyen/{app}-cortex-command/actions/runs/14504202826",
+            "url": f"https://github.com/hugh-nguyen/{app}-cortex-command/actions/runs/{run_id}",
             "logo": "gh-workflow.png",
         },
         {
@@ -63,13 +63,13 @@ def deploy_kubernetes(service):
         {
             "display_order": 4,
             "label": "Build Workflow",
-            "url": f"https://github.com/hugh-nguyen/{app}-{svc}/actions/runs/14504176262",
+            "url": f"https://github.com/hugh-nguyen/{app}-{svc}/actions",
             "logo": "gh-workflow.png",
         },
         {
             "display_order": 5,
             "label": "Source Code",
-            "url": f"https://github.com/hugh-nguyen/{app}-{svc}/releases/tag/0.0.1",
+            "url": f"https://github.com/hugh-nguyen/{app}-{svc}/releases/tag/{ver}",
             "logo": "github.png",
         },
     ]

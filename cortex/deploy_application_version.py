@@ -97,8 +97,6 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     
     print(os.listdir("temp/iac/"))
     
-    deployed_services = []
-    
     for platform in os.listdir("temp/iac/"):
         print(platform)
         for service_name in os.listdir(f"temp/iac/{platform}"):
@@ -108,11 +106,11 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
             
             service = service_lookup[service_name]
             if platform == "kubernetes":
-                deploy_kubernetes(service)
-            if platform == "serverless":
-                deploy_serverless(service)
-            if platform == "mulesoft":
-                deploy_mulesoft(service)
+                deploy_kubernetes(service, run_id)
+            # if platform == "serverless":
+            #     deploy_serverless(service)
+            # if platform == "mulesoft":
+            #     deploy_mulesoft(service)
 
                 
     team_lookup = {
@@ -133,7 +131,6 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
         raw_yaml, len(manifest["services"]), 0,
         run_id, manifest["services"], manifest["dependencies"], manifest["links"]
     )
-    
     
     
             
