@@ -99,6 +99,9 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
     
     for platform in os.listdir("temp/iac/"):
         print(platform)
+        if platform not in ("kubernetes", "serverless", "mulesoft"):
+            continue
+        
         for service_name in os.listdir(f"temp/iac/{platform}"):
             print("\t", service_name)
             if service_name not in service_lookup:
