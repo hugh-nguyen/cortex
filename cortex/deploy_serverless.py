@@ -35,7 +35,7 @@ def deploy_serverless(service):
         [
             "npx", "cdk", "deploy",
             "--require-approval", "never",
-            "-c", f"version={service['svc_ver'].replace(".", "-")}",
+            "-c", f"version={service['svc_ver'].replace('.', '-')}",
             "--all",
         ],
         check=True,
