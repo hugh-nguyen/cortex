@@ -235,7 +235,7 @@ def sort_routes(routes, sort_signature=True):
 
 import boto3
 
-def list_rest_apis(region=None):
+def list_rest_apis(region="ap-southeast-2"):
     client = boto3.client('apigateway', region_name=region) if region else boto3.client('apigateway')
     results = []
     paginator = client.get_paginator('get_rest_apis')
@@ -245,7 +245,7 @@ def list_rest_apis(region=None):
             name = api['name']
             stages = client.get_stages(restApiId=api_id)['item']
             for st in stages:
-                hostname = f"{api_id}.execute-api.{client.meta.region_name}.amazonaws.com/{st['stageName']}"
+                # hostname = f"{api_id}.execute-api.{client.meta.region_name}.amazonaws.com/{st['stageName']}"
                 results.append({"name": name, "id": api["id"]})
     return results
 
