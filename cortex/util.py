@@ -232,3 +232,32 @@ def sort_routes(routes, sort_signature=True):
             routes.append(choose_route(group))
 
     return sorted(routes, key=env_route_sort_key)
+
+import boto3
+
+def list_rest_apis(region=None):
+    client = boto3.client('apigateway', region_name=region) if region else boto3.client('apigateway')
+    results = []
+    paginator = client.get_paginator('get_rest_apis')
+    for page in paginator.paginate():
+        for api in page['items']:
+            api_id = api['id']
+            name = api['name']
+            stages = client.get_stages(restApiId=api_id)['item']
+            for st in stages:
+                hostname = f"{api_id}.execute-api.{client.meta.region_name}.amazonaws.com/{st['stageName']}"
+                results.append({"name": name, "id": api["id"]})
+    return results
+
+# def list_http_apis(region=None):
+#     client = boto3.client('apigatewayv2', region_name=region) if region else boto3.client('apigatewayv2')
+#     results = []
+#     paginator = client.get_paginator('get_apis')
+#     for page in paginator.paginate():
+#         for api in page['Items']:
+#             endpoint = api.get('ApiEndpoint')
+#             name = api.get('Name')
+#             if endpoint and name:
+#                 host = endpoint.replace('https://', '').rstrip('/')
+#                 results.append({"name": name, "hostname": host})
+#     return results

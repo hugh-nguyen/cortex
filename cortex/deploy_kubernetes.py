@@ -79,6 +79,6 @@ def deploy_kubernetes(service, run_id):
         "svc": svc,
         "ver": ver,
         "links": links,
-        "status": "Good"
+        "status": "Good",
     }
     services_table.put_item(Item=item)

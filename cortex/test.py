@@ -1,5 +1,8 @@
-import time
+import util
 
-time.sleep(3)
+all_hosts = []
+all_hosts += util.list_rest_apis()
+all_hosts += util.list_http_apis()
 
-print("SUCCESS!")
+print(all_hosts)
+
