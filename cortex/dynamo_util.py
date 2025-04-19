@@ -263,6 +263,7 @@ def get_routes(team_id):
         print(f"Error in get_routes: {str(e)}")
         return None
 
+
 def put_route(payload):
     response = routes_table.put_item(
         Item={
@@ -272,3 +273,12 @@ def put_route(payload):
         }
     )
     return response
+
+
+def get_services():
+    try:
+        response = services_table.scan()
+        return response.get('Items', [])
+    except Exception as e:
+        print(f"Error in get_services: {str(e)}")
+        return []

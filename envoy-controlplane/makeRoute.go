@@ -3,19 +3,18 @@ package main
 import (
 	"fmt"
 
-	core  "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	core   "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	route  "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// ---------- helper types ----------
 type Header struct {
 	Name  string
 	Value string
 }
 
-// ---------- helper builders ----------
+// helpers (unchanged)
 func makeHeaderMatcher(name, exact string) *route.HeaderMatcher {
 	return &route.HeaderMatcher{
 		Name: name,
@@ -37,61 +36,33 @@ func makeHeaderValueOption(key, value string, append bool) *core.HeaderValueOpti
 	}
 }
 
-// ---------- main factory ----------
-func makeRoute(prefix, cluster string,
+func makeRoute(
+	prefix, cluster string,
 	headers []Header,
-	headersToAdd []Header) *route.Route {
+	headersToAdd []Header,
+	prefixRewrite string,
+	hostRewrite string,
+) *route.Route {
 
-	// ── 1. matchers ────────────────────────────────────────────────────────────
+	if prefixRewrite == "" {
+		prefixRewrite = "/"
+	}
+
+	// matchers
 	var hdrMatchers []*route.HeaderMatcher
 	for _, h := range headers {
 		hdrMatchers = append(hdrMatchers, makeHeaderMatcher(h.Name, h.Value))
 	}
 
-	// ── 2. request‑headers‑to‑add  (upstream) ─────────────────────────────────
-	var reqAdd []*core.HeaderValueOption
+	// header adds
+	var reqAdd, respAdd []*core.HeaderValueOption
 	for _, h := range headersToAdd {
-		// static header (Envoy → upstream)
-		reqAdd = append(reqAdd,
-			makeHeaderValueOption(h.Name, h.Value, true))
-
-		// dynamic header pulled from cookie (browser → Envoy → upstream)
-		//   %REQ_COOKIE(<cookieName>)% is evaluated per request
-		// cookieForward := makeHeaderValueOption(
-		// 	h.Name,
-		// 	fmt.Sprintf("%%REQ_COOKIE(%s)%%", h.Name),
-		// 	false) // overwrite static if cookie exists
-		// reqAdd = append(reqAdd, cookieForward)
-	}
-
-	// ── 3. response‑headers‑to‑add  (downstream) ──────────────────────────────
-	var respAdd []*core.HeaderValueOption
-	// for _, h := range headersToAdd {
-	// 	respAdd = append(respAdd,
-	// 		makeHeaderValueOption(h.Name, h.Value, true))
-	// }
-
-	for _, h := range headersToAdd {
-		// Set‑Cookie so browser stores the version
+		reqAdd = append(reqAdd, makeHeaderValueOption(h.Name, h.Value, true))
 		cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", h.Name, h.Value)
-		respAdd = append(respAdd,
-			makeHeaderValueOption("Set-Cookie", cookie, true))
+		respAdd = append(respAdd, makeHeaderValueOption("Set-Cookie", cookie, true))
 	}
 
-	// for _, h := range headersToAdd {
-	// 	// Set‑Cookie so browser stores the version
-	// 	cookie := fmt.Sprintf("%s=%s; Path=/; SameSite=Lax", h.Name, h.Value)
-	// 	respAdd = append(respAdd,
-	// 		makeHeaderValueOption("Set-Cookie", cookie, false))
-	// }
-
-	// (optional) expose header to JS – uncomment if you need it
-	// respAdd = append(respAdd,
-	//     makeHeaderValueOption("Access-Control-Expose-Headers",
-	//         "X-App-Version, X-App-Name", true))
-
-	// ── 4. build and return the Route object ──────────────────────────────────
-	return &route.Route{
+	r := &route.Route{
 		Match: &route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Prefix{Prefix: prefix},
 			Headers:       hdrMatchers,
@@ -99,10 +70,17 @@ func makeRoute(prefix, cluster string,
 		Action: &route.Route_Route{
 			Route: &route.RouteAction{
 				ClusterSpecifier: &route.RouteAction_Cluster{Cluster: cluster},
-				PrefixRewrite:    "/",
+				PrefixRewrite:    prefixRewrite,
 			},
 		},
 		RequestHeadersToAdd:  reqAdd,
 		ResponseHeadersToAdd: respAdd,
 	}
+
+	if hostRewrite != "" {
+		r.GetRoute().HostRewriteSpecifier =
+			&route.RouteAction_HostRewriteLiteral{HostRewriteLiteral: hostRewrite}
+	}
+
+	return r
 }

@@ -176,5 +176,5 @@ if __name__ == '__main__':
     if not args.testing:
         deploy_services(DEPLOY_LOG_PATH, app_name, app_ver, args.run_id)
     
-    # import cortex.envoy_util
-    # cortex.envoy_util.update_envoy()
+    import cortex.envoy_util
+    cortex.envoy_util.update_envoy()

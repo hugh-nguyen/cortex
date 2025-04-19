@@ -262,36 +262,54 @@ func generateSnapshot() error {
 }
 
 func handleAddRoute(w http.ResponseWriter, r *http.Request) {
-    configMutex.Lock()
-    defer configMutex.Unlock()
-    
-    var data struct {
-        Routes  []struct {
-            Prefix          string           `json:"prefix"`
+	configMutex.Lock()
+	defer configMutex.Unlock()
+
+	var data struct {
+		Routes  []struct {
+			Prefix          string           `json:"prefix"`
             Cluster         string           `json:"cluster,omitempty"`
             Headers         []Header         `json:"headers,omitempty"`       
             HeadersToAdd    []Header         `json:"headers_to_add,omitempty"` 
             Port            *int             `json:"port,omitempty"`
-            WeightedClusters []WeightedCluster `json:"weighted_clusters,omitempty"`
-        } `json:"routes"`
-    }
-    
-    if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-        http.Error(w, "Error parsing request: "+err.Error(), http.StatusBadRequest)
-        return
-    }
+			WeightedClusters []WeightedCluster `json:"weighted_clusters,omitempty"`
 
-    for _, rt := range data.Routes {
-        if rt.Cluster != "" {
-            port := 80 
-            if rt.Port != nil {
-                port = *rt.Port
-            }
-            clusters[rt.Cluster] = makeCluster(rt.Cluster, rt.Cluster, uint32(port))
-        }
-    }
-    
-    routes["local_routes"] = &route.RouteConfiguration{
+			Address         string `json:"address,omitempty"`
+			PrefixRewrite   string `json:"prefix_rewrite,omitempty"`
+			ClusterType     string `json:"cluster_type,omitempty"`
+			TLS             bool   `json:"tls,omitempty"`
+			DNSLookupFamily string `json:"dns_lookup_family,omitempty"`
+		} `json:"routes"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "Error parsing request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	for _, rt := range data.Routes {
+		if rt.Cluster != "" {
+			host := rt.Address
+			if host == "" {
+				host = rt.Cluster
+			}
+			port := uint32(80)
+			if rt.Port != nil {
+				port = uint32(*rt.Port)
+			}
+
+			clusters[rt.Cluster] = makeCluster(
+				rt.Cluster,
+				host,
+				port,
+				rt.ClusterType,
+				rt.DNSLookupFamily,
+				rt.TLS,
+			)
+		}
+	}
+
+	routes["local_routes"] = &route.RouteConfiguration{
         Name: "backend",
         VirtualHosts: []*route.VirtualHost{
             {
@@ -313,8 +331,8 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
             },
         },
     }
-    
-    for _, rt := range data.Routes {
+
+	for _, rt := range data.Routes {
         if rt.Headers == nil {
             rt.Headers = []Header{}
         }
@@ -339,14 +357,16 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
                     rt.Cluster,
                     rt.Headers,
                     rt.HeadersToAdd,
+					rt.PrefixRewrite,
+					rt.Address,
                 ),
             )
         } else {
             log.Printf("Warning: Route with prefix %s has neither cluster nor weighted_clusters specified", rt.Prefix)
         }
     }
-    
-    routes["local_routes"].VirtualHosts[0].Routes = append(
+
+	routes["local_routes"].VirtualHosts[0].Routes = append(
         routes["local_routes"].VirtualHosts[0].Routes,
         &route.Route{
             Match: &route.RouteMatch{
@@ -366,17 +386,14 @@ func handleAddRoute(w http.ResponseWriter, r *http.Request) {
             },
         },
     )
-    
-    listeners["local_listener"] = makeListener("local_listener", "0.0.0.0", 8080, "local_routes")
-    
-    if err := generateSnapshot(); err != nil {
-        http.Error(w, "Error generating snapshot: "+err.Error(), http.StatusInternalServerError)
-        return
-    }
-    
-    // log.Printf("Added route configuration with %d routes", len(routes["local_routes"].VirtualHosts[0].Routes))
-    w.WriteHeader(http.StatusOK)
-    // w.Write([]byte(fmt.Sprintf("Routes updated successfully")))
+
+	listeners["local_listener"] = makeListener("local_listener", "0.0.0.0", 8080, "local_routes")
+
+	if err := generateSnapshot(); err != nil {
+		http.Error(w, "Error generating snapshot: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func handleListResources(w http.ResponseWriter, r *http.Request) {

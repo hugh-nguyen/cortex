@@ -51,7 +51,7 @@ def deploy_serverless(service, run_id):
         if api["name"] == release_name:
             api_id = api["id"]
             
-    hostname = "{api_id}.execute-api.{client.meta.region_name}.amazonaws.com/prod"
+    hostname = f"{api_id}.execute-api.ap-southeast-2.amazonaws.com/prod"
             
     import boto3
     dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2')
@@ -102,6 +102,7 @@ def deploy_serverless(service, run_id):
         "links": links,
         "status": "Good",
         "hostname": hostname,
+        "platform": "serverless",
     }
     services_table.put_item(Item=item)
     
