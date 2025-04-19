@@ -89,13 +89,19 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
   const [serviceInfo, setServiceInfo] = useState<ServiceInfo | null>(null);
   const [serviceInfoLoading, setServiceInfoLoading] = useState<boolean>(false);
 
-  // Mock services for testing
+  // const servicesM: Service[] = [
+  //   { id: 'app1/mfe-a', x: -150, y: 120, color: '#4299e1' },
+  //   { id: 'app1/service-b', x: -150, y: 260, color: '#ed8936' },
+  //   { id: 'app2/mfe-x', x: 300, y: 120, color: '#ecc94b' },
+  //   { id: 'app2/service-y', x: 300, y: 260, color: '#48bb78' },
+  //   { id: 'shared-app/service-s', x: 55, y: 400, color: '#805ad5' }
+  // ];
   const servicesM: Service[] = [
-    { id: 'app1/mfe-a', x: -150, y: 120, color: '#4299e1' },
-    { id: 'app1/service-b', x: -150, y: 260, color: '#ed8936' },
-    { id: 'app2/mfe-x', x: 300, y: 120, color: '#ecc94b' },
-    { id: 'app2/service-y', x: 300, y: 260, color: '#48bb78' },
-    { id: 'shared-app/service-s', x: 55, y: 400, color: '#805ad5' }
+    { id: 'app1/mfe-a', x: 0, y: 120, color: '#4299e1' },
+    { id: 'app1/service-b', x: 0, y: 260, color: '#ed8936' },
+    { id: 'app2/mfe-x', x: 450, y: 120, color: '#ecc94b' },
+    { id: 'app2/service-y', x: 450, y: 260, color: '#48bb78' },
+    { id: 'shared-app/service-s', x: 205, y: 400, color: '#805ad5' }
   ];
 
   useEffect(() => {

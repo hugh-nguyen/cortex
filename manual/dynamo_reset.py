@@ -53,6 +53,9 @@ if __name__ == "__main__":
     print("\nDeleting items from Routes table...")
     delete_all_table_items('Routes', region)
     
+    print("\nDeleting items from Services table...")
+    delete_all_table_items('Services', region)
+    
     print("\nDeletion complete!")
 
 dynamodb = boto3.resource('dynamodb')
@@ -60,6 +63,7 @@ apps_table = dynamodb.Table('Apps')
 app_versions_table = dynamodb.Table('AppVersions')
 teams_table = dynamodb.Table('Teams')
 routes_table = dynamodb.Table('Routes')
+services_table = dynamodb.Table('Services')
 
 def upload_team(team_id=None, team_name=None, last_updated=None):
   if last_updated is None:
@@ -409,7 +413,6 @@ item = {
 }
 app_versions_table.put_item(Item=item)
 
-services_table = dynamodb.Table('Services')
 
 item = {
   "name": "shared-app/service-s@0.0.1",

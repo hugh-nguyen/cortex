@@ -108,12 +108,12 @@ def deploy_services(path_to_deploy_log, app_name, app_ver, run_id):
                 continue
             
             service = service_lookup[service_name]
-            # if platform == "kubernetes":
-            #     deploy_kubernetes(service, run_id)
+            if platform == "kubernetes":
+                deploy_kubernetes(service, run_id)
             if platform == "serverless":
                 deploy_serverless(service, run_id)
-            # if platform == "mulesoft":
-            #     deploy_mulesoft(service)
+            if platform == "mulesoft":
+                deploy_mulesoft(service)
 
                 
     team_lookup = {
