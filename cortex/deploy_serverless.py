@@ -51,7 +51,7 @@ def deploy_serverless(service, run_id):
         if api["name"] == release_name:
             api_id = api["id"]
             
-    hostname = f"{api_id}.execute-api.ap-southeast-2.amazonaws.com/prod"
+    hostname = f"{api_id}.execute-api.ap-southeast-2.amazonaws.com"
             
     import boto3
     dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-2')
@@ -90,7 +90,7 @@ def deploy_serverless(service, run_id):
         {
             "display_order": 5,
             "label": "View in CloudFormation",
-            "url": f"",
+            "url": f"https://ap-southeast-2.console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks?filteringText=&filteringStatus=active&viewNested=true",
             "logo": "cloudformation.png",
         },
         {
@@ -108,6 +108,7 @@ def deploy_serverless(service, run_id):
         "links": links,
         "status": "Good",
         "hostname": hostname,
+        "rewrite": "/prod/",
         "platform": "serverless",
     }
     services_table.put_item(Item=item)

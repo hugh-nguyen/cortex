@@ -288,3 +288,11 @@ def get_service(full_name=None):
     except Exception as e:
         print(f"Error in get_service: {str(e)}")
         return None
+    
+def get_services():
+    try:
+        response = services_table.scan()
+        return response.get('Items', [])
+    except Exception as e:
+        print(f"Error in get_services: {str(e)}")
+        return []

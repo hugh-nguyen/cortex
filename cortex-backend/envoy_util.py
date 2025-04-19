@@ -146,6 +146,9 @@ def transform_custom_routes(routes, lookup):
         
 
 def transform_routes(routes):
+    
+    services_lookup = {s["name"].replace("/", "-").replace("@", "-").replace(".", "-"): s for s in dynamo_util.get_services()}
+    
     result = []
     for route in routes:
         r = {**route}
@@ -153,7 +156,19 @@ def transform_routes(routes):
             r["headers"] = transform_headers(r["headers"])
         if "headers_to_add" in r:
             r["headers_to_add"] = transform_headers(r["headers_to_add"])
+        
+        if route["cluster"] in services_lookup:
+            service = services_lookup[route["cluster"]]
+            if service.get("platform") == "serverless":
+                print(route["cluster"], service.get("platform"))
+                r["address"] = service["hostname"]
+                r["prefix_rewrite"] = service["rewrite"]
+                r["cluster_type"] = "LOGICAL_DNS"
+                r["tls"] = True
+                r["dn_lookup_family"] = "V4_ONLY"
+        
         result.append(r)
+        
     return sort_routes(result)
 
 
