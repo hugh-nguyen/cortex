@@ -59,7 +59,7 @@ def deploy_serverless(service, run_id):
     links = [
         {
             "display_order": 0,
-            "label": "View in EKS",
+            "label": "View in API Gateway",
             "url": f"https://ap-southeast-2.console.aws.amazon.com/apigateway/main/apis/{api_id}/resources?api={api_id}&region=ap-southeast-2&url=https%3A%2F%2Fap-southeast-2.console.aws.amazon.com%2Fapigateway%2Fhome%3Fregion%3Dap-southeast-2%23%2Fapis%2F{api_id}%2Fresources",
             "logo": "apigw.png",
         },
@@ -79,7 +79,7 @@ def deploy_serverless(service, run_id):
             "display_order": 3,
             "label": "Build Artifact",
             "url": f"",
-            "logo": "ecr.png",
+            "logo": "s3.png",
         },
         {
             "display_order": 4,
@@ -89,6 +89,12 @@ def deploy_serverless(service, run_id):
         },
         {
             "display_order": 5,
+            "label": "View in CloudFormation",
+            "url": f"",
+            "logo": "cloudformation.png",
+        },
+        {
+            "display_order": 6,
             "label": "Source Code",
             "url": f"https://github.com/hugh-nguyen/{app}-{svc}/releases/tag/{ver}",
             "logo": "github.png",
