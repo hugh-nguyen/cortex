@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { M_PLUS_1 } from 'next/font/google';
 
-const SUBDOMAIN = "e31e0db899-1642361493";
+const SUBDOMAIN = "e31e0db899-563352579";
 
 interface AppData {
   App: string;

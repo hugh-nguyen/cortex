@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: control-plane
-          image: "495599745704.dkr.ecr.ap-southeast-2.amazonaws.com/envoy-controlplane:0.0.4"
+          image: "495599745704.dkr.ecr.ap-southeast-2.amazonaws.com/envoy-controlplane:0.0.5"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 18000
