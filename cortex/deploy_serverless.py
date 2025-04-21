@@ -48,7 +48,7 @@ def deploy_serverless(service, run_id):
     
     api_id = ""
     for api in all_apis:
-        if api["name"] == release_name:
+        if api["name"] == release_name or api["name"] == f"{release_name}-api":
             api_id = api["id"]
             
     hostname = f"{api_id}.execute-api.ap-southeast-2.amazonaws.com"
