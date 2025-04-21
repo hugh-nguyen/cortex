@@ -2,7 +2,7 @@ import boto3
 import json
 from datetime import datetime
 
-subdomain = "e31e0db899-563352579"
+subdomain = "e31e0db899-864799364"
 
 def delete_all_table_items(table_name, region_name='us-east-1'):
     """Delete all items from a specific DynamoDB table"""
