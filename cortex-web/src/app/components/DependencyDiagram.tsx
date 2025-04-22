@@ -97,6 +97,74 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
     y: number;
   } | null>(null);
 
+  // Add this function to find paths related to a specific app version connection
+  const findPathsForConnection = (source: string, target: string, appVersion: number): { paths: Set<string>; nodes: Set<string> } => {
+    const paths = new Set<string>();
+    const nodes = new Set<string>();
+    
+    // Start with the direct connection
+    const pathId = `${source}|${target}|${appVersion}`;
+    paths.add(pathId);
+    nodes.add(source);
+    nodes.add(target);
+    
+    // Find related connections recursively
+    const visited = new Set<string>();
+    
+    // Find downstream connections
+    const findDownstream = (node: string) => {
+      if (visited.has(node)) return;
+      visited.add(node);
+      
+      if (dependencyGraph[node]) {
+        dependencyGraph[node].forEach(edge => {
+          if (edge.appVersion === appVersion) {
+            const newPathId = `${node}|${edge.target}|${appVersion}`;
+            paths.add(newPathId);
+            nodes.add(edge.target);
+            findDownstream(edge.target);
+          }
+        });
+      }
+    };
+    
+    // Find upstream connections by building a reverse graph
+    const reverseGraph: Record<string, {source: string; appVersion: number}[]> = {};
+    Object.entries(dependencyGraph).forEach(([src, targets]) => {
+      targets.forEach(edge => {
+        if (!reverseGraph[edge.target]) {
+          reverseGraph[edge.target] = [];
+        }
+        reverseGraph[edge.target].push({
+          source: src,
+          appVersion: edge.appVersion
+        });
+      });
+    });
+    
+    const findUpstream = (node: string) => {
+      if (visited.has(`up-${node}`)) return;
+      visited.add(`up-${node}`);
+      
+      if (reverseGraph[node]) {
+        reverseGraph[node].forEach(edge => {
+          if (edge.appVersion === appVersion) {
+            const newPathId = `${edge.source}|${node}|${appVersion}`;
+            paths.add(newPathId);
+            nodes.add(edge.source);
+            findUpstream(edge.source);
+          }
+        });
+      }
+    };
+    
+    // Start the traversal from both ends of the connection
+    findDownstream(target);
+    findUpstream(source);
+    
+    return { paths, nodes };
+  };
+
   // const servicesM: Service[] = [
   //   { id: 'app1/mfe-a', x: -150, y: 120, color: '#4299e1' },
   //   { id: 'app1/service-b', x: -150, y: 260, color: '#ed8936' },
@@ -348,7 +416,17 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
     paths.forEach((path) => highlightedPaths.add(path));
     nodes.forEach((node) => highlightedNodes.add(node));
   }
-  // If no selection, use hover highlight
+  // If hovering over a circle, highlight paths specifically related to that connection
+  else if (hoveredCircle) {
+    const { paths, nodes } = findPathsForConnection(
+      hoveredCircle.source, 
+      hoveredCircle.target, 
+      hoveredCircle.appVersion
+    );
+    paths.forEach((path) => highlightedPaths.add(path));
+    nodes.forEach((node) => highlightedNodes.add(node));
+  }
+  // If no selection or circle hover, use node hover highlight
   else if (hoveredNode) {
     const { paths, nodes } = findAllPaths(hoveredNode);
     paths.forEach((path) => highlightedPaths.add(path));
@@ -674,14 +752,19 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
                   return (
                     <g 
                       key={`version-${idx}-${conn.appVersion}`}
-                      onMouseEnter={() => setHoveredCircle({
-                        appVersion: conn.appVersion,
-                        source: conn.source,
-                        target: conn.target,
-                        x: midX + offsetX,
-                        y: midY + offsetY
-                      })}
+                      onMouseEnter={() => {
+                        setHoveredCircle({
+                          appVersion: conn.appVersion,
+                          source: conn.source,
+                          target: conn.target,
+                          x: midX + offsetX,
+                          y: midY + offsetY
+                        });
+                        // Clear node hover when hovering over circle
+                        setHoveredNode(null);
+                      }}
                       onMouseLeave={() => setHoveredCircle(null)}
+                      style={{cursor: "pointer"}}
                     >
                       <circle
                         cx={midX + offsetX}
@@ -730,14 +813,18 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
                   <>
                     <g 
                       key={`version-${idx}-first`}
-                      onMouseEnter={() => setHoveredCircle({
-                        appVersion: firstConn.appVersion,
-                        source: firstConn.source,
-                        target: firstConn.target,
-                        x: midX - 12,
-                        y: midY - 8
-                      })}
+                      onMouseEnter={() => {
+                        setHoveredCircle({
+                          appVersion: firstConn.appVersion,
+                          source: firstConn.source,
+                          target: firstConn.target,
+                          x: midX - 12,
+                          y: midY - 8
+                        });
+                        setHoveredNode(null);
+                      }}
                       onMouseLeave={() => setHoveredCircle(null)}
+                      style={{cursor: "pointer"}}
                     >
                       <circle
                         cx={midX - 12}
@@ -782,14 +869,18 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
                     </g>
                     <g 
                       key={`version-${idx}-last`}
-                      onMouseEnter={() => setHoveredCircle({
-                        appVersion: lastConn.appVersion,
-                        source: lastConn.source,
-                        target: lastConn.target,
-                        x: midX + 12,
-                        y: midY + 8
-                      })}
+                      onMouseEnter={() => {
+                        setHoveredCircle({
+                          appVersion: lastConn.appVersion,
+                          source: lastConn.source,
+                          target: lastConn.target,
+                          x: midX + 12,
+                          y: midY + 8
+                        });
+                        setHoveredNode(null);
+                      }}
                       onMouseLeave={() => setHoveredCircle(null)}
+                      style={{cursor: "pointer"}}
                     >
                       <circle
                         cx={midX + 12}
@@ -845,13 +936,13 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
                   height={bubbleHeight}
                   rx={5}
                   ry={5}
-                  fill="#7e20e3"
+                  fill="#7c26c7"
                 />
                 
                 {/* Triangle pointer pointing to the right */}
                 <polygon
                   points={`${bubbleX + bubbleWidth},${bubbleY + bubbleHeight/2} ${bubbleX + bubbleWidth + 10},${bubbleY + bubbleHeight/2} ${bubbleX + bubbleWidth},${bubbleY + bubbleHeight/2 + 10}`}
-                  fill="#7e20e3"
+                  fill="#7c26c7"
                 />
                 
                 {/* Text inside the bubble */}
