@@ -5,32 +5,36 @@ from collections import defaultdict
 import dynamo_util
 
 def env_route_sort_key(route):
-    app_name_sort_key = "zzzzzzzz"
-    app_version_sort_key = 99999999
-    add_app_name_sort_key = "zzzzzzzz"
-    add_app_version_sort_key = 99999999
-    is_override = False
-    has_headers_to_add = False
+    # --- normalise headers into a dict --------------------------------------
+    header_map = {
+        (h.get("Name")  or h.get("name")):
+        (h.get("Value") or h.get("value"))
+        for h in route.get("headers", [])
+        if (h.get("Name") or h.get("name"))
+    }
 
-    if "headers" in route:
-        if "X-App-Name" in route["headers"]:
-            app_name_sort_key = route["headers"]["X-App-Name"]
-        if "X-App-Version" in route["headers"]:
-            app_version_sort_key = int(route["headers"]["X-App-Version"])
+    header_cnt            = len(header_map)          # <-- NEW
+    app_name_sort_key     = header_map.get("X-App-Name", "zzzzzzzz")
+    app_version_sort_key  = int(header_map.get("X-App-Version", 99999999))
 
-    if "is_override" in route:
-        is_override = route["is_override"]
+    # --- headers_to_add (unchanged) -----------------------------------------
+    add_header_map = {
+        (h.get("Key")  or h.get("key")):
+        (h.get("Value") or h.get("value"))
+        for h in route.get("headers_to_add", [])
+        if (h.get("Key") or h.get("key"))
+    }
+    add_app_name_sort_key    = add_header_map.get("X-App-Name", "zzzzzzzz")
+    add_app_version_sort_key = int(add_header_map.get("X-App-Version", 99999999))
+    has_headers_to_add       = bool(add_header_map)
 
-    if "headers_to_add" in route:
-        has_headers_to_add = True
-        if "App-Name" in route["headers_to_add"]:
-            add_app_name_sort_key = route["headers_to_add"]["X-App-Name"]
-        if "App-Version" in route["headers_to_add"]:
-            add_app_version_sort_key = int(route["headers_to_add"]["X-App-Version"])
+    is_override = route.get("is_override", False)
 
+    # --------   the sort tuple   --------------------------------------------
     return (
-        route["prefix"],
-        app_name_sort_key,
+        route["prefix"],        # 1) group by path
+        -header_cnt,            # 2) more header matchers → smaller (earlier)
+        app_name_sort_key,      # 3… same tie‑break rules as before
         app_version_sort_key,
         add_app_name_sort_key,
         add_app_version_sort_key,
@@ -44,7 +48,7 @@ def choose_route(routes):
     for r in routes:
         if r.get("custom") == True:
             return {k: v for k, v in r.items() if k != "custom"}
-        if r["cluster"] > most_recent["cluster"]:
+        if "cluster" in r and r["cluster"] > most_recent["cluster"]:
             most_recent = r
     return most_recent
 
