@@ -88,6 +88,14 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [serviceInfo, setServiceInfo] = useState<ServiceInfo | null>(null);
   const [serviceInfoLoading, setServiceInfoLoading] = useState<boolean>(false);
+  // Add a new state for hovering over version circles
+  const [hoveredCircle, setHoveredCircle] = useState<{
+    appVersion: number;
+    source: string;
+    target: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
   // const servicesM: Service[] = [
   //   { id: 'app1/mfe-a', x: -150, y: 120, color: '#4299e1' },
@@ -403,7 +411,7 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
             .map((link, index) => (
               <a 
                 key={index} 
-                href={(() => link.url.replace("$$subdomain", SUBDOMAIN))()} 
+                href={(() => link.url.replace("$subdomain", SUBDOMAIN))()} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center hover:bg-gray-100 p-2 rounded transition-colors text-sm"
@@ -657,9 +665,24 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
                   const isThisActive = isThisSelected || (!selectedNode && isThisHighlighted);
                   
                   const circleHighlightColor = isThisSelected ? "#2adbfa" : "#2ade4b";
+                  
+                  const isThisCircleHovered = hoveredCircle && 
+                    hoveredCircle.appVersion === conn.appVersion && 
+                    hoveredCircle.source === conn.source && 
+                    hoveredCircle.target === conn.target;
   
                   return (
-                    <g key={`version-${idx}-${conn.appVersion}`}>
+                    <g 
+                      key={`version-${idx}-${conn.appVersion}`}
+                      onMouseEnter={() => setHoveredCircle({
+                        appVersion: conn.appVersion,
+                        source: conn.source,
+                        target: conn.target,
+                        x: midX + offsetX,
+                        y: midY + offsetY
+                      })}
+                      onMouseLeave={() => setHoveredCircle(null)}
+                    >
                       <circle
                         cx={midX + offsetX}
                         cy={midY + offsetY}
@@ -705,7 +728,17 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
 
                 versionCircles = (
                   <>
-                    <g key={`version-${idx}-first`}>
+                    <g 
+                      key={`version-${idx}-first`}
+                      onMouseEnter={() => setHoveredCircle({
+                        appVersion: firstConn.appVersion,
+                        source: firstConn.source,
+                        target: firstConn.target,
+                        x: midX - 12,
+                        y: midY - 8
+                      })}
+                      onMouseLeave={() => setHoveredCircle(null)}
+                    >
                       <circle
                         cx={midX - 12}
                         cy={midY - 8}
@@ -747,7 +780,17 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
                         ...
                       </text>
                     </g>
-                    <g key={`version-${idx}-last`}>
+                    <g 
+                      key={`version-${idx}-last`}
+                      onMouseEnter={() => setHoveredCircle({
+                        appVersion: lastConn.appVersion,
+                        source: lastConn.source,
+                        target: lastConn.target,
+                        x: midX + 12,
+                        y: midY + 8
+                      })}
+                      onMouseLeave={() => setHoveredCircle(null)}
+                    >
                       <circle
                         cx={midX + 12}
                         cy={midY + 8}
@@ -779,6 +822,51 @@ const DependencyDiagram: React.FC<DependencyDiagramProps> = ({ teamId, onError, 
                 </g>
               );
             });
+          })()}
+          
+          {/* Speech bubble for hovered circle */}
+          {hoveredCircle && (() => {
+            const sourceAppSvc = hoveredCircle.source.split('@')[0];
+            const sourceApp = sourceAppSvc.split('/')[0];
+            
+            // Create a speech bubble that matches the reference images
+            const bubbleWidth = 110;
+            const bubbleHeight = 35;
+            const bubbleX = hoveredCircle.x - bubbleWidth - 35; // Position to the left with some spacing
+            const bubbleY = hoveredCircle.y - bubbleHeight / 2;
+            
+            return (
+              <g>
+                {/* Main bubble rectangle */}
+                <rect
+                  x={bubbleX}
+                  y={bubbleY}
+                  width={bubbleWidth}
+                  height={bubbleHeight}
+                  rx={5}
+                  ry={5}
+                  fill="#7e20e3"
+                />
+                
+                {/* Triangle pointer pointing to the right */}
+                <polygon
+                  points={`${bubbleX + bubbleWidth},${bubbleY + bubbleHeight/2} ${bubbleX + bubbleWidth + 10},${bubbleY + bubbleHeight/2} ${bubbleX + bubbleWidth},${bubbleY + bubbleHeight/2 + 10}`}
+                  fill="#7e20e3"
+                />
+                
+                {/* Text inside the bubble */}
+                <text
+                  x={bubbleX + bubbleWidth/2}
+                  y={bubbleY + bubbleHeight/2 + 5}
+                  textAnchor="middle"
+                  fill="white"
+                  className="text-sm font-medium"
+                  style={{ fontWeight: 600 }}
+                >
+                  {sourceApp} @ v{hoveredCircle.appVersion}
+                </text>
+              </g>
+            );
           })()}
         </svg>
       </div>
