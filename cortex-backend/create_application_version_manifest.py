@@ -123,8 +123,8 @@ def create_application_version_manifest(main_app_name):
         release_name = f"{main_app_name}-{svc}-{svc_ver.replace('.', '-')}"
 
         # 1
-        # headers = {"X-App-Version": app_ver}
-        # routes.append(create_route(prefix, release_name, headers))
+        headers = {"X-App-Version": app_ver}
+        routes.append(create_route(prefix, release_name, headers))
 
         # 2
         if prefix not in prefixes:
@@ -153,8 +153,8 @@ def create_application_version_manifest(main_app_name):
         routes.append(create_route(prefix, release_name, headers))
 
         # 4
-        # headers = {"X-App-Name": main_app_name}
-        # routes.append(create_route(prefix, release_name, headers))
+        headers = {"X-App-Name": main_app_name}
+        routes.append(create_route(prefix, release_name, headers))
         
         transformed_dep = {
             "app": dep_app, 

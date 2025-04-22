@@ -195,6 +195,7 @@ def update_envoy():
     
     xroutes = dynamo_util.get_all_rows("routes")
     routes = transform_routes(routes) + transform_custom_routes(xroutes, lookup)
+    routes = sort_routes(routes)
     
     # import json; open("test.json", "w").write(json.dumps(sort_routes(routes)))
     

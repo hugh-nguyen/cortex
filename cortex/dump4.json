@@ -14,10 +14,10 @@
        "patch": 1
       },
       "metadata": {
-       "build.type": "RELEASE",
+       "revision.status": "Clean",
        "ssl.version": "BoringSSL",
        "revision.sha": "bae2e9d642a6a8ae6c5d3810f77f3e888f0d97da",
-       "revision.status": "Clean"
+       "build.type": "RELEASE"
       }
      },
      "extensions": [
@@ -1912,7 +1912,7 @@
   },
   {
    "@type": "type.googleapis.com/envoy.admin.v3.ClustersConfigDump",
-   "version_info": "v16",
+   "version_info": "v18",
    "static_clusters": [
     {
      "cluster": {
@@ -2126,7 +2126,7 @@
      "last_updated": "2025-04-21T22:58:14.014Z"
     },
     {
-     "version_info": "v16",
+     "version_info": "v18",
      "cluster": {
       "@type": "type.googleapis.com/envoy.config.cluster.v3.Cluster",
       "name": "app2-service-y-0-0-1",
@@ -2136,7 +2136,7 @@
        "name": "envoy.transport_sockets.tls",
        "typed_config": {
         "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-        "sni": "azm9biteef.execute-api.ap-southeast-2.amazonaws.com"
+        "sni": "9ovd6hn4o0.execute-api.ap-southeast-2.amazonaws.com"
        }
       },
       "load_assignment": {
@@ -2148,7 +2148,7 @@
            "endpoint": {
             "address": {
              "socket_address": {
-              "address": "azm9biteef.execute-api.ap-southeast-2.amazonaws.com",
+              "address": "9ovd6hn4o0.execute-api.ap-southeast-2.amazonaws.com",
               "port_value": 443
              }
             }
@@ -2159,7 +2159,7 @@
        ]
       }
      },
-     "last_updated": "2025-04-22T00:23:16.465Z"
+     "last_updated": "2025-04-22T00:38:12.527Z"
     },
     {
      "version_info": "v13",
@@ -2259,7 +2259,7 @@
   },
   {
    "@type": "type.googleapis.com/envoy.admin.v3.ListenersConfigDump",
-   "version_info": "v16",
+   "version_info": "v18",
    "dynamic_listeners": [
     {
      "name": "local_listener",
@@ -2310,15 +2310,6 @@
                 },
                 {
                  "match": {
-                  "prefix": "/app1/mfe-a/"
-                 },
-                 "route": {
-                  "cluster": "app1-mfe-a-0-0-2",
-                  "prefix_rewrite": "/"
-                 }
-                },
-                {
-                 "match": {
                   "prefix": "/app1/mfe-a/",
                   "headers": [
                    {
@@ -2336,7 +2327,24 @@
                 },
                 {
                  "match": {
-                  "prefix": "/app1/service-b/"
+                  "prefix": "/app1/mfe-a/"
+                 },
+                 "route": {
+                  "cluster": "app1-mfe-a-0-0-2",
+                  "prefix_rewrite": "/"
+                 }
+                },
+                {
+                 "match": {
+                  "prefix": "/app1/service-b/",
+                  "headers": [
+                   {
+                    "name": "X-App-Version",
+                    "string_match": {
+                     "exact": "1"
+                    }
+                   }
+                  ]
                  },
                  "route": {
                   "cluster": "app1-service-b-0-0-1",
@@ -2362,18 +2370,19 @@
                 },
                 {
                  "match": {
-                  "prefix": "/app1/service-b/",
-                  "headers": [
-                   {
-                    "name": "X-App-Version",
-                    "string_match": {
-                     "exact": "1"
-                    }
-                   }
-                  ]
+                  "prefix": "/app1/service-b/"
                  },
                  "route": {
                   "cluster": "app1-service-b-0-0-1",
+                  "prefix_rewrite": "/"
+                 }
+                },
+                {
+                 "match": {
+                  "prefix": "/app2/mfe-x/"
+                 },
+                 "route": {
+                  "cluster": "app2-mfe-x-0-0-1",
                   "prefix_rewrite": "/"
                  }
                 },
@@ -2396,21 +2405,12 @@
                 },
                 {
                  "match": {
-                  "prefix": "/app2/mfe-x/"
-                 },
-                 "route": {
-                  "cluster": "app2-mfe-x-0-0-1",
-                  "prefix_rewrite": "/"
-                 }
-                },
-                {
-                 "match": {
                   "prefix": "/app2/service-y/"
                  },
                  "route": {
                   "cluster": "app2-service-y-0-0-1",
                   "prefix_rewrite": "/prod/",
-                  "host_rewrite_literal": "azm9biteef.execute-api.ap-southeast-2.amazonaws.com"
+                  "host_rewrite_literal": "9ovd6hn4o0.execute-api.ap-southeast-2.amazonaws.com"
                  }
                 },
                 {
@@ -2428,24 +2428,7 @@
                  "route": {
                   "cluster": "app2-service-y-0-0-1",
                   "prefix_rewrite": "/prod/",
-                  "host_rewrite_literal": "azm9biteef.execute-api.ap-southeast-2.amazonaws.com"
-                 }
-                },
-                {
-                 "match": {
-                  "prefix": "/shared-app/service-s/",
-                  "headers": [
-                   {
-                    "name": "X-App-Version",
-                    "string_match": {
-                     "exact": "1"
-                    }
-                   }
-                  ]
-                 },
-                 "route": {
-                  "cluster": "shared-app-service-s-0-0-1",
-                  "prefix_rewrite": "/"
+                  "host_rewrite_literal": "9ovd6hn4o0.execute-api.ap-southeast-2.amazonaws.com"
                  }
                 },
                 {
@@ -2476,15 +2459,26 @@
                   "prefix": "/shared-app/service-s/",
                   "headers": [
                    {
-                    "name": "X-App-Name",
-                    "string_match": {
-                     "exact": "app2"
-                    }
-                   },
-                   {
                     "name": "X-App-Version",
                     "string_match": {
                      "exact": "1"
+                    }
+                   }
+                  ]
+                 },
+                 "route": {
+                  "cluster": "shared-app-service-s-0-0-1",
+                  "prefix_rewrite": "/"
+                 }
+                },
+                {
+                 "match": {
+                  "prefix": "/shared-app/service-s/",
+                  "headers": [
+                   {
+                    "name": "X-App-Version",
+                    "string_match": {
+                     "exact": "2"
                     }
                    }
                   ]
@@ -2510,7 +2504,7 @@
                    {
                     "name": "X-App-Name",
                     "string_match": {
-                     "exact": "app1"
+                     "exact": "app2"
                     }
                    }
                   ]
@@ -2548,9 +2542,15 @@
                   "prefix": "/shared-app/service-s/",
                   "headers": [
                    {
+                    "name": "X-App-Name",
+                    "string_match": {
+                     "exact": "app2"
+                    }
+                   },
+                   {
                     "name": "X-App-Version",
                     "string_match": {
-                     "exact": "2"
+                     "exact": "1"
                     }
                    }
                   ]
@@ -2567,7 +2567,7 @@
                    {
                     "name": "X-App-Name",
                     "string_match": {
-                     "exact": "app2"
+                     "exact": "app1"
                     }
                    }
                   ]
@@ -2700,7 +2700,7 @@
         }
        ]
       },
-      "last_updated": "2025-04-22T00:23:16.464Z"
+      "last_updated": "2025-04-22T00:38:12.526Z"
      }
     }
    ]
@@ -3218,6 +3218,15 @@
          },
          {
           "match": {
+           "prefix": "/app2/mfe-x/"
+          },
+          "route": {
+           "cluster": "app2-mfe-x-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
            "prefix": "/app2/mfe-x/",
            "headers": [
             {
@@ -3227,15 +3236,6 @@
              }
             }
            ]
-          },
-          "route": {
-           "cluster": "app2-mfe-x-0-0-1",
-           "prefix_rewrite": "/"
-          }
-         },
-         {
-          "match": {
-           "prefix": "/app2/mfe-x/"
           },
           "route": {
            "cluster": "app2-mfe-x-0-0-1",
@@ -3257,7 +3257,7 @@
           "route": {
            "cluster": "app2-service-y-0-0-1",
            "prefix_rewrite": "/prod/",
-           "host_rewrite_literal": "shf3ys5sue.execute-api.ap-southeast-2.amazonaws.com"
+           "host_rewrite_literal": "kkscwvo7h4.execute-api.ap-southeast-2.amazonaws.com"
           }
          },
          {
@@ -3267,19 +3267,13 @@
           "route": {
            "cluster": "app2-service-y-0-0-1",
            "prefix_rewrite": "/prod/",
-           "host_rewrite_literal": "shf3ys5sue.execute-api.ap-southeast-2.amazonaws.com"
+           "host_rewrite_literal": "kkscwvo7h4.execute-api.ap-southeast-2.amazonaws.com"
           }
          },
          {
           "match": {
            "prefix": "/shared-app/service-s/",
            "headers": [
-            {
-             "name": "X-App-Name",
-             "string_match": {
-              "exact": "app1"
-             }
-            },
             {
              "name": "X-App-Version",
              "string_match": {
@@ -3297,6 +3291,12 @@
           "match": {
            "prefix": "/shared-app/service-s/",
            "headers": [
+            {
+             "name": "X-App-Name",
+             "string_match": {
+              "exact": "app1"
+             }
+            },
             {
              "name": "X-App-Version",
              "string_match": {
@@ -3341,9 +3341,9 @@
            "prefix": "/shared-app/service-s/",
            "headers": [
             {
-             "name": "X-App-Name",
+             "name": "X-App-Version",
              "string_match": {
-              "exact": "app2"
+              "exact": "2"
              }
             }
            ]
@@ -3360,13 +3360,7 @@
             {
              "name": "X-App-Name",
              "string_match": {
-              "exact": "app1"
-             }
-            },
-            {
-             "name": "X-App-Version",
-             "string_match": {
-              "exact": "2"
+              "exact": "app2"
              }
             }
            ]
@@ -3404,6 +3398,12 @@
            "prefix": "/shared-app/service-s/",
            "headers": [
             {
+             "name": "X-App-Name",
+             "string_match": {
+              "exact": "app1"
+             }
+            },
+            {
              "name": "X-App-Version",
              "string_match": {
               "exact": "2"
@@ -3413,54 +3413,6 @@
           },
           "route": {
            "cluster": "shared-app-service-s-0-0-2",
-           "prefix_rewrite": "/"
-          }
-         },
-         {
-          "match": {
-           "prefix": "/app2/main/"
-          },
-          "route": {
-           "weighted_clusters": {
-            "clusters": [
-             {
-              "name": "app2-mfe-x-0-0-1",
-              "weight": 50,
-              "request_headers_to_add": [
-               {
-                "header": {
-                 "key": "X-App-Version",
-                 "value": "1"
-                },
-                "append": true
-               },
-               {
-                "header": {
-                 "key": "X-App-Name",
-                 "value": "app2"
-                },
-                "append": true
-               }
-              ],
-              "response_headers_to_add": [
-               {
-                "header": {
-                 "key": "Set-Cookie",
-                 "value": "X-App-Version=1; Path=/; SameSite=Lax"
-                },
-                "append": true
-               },
-               {
-                "header": {
-                 "key": "Set-Cookie",
-                 "value": "X-App-Name=app2; Path=/; SameSite=Lax"
-                },
-                "append": true
-               }
-              ]
-             }
-            ]
-           },
            "prefix_rewrite": "/"
           }
          },
@@ -3573,7 +3525,415 @@
        }
       ]
      },
-     "last_updated": "2025-04-22T00:03:09.919Z"
+     "last_updated": "2025-04-22T00:29:52.589Z"
+    },
+    {
+     "route_config": {
+      "@type": "type.googleapis.com/envoy.config.route.v3.RouteConfiguration",
+      "name": "backend",
+      "virtual_hosts": [
+       {
+        "name": "backend",
+        "domains": [
+         "*"
+        ],
+        "routes": [
+         {
+          "match": {
+           "prefix": "/app1/mfe-a/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "app1-mfe-a-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app1/mfe-a/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "2"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "app1-mfe-a-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app1/mfe-a/"
+          },
+          "route": {
+           "cluster": "app1-mfe-a-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app1/service-b/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "app1-service-b-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app1/service-b/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "2"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "app1-service-b-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app1/service-b/"
+          },
+          "route": {
+           "cluster": "app1-service-b-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app2/mfe-x/"
+          },
+          "route": {
+           "cluster": "app2-mfe-x-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app2/mfe-x/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "app2-mfe-x-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app2/service-y/"
+          },
+          "route": {
+           "cluster": "app2-service-y-0-0-1",
+           "prefix_rewrite": "/prod/",
+           "host_rewrite_literal": "9ovd6hn4o0.execute-api.ap-southeast-2.amazonaws.com"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app2/service-y/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "app2-service-y-0-0-1",
+           "prefix_rewrite": "/prod/",
+           "host_rewrite_literal": "9ovd6hn4o0.execute-api.ap-southeast-2.amazonaws.com"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/",
+           "headers": [
+            {
+             "name": "X-App-Name",
+             "string_match": {
+              "exact": "app1"
+             }
+            },
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-1",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/",
+           "headers": [
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "2"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/"
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/",
+           "headers": [
+            {
+             "name": "X-App-Name",
+             "string_match": {
+              "exact": "app2"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/",
+           "headers": [
+            {
+             "name": "X-App-Name",
+             "string_match": {
+              "exact": "app1"
+             }
+            },
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "2"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/",
+           "headers": [
+            {
+             "name": "X-App-Name",
+             "string_match": {
+              "exact": "app2"
+             }
+            },
+            {
+             "name": "X-App-Version",
+             "string_match": {
+              "exact": "1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/shared-app/service-s/",
+           "headers": [
+            {
+             "name": "X-App-Name",
+             "string_match": {
+              "exact": "app1"
+             }
+            }
+           ]
+          },
+          "route": {
+           "cluster": "shared-app-service-s-0-0-2",
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/app1/main/"
+          },
+          "route": {
+           "weighted_clusters": {
+            "clusters": [
+             {
+              "name": "app1-mfe-a-0-0-1",
+              "weight": 50,
+              "request_headers_to_add": [
+               {
+                "header": {
+                 "key": "X-App-Version",
+                 "value": "1"
+                },
+                "append": true
+               },
+               {
+                "header": {
+                 "key": "X-App-Name",
+                 "value": "app1"
+                },
+                "append": true
+               }
+              ],
+              "response_headers_to_add": [
+               {
+                "header": {
+                 "key": "Set-Cookie",
+                 "value": "X-App-Version=1; Path=/; SameSite=Lax"
+                },
+                "append": true
+               },
+               {
+                "header": {
+                 "key": "Set-Cookie",
+                 "value": "X-App-Name=app1; Path=/; SameSite=Lax"
+                },
+                "append": true
+               }
+              ]
+             },
+             {
+              "name": "app1-mfe-a-0-0-2",
+              "weight": 50,
+              "request_headers_to_add": [
+               {
+                "header": {
+                 "key": "X-App-Version",
+                 "value": "2"
+                },
+                "append": true
+               },
+               {
+                "header": {
+                 "key": "X-App-Name",
+                 "value": "app1"
+                },
+                "append": true
+               }
+              ],
+              "response_headers_to_add": [
+               {
+                "header": {
+                 "key": "Set-Cookie",
+                 "value": "X-App-Version=2; Path=/; SameSite=Lax"
+                },
+                "append": true
+               },
+               {
+                "header": {
+                 "key": "Set-Cookie",
+                 "value": "X-App-Name=app1; Path=/; SameSite=Lax"
+                },
+                "append": true
+               }
+              ]
+             }
+            ]
+           },
+           "prefix_rewrite": "/"
+          }
+         },
+         {
+          "match": {
+           "prefix": "/"
+          },
+          "direct_response": {
+           "status": 404,
+           "body": {
+            "inline_string": "Invalid API Route"
+           }
+          }
+         }
+        ],
+        "cors": {
+         "allow_methods": "GET, POST, OPTIONS",
+         "allow_headers": "X-Stack-Version, Content-Type",
+         "expose_headers": "X-Stack-Version",
+         "allow_origin_string_match": [
+          {
+           "exact": "*"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "last_updated": "2025-04-22T00:38:12.526Z"
     }
    ]
   },
